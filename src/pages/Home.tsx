@@ -31,12 +31,55 @@ export default function Home() {
       <IonHeader translucent={true}>
         <IonToolbar>
           <IonTitle>EcoRound</IonTitle>
-
+          <IonButtons slot="end" class="ion-margin-end" collapse={true}>
+            <IonButton shape="round">
+              <IonIcon icon={ellipsisVertical}></IonIcon>
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
-
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">EcoRound</IonTitle>
+            <IonButtons slot="end" class="ion-margin-end">
+              <IonButton shape="round">
+                <IonIcon icon={ellipsisVertical}></IonIcon>
+              </IonButton>
+            </IonButtons>
+          </IonToolbar>
+        </IonHeader>
+        <p>1</p>
+        <p>2</p>
+        <p>3</p>
+        <p>5</p>
+        <p>6</p>
+        <p>7</p>
+        <p>8</p>
+        <p>9</p>
+        <p>h</p>
+        <p>3</p>
+        <p>3</p>
+        <p>4</p>
+        <p>9</p>
+        <p>9</p>
+        <p>9</p>
+        <p>9</p>
+        <p>9</p>
+        <p>9</p>
+        <p>9</p>
+        <p>9 </p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
+        <p>2</p>
       </IonContent>
 
       <IonTabBar>
