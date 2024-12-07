@@ -24,6 +24,7 @@ import {
   ellipsisVertical,
 } from "ionicons/icons";
 import "./Home.css";
+import TabBar from "../components/TabBar";
 
 export default function Home() {
   return (
@@ -82,20 +83,7 @@ export default function Home() {
         <p>2</p>
       </IonContent>
 
-      <IonTabBar>
-        <IonTabButton>
-          <IonIcon icon={homeOutline} />
-          <IonText>Home</IonText>
-        </IonTabButton>
-        <IonTabButton>
-          <IonIcon icon={locationOutline} />
-          <IonText>Travel</IonText>
-        </IonTabButton>
-        <IonTabButton>
-          <IonIcon icon={personCircleOutline} />
-          <IonText>Profile</IonText>
-        </IonTabButton>
-      </IonTabBar>
+      <TabBar />
     </IonPage>
   );
 };
