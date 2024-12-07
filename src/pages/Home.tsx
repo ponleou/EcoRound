@@ -28,11 +28,11 @@ import "./Home.css";
 export default function Home() {
   return (
     <IonPage>
-      <IonHeader translucent={true}>
+      <IonHeader className="no-shadow" translucent={true}>
         <IonToolbar>
-          <IonTitle>EcoRound</IonTitle>
+          <IonTitle color="primary">EcoRound</IonTitle>
           <IonButtons slot="end" class="ion-margin-end" collapse={true}>
-            <IonButton shape="round">
+            <IonButton color="primary" shape="round">
               <IonIcon icon={ellipsisVertical}></IonIcon>
             </IonButton>
           </IonButtons>
@@ -42,7 +42,7 @@ export default function Home() {
       <IonContent fullscreen>
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">EcoRound</IonTitle>
+            <IonTitle color="primary" size="large">EcoRound</IonTitle>
             <IonButtons slot="end" class="ion-margin-end">
               <IonButton shape="round">
                 <IonIcon icon={ellipsisVertical}></IonIcon>

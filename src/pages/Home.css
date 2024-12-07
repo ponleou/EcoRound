@@ -5,3 +5,7 @@
 .text-small  {
     font-size: 12px;
 }
+
+.no-shadow {
+    box-shadow: none;
+}
