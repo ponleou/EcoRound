@@ -28,35 +28,14 @@ import "./Home.css";
 import TabBar from "../components/TabBar";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useEffect } from "react";
+import HeaderBar from "../components/HeaderBar";
 
 export default function Home() {
-  // Make the status bar blend with header
-  StatusBar.setBackgroundColor({ color: "#ffffff" });
-  const setStatusBarStyleLight = async () => {
-    await StatusBar.setStyle({ style: Style.Light });
-  };
-
-  useEffect(() => {
-    setStatusBarStyleLight();
-  }, []);
-
   return (
     // Header section
     <IonPage>
       <IonHeader className="shadow" translucent={true}>
-        <IonToolbar>
-          <IonTitle color="primary">EcoRound</IonTitle>
-          <IonButtons slot="end" class="ion-margin-end" collapse={true}>
-            <IonButton
-              href="/travel"
-              size="small"
-              color="primary"
-              shape="round"
-            >
-              <IonIcon icon={ellipsisVertical}></IonIcon>
-            </IonButton>
-          </IonButtons>
-        </IonToolbar>
+        <HeaderBar title="EcoRound" textColor="primary" />
       </IonHeader>
 
       <IonContent fullscreen>

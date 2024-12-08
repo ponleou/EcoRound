@@ -12,7 +12,6 @@ import {
   locationSharp,
   personCircle,
 } from "ionicons/icons";
-import { useEffect } from "react";
 
 export default function TabBar() {
   const navigation = useIonRouter();

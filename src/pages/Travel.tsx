@@ -1,16 +1,23 @@
-import { IonPage, IonContent, IonButton, useIonRouter } from "@ionic/react";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import {
+  IonPage,
+  IonContent,
+  IonButton,
+  useIonRouter,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
+} from "@ionic/react";
+import { useEffect } from "react";
+import HeaderBar from "../components/HeaderBar";
 
 export default function Travel() {
-  //temp
-  const navigation = useIonRouter();
-  function handleTabClick() {
-    navigation.goBack();
-  }
   return (
     <IonPage>
-      <IonContent>
-        test2 <IonButton onClick={handleTabClick}>go back</IonButton>
-      </IonContent>
+      <IonHeader>
+        <HeaderBar title="Travel" color="primary" isStatusDark={true} />
+      </IonHeader>
+      <IonContent>test2</IonContent>
     </IonPage>
   );
 }
