@@ -41,6 +41,7 @@ import "./theme/variables.css";
 import Home from "./pages/Home";
 import Travel from "./pages/Travel";
 import { useEffect } from "react";
+import { App as CApp } from "@capacitor/app";
 
 setupIonicReact();
 
@@ -59,7 +60,11 @@ function Main() {
 
   useEffect(() => {
     document.addEventListener("ionBackButton", () => {
-      navigation.goBack();
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        CApp.exitApp();
+      }
     });
   }, [navigation]);
 

@@ -17,7 +17,7 @@ export default function TabBar() {
   const navigation = useIonRouter();
 
   function handleTabClick(page) {
-    navigation.push(page, "forward", "replace");
+    navigation.push(page, "forward");
   }
 
   return (

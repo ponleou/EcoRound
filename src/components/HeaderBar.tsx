@@ -5,6 +5,7 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
+  IonBackButton,
 } from "@ionic/react";
 import { ellipsisVertical } from "ionicons/icons";
 import { useEffect } from "react";
@@ -15,7 +16,6 @@ export default function HeaderBar({
   textColor = "",
   isStatusDark = false,
 }) {
-  console.log("rendered");
   // Make the status bar blend with header
   function getCssVariableValue(variableName) {
     return getComputedStyle(document.documentElement).getPropertyValue(
@@ -23,14 +23,7 @@ export default function HeaderBar({
     );
   }
 
-  const hexColor = color
-    ? getCssVariableValue("--ion-color-" + color)
-    : "#ffffff";
-
-  StatusBar.setBackgroundColor({ color: hexColor });
-
   async function setStatusBarStyle() {
-    console.log("setStatusBarStyle");
     if (isStatusDark) {
       await StatusBar.setStyle({ style: Style.Dark });
     } else {
@@ -38,16 +31,21 @@ export default function HeaderBar({
     }
   }
 
-  useEffect(() => {
-    setStatusBarStyle();
-  }, [setStatusBarStyle]);
+  const hexColor = color
+    ? getCssVariableValue("--ion-color-" + color)
+    : "#ffffff";
+
+  StatusBar.setBackgroundColor({ color: hexColor });
+  setStatusBarStyle();
 
   return (
     <IonToolbar color={color ? color : ""}>
+      <IonButtons slot="start">
+        <IonBackButton></IonBackButton>
+      </IonButtons>
       <IonTitle color={textColor ? textColor : ""}>{title}</IonTitle>
       <IonButtons slot="end" class="ion-margin-end" collapse={true}>
         <IonButton
-          href="/travel"
           size="small"
           color={textColor ? textColor : ""}
           shape="round"
