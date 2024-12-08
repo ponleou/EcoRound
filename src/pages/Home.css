@@ -1,11 +1,13 @@
 .block {
-    display: block;
+  display: block;
 }
 
-.text-small  {
-    font-size: 12px;
+.text-small {
+  font-size: 12px;
 }
 
-.no-shadow {
-    box-shadow: none;
+.md {
+  .shadow {
+    box-shadow: 0 0 10px 4px rgba(0, 0, 0, 0.1);
+  }
 }

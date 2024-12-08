@@ -1,5 +1,9 @@
 import { IonIcon, IonTabBar, IonTabButton, IonText } from "@ionic/react";
-import { homeOutline, locationOutline, personCircleOutline } from "ionicons/icons";
+import {
+  homeOutline,
+  locationOutline,
+  personCircleOutline,
+} from "ionicons/icons";
 
 export default function TabBar() {
   return (

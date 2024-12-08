@@ -29,7 +29,6 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import { useEffect } from "react";
 
 export default function Home() {
-
   // Make the status bar blend with header
   StatusBar.setBackgroundColor({ color: "#ffffff" });
   const setStatusBarStyleLight = async () => {
@@ -40,11 +39,10 @@ export default function Home() {
     setStatusBarStyleLight();
   }, []);
 
-
   return (
     // Header section
     <IonPage>
-      <IonHeader className="no-shadow" translucent={true}>
+      <IonHeader className="shadow" translucent={true}>
         <IonToolbar>
           <IonTitle color="primary">EcoRound</IonTitle>
           <IonButtons slot="end" class="ion-margin-end" collapse={true}>
@@ -59,7 +57,9 @@ export default function Home() {
         {/* collapseible header section for iOS */}
         <IonHeader collapse="condense">
           <IonToolbar class="ion-justify-content-center">
-            <IonTitle color="primary" size="large">EcoRound</IonTitle>
+            <IonTitle color="primary" size="large">
+              EcoRound
+            </IonTitle>
             <IonButtons slot="end" class="ion-margin-end">
               <IonButton size="small" shape="round">
                 <IonIcon icon={ellipsisVertical}></IonIcon>
@@ -98,10 +98,9 @@ export default function Home() {
         <p>2</p>
         <p>2</p>
         <p>2</p>
-
       </IonContent>
 
       <TabBar />
     </IonPage>
   );
-};
+}
