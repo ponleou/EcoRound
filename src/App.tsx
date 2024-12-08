@@ -1,9 +1,11 @@
 import { Redirect, Route } from "react-router-dom";
 import {
   IonApp,
+  IonPage,
   IonRouterOutlet,
   IonTabs,
   setupIonicReact,
+  useIonRouter,
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 
@@ -38,21 +40,38 @@ import "@ionic/react/css/display.css";
 import "./theme/variables.css";
 import Home from "./pages/Home";
 import Travel from "./pages/Travel";
+import { useEffect } from "react";
 
 setupIonicReact();
 
-export default function App() {
+function App() {
   return (
     <IonApp>
       <IonReactRouter>
-        <IonRouterOutlet>
-          <Route exact path="/">
-            <Redirect to="/home" />
-          </Route>
-          <Route exact={true} path="/home" render={() => <Home />} />
-          <Route exact={true} path="/travel" render={() => <Travel />} />
-        </IonRouterOutlet>
+        <Main />
       </IonReactRouter>
     </IonApp>
   );
 }
+
+function Main() {
+  const navigation = useIonRouter();
+
+  useEffect(() => {
+    document.addEventListener("ionBackButton", () => {
+      navigation.goBack();
+    });
+  }, [navigation]);
+
+  return (
+    <IonRouterOutlet>
+      <Route exact path="/">
+        <Redirect to="/home" />
+      </Route>
+      <Route exact={true} path="/home" render={() => <Home />} />
+      <Route exact={true} path="/travel" render={() => <Travel />} />
+    </IonRouterOutlet>
+  );
+}
+
+export default App;

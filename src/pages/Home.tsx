@@ -16,6 +16,7 @@ import {
   IonTab,
   IonTabBar,
   IonTabButton,
+  useIonRouter,
 } from "@ionic/react";
 import {
   homeOutline,
@@ -46,7 +47,12 @@ export default function Home() {
         <IonToolbar>
           <IonTitle color="primary">EcoRound</IonTitle>
           <IonButtons slot="end" class="ion-margin-end" collapse={true}>
-            <IonButton size="small" color="primary" shape="round">
+            <IonButton
+              href="/travel"
+              size="small"
+              color="primary"
+              shape="round"
+            >
               <IonIcon icon={ellipsisVertical}></IonIcon>
             </IonButton>
           </IonButtons>
