@@ -1,23 +1,25 @@
 import { IonIcon, IonTabBar, IonTabButton, IonText } from "@ionic/react";
 import {
   homeOutline,
+  homeSharp,
   locationOutline,
-  personCircleOutline,
+  locationSharp,
+  personCircle,
 } from "ionicons/icons";
 
 export default function TabBar() {
   return (
     <IonTabBar>
-      <IonTabButton>
-        <IonIcon icon={homeOutline} />
+      <IonTabButton tab="home" href="/home">
+        <IonIcon icon={homeSharp} />
         <IonText>Home</IonText>
       </IonTabButton>
-      <IonTabButton>
-        <IonIcon icon={locationOutline} />
+      <IonTabButton tab="travel" href="/travel">
+        <IonIcon icon={locationSharp} />
         <IonText>Travel</IonText>
       </IonTabButton>
       <IonTabButton>
-        <IonIcon icon={personCircleOutline} />
+        <IonIcon icon={personCircle} />
         <IonText>Profile</IonText>
       </IonTabButton>
     </IonTabBar>

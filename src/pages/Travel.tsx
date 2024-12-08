@@ -1,5 +1,9 @@
-import { IonPage } from "@ionic/react";
+import { IonPage, IonContent } from "@ionic/react";
 
 export default function Travel() {
-  return <IonPage></IonPage>;
+  return (
+    <IonPage>
+      <IonContent>test</IonContent>
+    </IonPage>
+  );
 }
