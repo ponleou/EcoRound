@@ -1,3 +1,7 @@
 ion-modal {
   --border-radius: 1.5rem;
 }
+
+.leaflet-container {
+  height: 100%;
+}

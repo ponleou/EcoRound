@@ -12,12 +12,72 @@ import {
 } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
-import { searchSharp } from "ionicons/icons";
+import { print, searchSharp } from "ionicons/icons";
 import "./Travel.css";
+import { MapContainer, Marker, Popup } from "react-leaflet";
+import { TileLayer, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { Geolocation } from "@capacitor/geolocation";
+
+// Custom component to update the map view
+function MapUpdater({ lat, lon }) {
+  const map = useMap(); // Get access to the Leaflet map instance
+
+  useEffect(() => {
+    if (lat && lon) {
+      map.setView([lat, lon], map.getZoom()); // Change center of the map
+    }
+  }, [lat, lon, map]); // Run effect when lat or lon changes
+
+  return null; // This component does not render anything visible
+}
 
 export default function Travel() {
-  const [searchInput, setSearchInput] = useState("");
+  // essential for modal
   const modal = useRef<HTMLIonModalElement>(null);
+
+  const [searchInput, setSearchInput] = useState("");
+  // status determines if location is available (false when permission is denied)
+  const [currentCoords, setCurrentCoords] = useState({
+    lat: 0,
+    lon: 0,
+    status: false,
+  });
+
+  // fix leaflet map incorrect size rendering
+  setTimeout(function () {
+    window.dispatchEvent(new Event("resize"));
+  }, 1000);
+
+  // Get current location
+  const getCurrentCoords = async () => {
+    const location = await Geolocation.getCurrentPosition();
+    setCurrentCoords({
+      lat: location.coords.latitude,
+      lon: location.coords.longitude,
+      status: true,
+    });
+  };
+
+  const checkLocationPermission = async () => {
+    let permission = await Geolocation.checkPermissions();
+    if (permission.location === "prompt") {
+      permission = await Geolocation.requestPermissions();
+    }
+    return permission.location;
+  };
+
+  useEffect(() => {
+    checkLocationPermission().then((permission) => {
+      if (permission === "granted") {
+        getCurrentCoords();
+      }
+      if (permission === "denied") {
+        console.log("Location permission denied");
+        setCurrentCoords({ ...currentCoords, status: false });
+      }
+    });
+  }, []);
 
   return (
     <IonPage>
@@ -41,6 +101,27 @@ export default function Travel() {
           </div>
         </div>
 
+        <div className="fixed h-screen top-0 w-screen -z-30">
+          <MapContainer
+            center={[currentCoords.lat, currentCoords.lon]}
+            zoom={13}
+            zoomControl={false}
+            trackResize={true}
+            bounceAtZoomLimits={false}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapUpdater lat={currentCoords.lat} lon={currentCoords.lon} />
+            <Marker position={[currentCoords.lat, currentCoords.lon]}>
+              <Popup>
+                A pretty CSS3 popup. <br /> Easily customizable.
+              </Popup>
+            </Marker>
+          </MapContainer>
+        </div>
+
         {/* Modal */}
         <IonModal
           className="rounded-t-3l"
@@ -58,7 +139,11 @@ export default function Travel() {
               test
               <p>test</p>
             </div>
-            <div className="bg-white">test</div>
+            <div className="bg-white">
+              {currentCoords.status
+                ? "lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon
+                : "Location not available"}
+            </div>
             <div className="bg-white">tes2</div>
             <div className="bg-white">test3</div>
           </div>
