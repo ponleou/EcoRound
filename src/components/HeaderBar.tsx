@@ -31,12 +31,14 @@ export default function HeaderBar({
     }
   }
 
-  const hexColor = color
-    ? getCssVariableValue("--ion-color-" + color)
-    : getCssVariableValue("--ion-color-primary-contrast");
+  useEffect(() => {
+    const hexColor = color
+      ? getCssVariableValue("--ion-color-" + color)
+      : getCssVariableValue("--ion-color-primary-contrast");
 
-  StatusBar.setBackgroundColor({ color: hexColor });
-  setStatusBarStyle();
+    StatusBar.setBackgroundColor({ color: hexColor });
+    setStatusBarStyle();
+  });
 
   return (
     <IonToolbar color={color ? color : ""}>
