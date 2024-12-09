@@ -24,7 +24,6 @@ import {
   locationOutline,
   ellipsisVertical,
 } from "ionicons/icons";
-import "./Home.css";
 import TabBar from "../components/TabBar";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useEffect } from "react";
@@ -34,7 +33,7 @@ export default function Home() {
   return (
     // Header section
     <IonPage>
-      <IonHeader className="shadow" translucent={true}>
+      <IonHeader translucent={true} className="shadow-lg">
         <HeaderBar title="EcoRound" textColor="primary" />
       </IonHeader>
 

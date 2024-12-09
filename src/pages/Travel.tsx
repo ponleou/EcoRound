@@ -7,17 +7,19 @@ import {
   IonHeader,
   IonTitle,
   IonToolbar,
+  IonIcon,
 } from "@ionic/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
+import { searchSharp } from "ionicons/icons";
 
 export default function Travel() {
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="shadow-none border-0 outline-0">
         <HeaderBar title="Travel" color="primary" isStatusDark={true} />
       </IonHeader>
-      <IonContent>test2</IonContent>
+      <IonContent></IonContent>
     </IonPage>
   );
 }

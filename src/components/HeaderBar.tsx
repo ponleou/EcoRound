@@ -33,18 +33,20 @@ export default function HeaderBar({
 
   const hexColor = color
     ? getCssVariableValue("--ion-color-" + color)
-    : "#ffffff";
+    : getCssVariableValue("--ion-color-primary-contrast");
 
   StatusBar.setBackgroundColor({ color: hexColor });
   setStatusBarStyle();
 
   return (
     <IonToolbar color={color ? color : ""}>
-      <IonButtons slot="start">
+      <IonButtons slot="start" class="ion-margin-start">
         <IonBackButton></IonBackButton>
       </IonButtons>
-      <IonTitle color={textColor ? textColor : ""}>{title}</IonTitle>
-      <IonButtons slot="end" class="ion-margin-end" collapse={true}>
+      <IonTitle class="ion-no-padding" color={textColor ? textColor : ""}>
+        {title}
+      </IonTitle>
+      <IonButtons slot="end" collapse={true} class="ion-margin-end">
         <IonButton
           size="small"
           color={textColor ? textColor : ""}
