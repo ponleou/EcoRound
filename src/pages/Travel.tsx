@@ -14,49 +14,39 @@ import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
 import { print, searchSharp } from "ionicons/icons";
 import "./Travel.css";
-import { MapContainer, Marker, Popup } from "react-leaflet";
+import { MapContainer, Marker, Popup, useMapEvents } from "react-leaflet";
 import { TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Geolocation } from "@capacitor/geolocation";
-
-// Custom component to update the map view
-function MapUpdater({ lat, lon }) {
-  const map = useMap(); // Get access to the Leaflet map instance
-
-  useEffect(() => {
-    if (lat && lon) {
-      map.setView([lat, lon], map.getZoom()); // Change center of the map
-    }
-  }, [lat, lon, map]); // Run effect when lat or lon changes
-
-  return null; // This component does not render anything visible
-}
 
 export default function Travel() {
   // essential for modal
   const modal = useRef<HTMLIonModalElement>(null);
 
   const [searchInput, setSearchInput] = useState("");
+
   // status determines if location is available (false when permission is denied)
   const [currentCoords, setCurrentCoords] = useState({
     lat: 0,
     lon: 0,
     status: false,
+    focus: true,
   });
 
-  // fix leaflet map incorrect size rendering
-  setTimeout(function () {
-    window.dispatchEvent(new Event("resize"));
-  }, 1000);
+  // reference to leaflet map instance
+  const map = useRef(null);
+  // reference to interval for updating location
+  const interval = useRef(null);
 
   // Get current location
   const getCurrentCoords = async () => {
     const location = await Geolocation.getCurrentPosition();
-    setCurrentCoords({
+    setCurrentCoords((prevState) => ({
+      ...prevState,
       lat: location.coords.latitude,
       lon: location.coords.longitude,
       status: true,
-    });
+    }));
   };
 
   const checkLocationPermission = async () => {
@@ -71,12 +61,41 @@ export default function Travel() {
     checkLocationPermission().then((permission) => {
       if (permission === "granted") {
         getCurrentCoords();
-      }
-      if (permission === "denied") {
-        console.log("Location permission denied");
-        setCurrentCoords({ ...currentCoords, status: false });
+
+        interval.current = setInterval(() => {
+          getCurrentCoords();
+        }, 3000);
+      } else if (permission === "denied") {
+        console.log("Location permission denied"); //FIXME: remove this line
+        setCurrentCoords((prevState) => ({ ...prevState, status: false }));
       }
     });
+
+    return () => {
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
+    };
+  }, []);
+
+  // Update map view to center location when location changes (only when focus is true)
+  useEffect(() => {
+    if (currentCoords.focus && map.current) {
+      map.current.setView(
+        [currentCoords.lat, currentCoords.lon],
+        map.current.getZoom()
+      );
+    }
+  }, [currentCoords]);
+
+  // fix leaflet map invalid size
+  useEffect(() => {
+    const resizeInterval = setInterval(() => {
+      if (map.current) {
+        map.current.invalidateSize();
+        clearInterval(resizeInterval);
+      }
+    }, 100);
   }, []);
 
   return (
@@ -104,16 +123,16 @@ export default function Travel() {
         <div className="fixed h-screen top-0 w-screen -z-30">
           <MapContainer
             center={[currentCoords.lat, currentCoords.lon]}
-            zoom={13}
+            zoom={16}
             zoomControl={false}
             trackResize={true}
             bounceAtZoomLimits={false}
+            ref={map}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapUpdater lat={currentCoords.lat} lon={currentCoords.lon} />
             <Marker position={[currentCoords.lat, currentCoords.lon]}>
               <Popup>
                 A pretty CSS3 popup. <br /> Easily customizable.
@@ -140,9 +159,9 @@ export default function Travel() {
               <p>test</p>
             </div>
             <div className="bg-white">
-              {currentCoords.status
-                ? "lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon
-                : "Location not available"}
+              {"lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon}{" "}
+              <br />
+              {currentCoords.status ? "" : "Location not available"}
             </div>
             <div className="bg-white">tes2</div>
             <div className="bg-white">test3</div>
