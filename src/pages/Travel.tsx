@@ -29,7 +29,7 @@ export default function Travel() {
   const [currentCoords, setCurrentCoords] = useState({
     lat: 0,
     lon: 0,
-    status: false,
+    status: true,
     focus: true,
   });
 
