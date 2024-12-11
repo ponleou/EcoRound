@@ -10,6 +10,7 @@ import {
   IonIcon,
   IonModal,
   IonText,
+  IonRouterOutlet,
 } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
@@ -24,10 +25,13 @@ import {
 import "./Travel.css";
 import { Geolocation } from "@capacitor/geolocation";
 import Map from "../components/Map";
+import { Route } from "react-router-dom";
+import MapPage from "../components/MapPage";
 
 export default function Travel() {
   // essential for modal
   const modal = useRef<HTMLIonModalElement>(null);
+  const [openModal, setOpenModal] = useState(true);
 
   const [searchInput, setSearchInput] = useState("");
 
@@ -83,54 +87,45 @@ export default function Travel() {
   }, []);
 
   return (
-    <IonPage>
-      <IonHeader className="shadow-none border-0 outline-0">
-        <HeaderBar title="Travel" color="primary" />
-      </IonHeader>
-      <IonContent>
-        {/* Search header */}
-        <div className="bg-primary flex justify-center p-4 rounded-b-3xl shadow-lg">
-          {/* Search bar */}
-          <div className="flex-grow flex rounded-full bg-white items-center justify-between pl-4">
-            <IonIcon icon={searchSharp}></IonIcon>
-            <input
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Find a location"
-              className="border-0 outline-none bg-white rounded-r-full flex-grow pl-3 pr-4 py-2"
-              type="text"
-              name=""
-              id=""
-            />
+    <MapPage
+      header={<HeaderBar title="Travel" color="primary" />}
+      topContent={
+        <span>
+          <div className="bg-primary flex justify-center p-4 rounded-b-3xl shadow-lg">
+            <div className="flex-grow flex rounded-full bg-white items-center justify-between pl-4">
+              <IonIcon icon={searchSharp}></IonIcon>
+              <input
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Find a location"
+                className="border-0 outline-none bg-white rounded-r-full flex-grow pl-3 pr-4 py-2"
+                type="text"
+                name=""
+                id=""
+              />
+            </div>
           </div>
-        </div>
-
-        <div className="flex flex-col items-end gap-4 m-4">
-          <IonButton
-            shape="round"
-            color={currentCoords.focus ? "primary" : "light"}
-            onClick={() => {
-              setCurrentCoords((prevState) => ({ ...prevState, focus: true }));
-            }}
-          >
-            <IonIcon slot="icon-only" icon={locate}></IonIcon>
-          </IonButton>
-          <span>test</span>
-          <span>test</span>
-        </div>
-
-        <div className="fixed h-screen top-0 w-screen -z-30">
-          <Map
-            currentCoords={currentCoords}
-            setCurrentCoords={setCurrentCoords}
-          />
-        </div>
-
-        {/* Modal */}
+          <div className="flex flex-col items-end gap-4 m-4">
+            <IonButton
+              shape="round"
+              color={currentCoords.focus ? "primary" : "light"}
+              onClick={() => {
+                setCurrentCoords((prevState) => ({
+                  ...prevState,
+                  focus: true,
+                }));
+              }}
+            >
+              <IonIcon slot="icon-only" icon={locate}></IonIcon>
+            </IonButton>
+          </div>
+        </span>
+      }
+      bottomContent={
         <IonModal
           className="rounded-t-3l"
           ref={modal}
           trigger="open-modal"
-          isOpen={true}
+          isOpen={openModal}
           initialBreakpoint={0.5}
           breakpoints={[0.05, 0.25, 0.5, 0.75]}
           backdropDismiss={false}
@@ -141,7 +136,6 @@ export default function Travel() {
             <div className="bg-white rounded-lg grid grid-cols-[auto_1fr_auto] grid-rows-3 p-4 gap-x-4 items-center">
               <IonIcon color="secondary" icon={locate}></IonIcon>
               <IonText class="ion-padding-horizontal">
-                {" "}
                 {currentCoords.lat + ", " + currentCoords.lon}
               </IonText>
               <IonButton
@@ -158,7 +152,7 @@ export default function Travel() {
               <IonText class="ion-padding-horizontal">Destination</IonText>
             </div>
             <div className="bg-white">
-              {"lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon}{" "}
+              {"lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon}
               <br />
               {currentCoords.status ? "" : "Location not available"}
             </div>
@@ -166,7 +160,9 @@ export default function Travel() {
             <div className="bg-white">test3</div>
           </div>
         </IonModal>
-      </IonContent>
-    </IonPage>
+      }
+      currentCoords={currentCoords}
+      setCurrentCoords={setCurrentCoords}
+    ></MapPage>
   );
 }

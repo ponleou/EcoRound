@@ -106,8 +106,8 @@ function Main() {
       <Route exact path="/">
         <Redirect to="/home" />
       </Route>
-      <Route exact={true} path={homePath.current} render={() => <Home />} />
-      <Route exact={true} path={travelPath.current} render={() => <Travel />} />
+      <Route exact={true} path={homePath.current} component={Home} />
+      <Route exact={true} path={travelPath.current} component={Travel} />
     </IonRouterOutlet>
   );
 }
