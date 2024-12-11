@@ -18,6 +18,7 @@ import {
   ellipsisVertical,
   locate,
   locationSharp,
+  pin,
   print,
   searchSharp,
   swapVertical,
@@ -38,19 +39,25 @@ export default function Travel() {
   const [currentCoords, setCurrentCoords] = useState({
     lat: 0,
     lon: 0,
-    status: true,
+    status: false,
     focus: true,
   });
 
-  const [startCoords, setStartCoords] = useState({ lat: 0, lon: 0 });
-  const [destinationCoords, setDestinationCoords] = useState({
-    lat: 0,
-    lon: 0,
+  const [startCoords, setStartCoords] = useState({
+    lat: undefined,
+    lon: undefined,
   });
-  const [centerCoords, setCenterCoords] = useState({ lat: 0, lon: 0 });
+  const [destinationCoords, setDestinationCoords] = useState({
+    lat: undefined,
+    lon: undefined,
+  });
+  const [centerCoords, setCenterCoords] = useState({
+    lat: undefined,
+    lon: undefined,
+  });
 
   // reference to interval for updating location
-  const interval = useRef(null);
+  const currentCoordsInterval = useRef(null);
 
   // Get current location
   const getCurrentCoords = async () => {
@@ -76,7 +83,7 @@ export default function Travel() {
       if (permission === "granted") {
         getCurrentCoords();
 
-        interval.current = setInterval(() => {
+        currentCoordsInterval.current = setInterval(() => {
           getCurrentCoords();
         }, 3000);
       } else if (permission === "denied") {
@@ -86,11 +93,24 @@ export default function Travel() {
     });
 
     return () => {
-      if (interval.current) {
-        clearInterval(interval.current);
+      if (currentCoordsInterval.current) {
+        clearInterval(currentCoordsInterval.current);
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      (startCoords.lat === undefined || startCoords.lon === undefined) &&
+      currentCoords.status
+    ) {
+      setStartCoords((prevState) => ({
+        ...prevState,
+        lat: currentCoords.lat,
+        lon: currentCoords.lon,
+      }));
+    }
+  }, [currentCoords, startCoords]);
 
   const functionSetter = useRef(null);
 
@@ -105,10 +125,11 @@ export default function Travel() {
     setOpenModal(true);
     setChoosingLocation(false);
 
-    functionSetter.current({
+    functionSetter.current((prevState) => ({
+      ...prevState,
       lat: centerCoords.lat,
       lon: centerCoords.lon,
-    });
+    }));
 
     functionSetter.current = null;
   };
@@ -173,7 +194,7 @@ export default function Travel() {
                   class="ion-padding-horizontal"
                   onClick={() => handleChooseLocation(setStartCoords)}
                 >
-                  {currentCoords.lat + ", " + currentCoords.lon}
+                  {startCoords.lat + ", " + startCoords.lon}
                 </IonText>
                 <IonButton
                   size="small"
@@ -191,7 +212,10 @@ export default function Travel() {
                   class="ion-padding-horizontal"
                   onClick={() => handleChooseLocation(setDestinationCoords)}
                 >
-                  {destinationCoords.lat + ", " + destinationCoords.lon}
+                  {destinationCoords.lat === undefined ||
+                  destinationCoords.lon === undefined
+                    ? "Set destination"
+                    : destinationCoords.lat + ", " + destinationCoords.lon}
                 </IonText>
               </div>
               {/* Card 2 */}
@@ -223,6 +247,16 @@ export default function Travel() {
                 </IonButton>
               </div>
             </div>
+          ) : (
+            ""
+          )}
+          {choosingLocation ? (
+            <IonIcon
+              color="tertiary"
+              size="large"
+              className="fixed bottom-1/2 right-1/2 transform translate-x-1/2"
+              icon={pin}
+            />
           ) : (
             ""
           )}
