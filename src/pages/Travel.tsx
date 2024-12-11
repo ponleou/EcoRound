@@ -18,6 +18,7 @@ import { MapContainer, Marker, Popup, useMapEvents } from "react-leaflet";
 import { TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Geolocation } from "@capacitor/geolocation";
+import Map from "../components/Map";
 
 export default function Travel() {
   // essential for modal
@@ -33,8 +34,6 @@ export default function Travel() {
     focus: true,
   });
 
-  // reference to leaflet map instance
-  const map = useRef(null);
   // reference to interval for updating location
   const interval = useRef(null);
 
@@ -78,26 +77,6 @@ export default function Travel() {
     };
   }, []);
 
-  // Update map view to center location when location changes (only when focus is true)
-  useEffect(() => {
-    if (currentCoords.focus && map.current) {
-      map.current.setView(
-        [currentCoords.lat, currentCoords.lon],
-        map.current.getZoom()
-      );
-    }
-  }, [currentCoords]);
-
-  // fix leaflet map invalid size
-  useEffect(() => {
-    const resizeInterval = setInterval(() => {
-      if (map.current) {
-        map.current.invalidateSize();
-        clearInterval(resizeInterval);
-      }
-    }, 100);
-  }, []);
-
   return (
     <IonPage>
       <IonHeader className="shadow-none border-0 outline-0">
@@ -121,24 +100,10 @@ export default function Travel() {
         </div>
 
         <div className="fixed h-screen top-0 w-screen -z-30">
-          <MapContainer
-            center={[currentCoords.lat, currentCoords.lon]}
-            zoom={16}
-            zoomControl={false}
-            trackResize={true}
-            bounceAtZoomLimits={false}
-            ref={map}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker position={[currentCoords.lat, currentCoords.lon]}>
-              <Popup>
-                A pretty CSS3 popup. <br /> Easily customizable.
-              </Popup>
-            </Marker>
-          </MapContainer>
+          <Map
+            currentCoords={currentCoords}
+            setCurrentCoords={setCurrentCoords}
+          />
         </div>
 
         {/* Modal */}
