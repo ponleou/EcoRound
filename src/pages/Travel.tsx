@@ -29,9 +29,8 @@ import { Route } from "react-router-dom";
 import MapPage from "../components/MapPage";
 
 export default function Travel() {
-  // essential for modal
-  const modal = useRef<HTMLIonModalElement>(null);
   const [openModal, setOpenModal] = useState(true);
+  const [choosingLocation, setChoosingLocation] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
 
@@ -42,6 +41,13 @@ export default function Travel() {
     status: true,
     focus: true,
   });
+
+  const [startCoords, setStartCoords] = useState({ lat: 0, lon: 0 });
+  const [destinationCoords, setDestinationCoords] = useState({
+    lat: 0,
+    lon: 0,
+  });
+  const [centerCoords, setCenterCoords] = useState({ lat: 0, lon: 0 });
 
   // reference to interval for updating location
   const interval = useRef(null);
@@ -86,9 +92,35 @@ export default function Travel() {
     };
   }, []);
 
+  const functionSetter = useRef(null);
+
+  const handleChooseLocation = (setFunction) => {
+    setChoosingLocation(true);
+    setOpenModal(false);
+
+    functionSetter.current = setFunction;
+  };
+
+  const handleSelectLocation = () => {
+    setOpenModal(true);
+    setChoosingLocation(false);
+
+    functionSetter.current({
+      lat: centerCoords.lat,
+      lon: centerCoords.lon,
+    });
+
+    functionSetter.current = null;
+  };
+
   return (
     <MapPage
-      header={<HeaderBar title="Travel" color="primary" />}
+      header={
+        <HeaderBar
+          title={!choosingLocation ? "Travel" : "Choose location"}
+          color="primary"
+        />
+      }
       topContent={
         <span>
           <div className="bg-primary flex justify-center p-4 rounded-b-3xl shadow-lg">
@@ -121,48 +153,84 @@ export default function Travel() {
         </span>
       }
       bottomContent={
-        <IonModal
-          className="rounded-t-3l"
-          ref={modal}
-          trigger="open-modal"
-          isOpen={openModal}
-          initialBreakpoint={0.5}
-          breakpoints={[0.05, 0.25, 0.5, 0.75]}
-          backdropDismiss={false}
-          backdropBreakpoint={0.5}
-        >
-          <div className="bg-primary h-full px-4 pb-4 pt-6 flex flex-col gap-4">
-            {/* Cards inside modal */}
-            <div className="bg-white rounded-lg grid grid-cols-[auto_1fr_auto] grid-rows-3 p-4 gap-x-4 items-center">
-              <IonIcon color="secondary" icon={locate}></IonIcon>
-              <IonText class="ion-padding-horizontal">
-                {currentCoords.lat + ", " + currentCoords.lon}
-              </IonText>
-              <IonButton
-                size="small"
-                color="light"
-                className="row-span-3"
-                shape="round"
-              >
-                <IonIcon slot="icon-only" icon={swapVertical}></IonIcon>
-              </IonButton>
-              <IonIcon icon={ellipsisVertical}></IonIcon>
-              <hr />
-              <IonIcon color="tertiary" icon={locationSharp}></IonIcon>
-              <IonText class="ion-padding-horizontal">Destination</IonText>
+        <span>
+          <IonModal
+            className="rounded-t-3l"
+            trigger="open-modal"
+            isOpen={openModal}
+            initialBreakpoint={0.5}
+            breakpoints={[0.05, 0.25, 0.5, 0.75]}
+            backdropDismiss={false}
+            backdropBreakpoint={0.5}
+          >
+            <div className="bg-primary h-full px-4 pb-4 pt-6 flex flex-col gap-4">
+              {/* Cards inside modal */}
+              {/* Card 1 */}
+              <div className="bg-white rounded-lg grid grid-cols-[auto_1fr_auto] grid-rows-3 p-4 gap-x-4 items-center">
+                <IonIcon color="secondary" icon={locate}></IonIcon>
+                <IonText
+                  className="truncate"
+                  class="ion-padding-horizontal"
+                  onClick={() => handleChooseLocation(setStartCoords)}
+                >
+                  {currentCoords.lat + ", " + currentCoords.lon}
+                </IonText>
+                <IonButton
+                  size="small"
+                  color="light"
+                  className="row-span-3"
+                  shape="round"
+                >
+                  <IonIcon slot="icon-only" icon={swapVertical}></IonIcon>
+                </IonButton>
+                <IonIcon icon={ellipsisVertical}></IonIcon>
+                <hr />
+                <IonIcon color="tertiary" icon={locationSharp}></IonIcon>
+                <IonText
+                  className="truncate"
+                  class="ion-padding-horizontal"
+                  onClick={() => handleChooseLocation(setDestinationCoords)}
+                >
+                  {destinationCoords.lat + ", " + destinationCoords.lon}
+                </IonText>
+              </div>
+              {/* Card 2 */}
+              <div className="bg-white">
+                {"lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon}
+                <br />
+                {currentCoords.status ? "" : "Location not available"}
+              </div>
+              {/* Card 3 */}
+              <div className="bg-white">tes2</div>
+              {/* Card 4 */}
+              <div className="bg-white">test3</div>
             </div>
-            <div className="bg-white">
-              {"lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon}
-              <br />
-              {currentCoords.status ? "" : "Location not available"}
+          </IonModal>
+          {choosingLocation ? (
+            <div className="fixed bottom-0 left-0 right-0 bg-primary rounded-t-3xl p-4">
+              <div className="bg-white rounded-lg p-4 flex flex-col gap-4">
+                <div className="flex gap-4 items-center">
+                  <IonIcon icon={locationSharp} color="tertiary"></IonIcon>
+                  {centerCoords.lat + ", " + centerCoords.lon}
+                </div>
+                <IonButton
+                  shape="round"
+                  expand="block"
+                  color="secondary"
+                  onClick={() => handleSelectLocation()}
+                >
+                  Select location
+                </IonButton>
+              </div>
             </div>
-            <div className="bg-white">tes2</div>
-            <div className="bg-white">test3</div>
-          </div>
-        </IonModal>
+          ) : (
+            ""
+          )}
+        </span>
       }
       currentCoords={currentCoords}
       setCurrentCoords={setCurrentCoords}
+      setCenterCoords={setCenterCoords}
     ></MapPage>
   );
 }

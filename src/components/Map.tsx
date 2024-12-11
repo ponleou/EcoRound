@@ -10,7 +10,11 @@ import {
 import "leaflet/dist/leaflet.css";
 import "./Map.css";
 
-export default function Map({ currentCoords, setCurrentCoords }) {
+export default function Map({
+  currentCoords,
+  setCurrentCoords,
+  setCenterCoords,
+}) {
   const mapRef = useRef(null);
 
   // Update map view to center location when location changes (only when focus is true)
@@ -39,6 +43,17 @@ export default function Map({ currentCoords, setCurrentCoords }) {
         setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
       },
     });
+
+    useEffect(() => {
+      const getCenterInterval = setInterval(() => {
+        setCenterCoords((prevState) => ({
+          ...prevState,
+          lat: mapRef.current.getCenter().lat,
+          lon: mapRef.current.getCenter().lng,
+        }));
+      }, 100);
+      return () => clearInterval(getCenterInterval);
+    }, []);
 
     return null;
   }
