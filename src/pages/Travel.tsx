@@ -9,14 +9,19 @@ import {
   IonToolbar,
   IonIcon,
   IonModal,
+  IonText,
 } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
-import { print, searchSharp } from "ionicons/icons";
+import {
+  ellipsisVertical,
+  locate,
+  locationSharp,
+  print,
+  searchSharp,
+  swapVertical,
+} from "ionicons/icons";
 import "./Travel.css";
-import { MapContainer, Marker, Popup, useMapEvents } from "react-leaflet";
-import { TileLayer, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import { Geolocation } from "@capacitor/geolocation";
 import Map from "../components/Map";
 
@@ -99,6 +104,20 @@ export default function Travel() {
           </div>
         </div>
 
+        <div className="flex flex-col items-end gap-4 m-4">
+          <IonButton
+            shape="round"
+            color={currentCoords.focus ? "primary" : "light"}
+            onClick={() => {
+              setCurrentCoords((prevState) => ({ ...prevState, focus: true }));
+            }}
+          >
+            <IonIcon slot="icon-only" icon={locate}></IonIcon>
+          </IonButton>
+          <span>test</span>
+          <span>test</span>
+        </div>
+
         <div className="fixed h-screen top-0 w-screen -z-30">
           <Map
             currentCoords={currentCoords}
@@ -119,9 +138,24 @@ export default function Travel() {
         >
           <div className="bg-primary h-full px-4 pb-4 pt-6 flex flex-col gap-4">
             {/* Cards inside modal */}
-            <div className="bg-white rounded-lg">
-              test
-              <p>test</p>
+            <div className="bg-white rounded-lg grid grid-cols-[auto_1fr_auto] grid-rows-3 p-4 gap-x-4 items-center">
+              <IonIcon color="secondary" icon={locate}></IonIcon>
+              <IonText class="ion-padding-horizontal">
+                {" "}
+                {currentCoords.lat + ", " + currentCoords.lon}
+              </IonText>
+              <IonButton
+                size="small"
+                color="light"
+                className="row-span-3"
+                shape="round"
+              >
+                <IonIcon slot="icon-only" icon={swapVertical}></IonIcon>
+              </IonButton>
+              <IonIcon icon={ellipsisVertical}></IonIcon>
+              <hr />
+              <IonIcon color="tertiary" icon={locationSharp}></IonIcon>
+              <IonText class="ion-padding-horizontal">Destination</IonText>
             </div>
             <div className="bg-white">
               {"lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon}{" "}

@@ -35,8 +35,7 @@ export default function Map({ currentCoords, setCurrentCoords }) {
 
   function MapEvents() {
     const map = useMapEvents({
-      movestart: () => {
-        console.log("Map moving");
+      dragstart: () => {
         setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
       },
     });
