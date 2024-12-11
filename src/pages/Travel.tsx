@@ -101,7 +101,7 @@ export default function Travel() {
   return (
     <IonPage>
       <IonHeader className="shadow-none border-0 outline-0">
-        <HeaderBar title="Travel" color="primary" isStatusDark={true} />
+        <HeaderBar title="Travel" color="primary" />
       </IonHeader>
       <IonContent>
         {/* Search header */}

@@ -10,36 +10,7 @@ import {
 import { ellipsisVertical } from "ionicons/icons";
 import { useEffect } from "react";
 
-export default function HeaderBar({
-  title,
-  color = "",
-  textColor = "",
-  isStatusDark = false,
-}) {
-  // Make the status bar blend with header
-  function getCssVariableValue(variableName) {
-    return getComputedStyle(document.documentElement).getPropertyValue(
-      variableName
-    );
-  }
-
-  async function setStatusBarStyle() {
-    if (isStatusDark) {
-      await StatusBar.setStyle({ style: Style.Dark });
-    } else {
-      await StatusBar.setStyle({ style: Style.Light });
-    }
-  }
-
-  useEffect(() => {
-    const hexColor = color
-      ? getCssVariableValue("--ion-color-" + color)
-      : getCssVariableValue("--ion-color-primary-contrast");
-
-    StatusBar.setBackgroundColor({ color: hexColor });
-    setStatusBarStyle();
-  });
-
+export default function HeaderBar({ title, color = "", textColor = "" }) {
   return (
     <IonToolbar color={color ? color : ""}>
       <IonButtons slot="start" class="ion-margin-start">

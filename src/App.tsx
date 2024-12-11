@@ -41,8 +41,9 @@ import "./theme/variables.css";
 import "./input.css";
 import Home from "./pages/Home";
 import Travel from "./pages/Travel";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { App as CApp } from "@capacitor/app";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 setupIonicReact();
 
@@ -59,6 +60,37 @@ function App() {
 function Main() {
   const navigation = useIonRouter();
 
+  const homePath = useRef("/home");
+  const travelPath = useRef("/travel");
+
+  // Make the status bar blend with header
+  function getCssVariableValue(variableName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(
+      variableName
+    );
+  }
+  async function setStatusBarStyle(style) {
+    await StatusBar.setStyle({ style: style });
+  }
+
+  const hexColor = useRef("#ffffff");
+  const style = useRef(Style.Light);
+
+  useEffect(() => {
+    if (location.pathname === homePath.current) {
+      hexColor.current = getCssVariableValue("--ion-color-primary-contrast");
+      style.current = Style.Light;
+    }
+    if (location.pathname === travelPath.current) {
+      hexColor.current = getCssVariableValue("--ion-color-primary");
+      style.current = Style.Dark;
+    }
+
+    StatusBar.setBackgroundColor({ color: hexColor.current });
+    setStatusBarStyle(style.current);
+  }, [location.pathname]);
+
+  // Handle back button on android
   useEffect(() => {
     document.addEventListener("ionBackButton", () => {
       if (navigation.canGoBack()) {
@@ -74,8 +106,8 @@ function Main() {
       <Route exact path="/">
         <Redirect to="/home" />
       </Route>
-      <Route exact={true} path="/home" render={() => <Home />} />
-      <Route exact={true} path="/travel" render={() => <Travel />} />
+      <Route exact={true} path={homePath.current} render={() => <Home />} />
+      <Route exact={true} path={travelPath.current} render={() => <Travel />} />
     </IonRouterOutlet>
   );
 }
