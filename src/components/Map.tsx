@@ -6,14 +6,19 @@ import {
   Marker,
   Popup,
   useMapEvents,
+  CircleMarker,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./Map.css";
+import { locate } from "ionicons/icons";
+import L from "leaflet";
 
 export default function Map({
   currentCoords,
   setCurrentCoords,
   setCenterCoords,
+  startCoords,
+  destinationCoords,
 }) {
   const mapRef = useRef(null);
 
@@ -58,6 +63,12 @@ export default function Map({
     return null;
   }
 
+  function getCssVariableValue(variableName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(
+      variableName
+    );
+  }
+
   return (
     <MapContainer
       center={[currentCoords.lat, currentCoords.lon]}
@@ -72,11 +83,29 @@ export default function Map({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapEvents />
-      <Marker position={[currentCoords.lat, currentCoords.lon]}>
-        <Popup>
-          A pretty CSS3 popup. <br /> Easily customizable.
-        </Popup>
-      </Marker>
+      <CircleMarker
+        radius={10}
+        center={[currentCoords.lat, currentCoords.lon]}
+        fillColor={getCssVariableValue("--ion-color-secondary").trim()}
+        color="white"
+        fillOpacity={0.7}
+      ></CircleMarker>
+      {startCoords.lat && startCoords.lon && (
+        <CircleMarker
+          radius={7}
+          center={[startCoords.lat, startCoords.lon]}
+          color={getCssVariableValue("--ion-color-primary").trim()}
+          fillColor="white"
+          fillOpacity={1}
+        >
+          {/* <Popup>Start</Popup> */}
+        </CircleMarker>
+      )}
+      {destinationCoords.lat && destinationCoords.lon && (
+        <Marker position={[destinationCoords.lat, destinationCoords.lon]}>
+          {/* <Popup>Destination</Popup> */}
+        </Marker>
+      )}
     </MapContainer>
   );
 }

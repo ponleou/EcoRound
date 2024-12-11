@@ -31,6 +31,8 @@ export default function Travel({
   currentCoords,
   setCurrentCoords,
   setCenterCoords,
+  startCoords,
+  destinationCoords,
 }) {
   return (
     <IonPage>
@@ -42,6 +44,8 @@ export default function Travel({
             currentCoords={currentCoords}
             setCurrentCoords={setCurrentCoords}
             setCenterCoords={setCenterCoords}
+            startCoords={startCoords}
+            destinationCoords={destinationCoords}
           />
         </div>
         {bottomContent}
