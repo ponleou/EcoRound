@@ -29,9 +29,12 @@ import Map from "../components/Map";
 import { Route } from "react-router-dom";
 import MapPage from "../components/MapPage";
 
-export default function Travel() {
-  const [openModal, setOpenModal] = useState(true);
+export default function Travel({ match }) {
+  const navigation = useIonRouter();
+
+  const chooseLocationPath = useRef(`${match.url}/choose-location`);
   const [choosingLocation, setChoosingLocation] = useState(false);
+  const [openModal, setOpenModal] = useState(true);
 
   const [searchInput, setSearchInput] = useState("");
 
@@ -114,17 +117,14 @@ export default function Travel() {
 
   const functionSetter = useRef(null);
 
+  // handles choosing state and selected location
   const handleChooseLocation = (setFunction) => {
-    setChoosingLocation(true);
-    setOpenModal(false);
-
+    navigation.push(chooseLocationPath.current);
     functionSetter.current = setFunction;
   };
 
   const handleSelectLocation = () => {
-    setOpenModal(true);
-    setChoosingLocation(false);
-
+    navigation.goBack();
     functionSetter.current((prevState) => ({
       ...prevState,
       lat: centerCoords.lat,
@@ -133,6 +133,19 @@ export default function Travel() {
 
     functionSetter.current = null;
   };
+
+  // modify pages based on route
+  useEffect(() => {
+    if (location.pathname === chooseLocationPath.current) {
+      setOpenModal(false);
+      setChoosingLocation(true);
+    }
+
+    if (location.pathname === match.url) {
+      setOpenModal(true);
+      setChoosingLocation(false);
+    }
+  }, [location.pathname]);
 
   return (
     <MapPage

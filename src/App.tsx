@@ -93,9 +93,7 @@ function Main() {
   // Handle back button on android
   useEffect(() => {
     document.addEventListener("ionBackButton", () => {
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else {
+      if (!navigation.canGoBack()) {
         CApp.exitApp();
       }
     });
@@ -107,7 +105,7 @@ function Main() {
         <Redirect to="/home" />
       </Route>
       <Route exact={true} path={homePath.current} component={Home} />
-      <Route exact={true} path={travelPath.current} component={Travel} />
+      <Route path={travelPath.current} component={Travel} />
     </IonRouterOutlet>
   );
 }
