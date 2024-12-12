@@ -207,7 +207,10 @@ export default function Travel({ match }) {
                   class="ion-padding-horizontal"
                   onClick={() => handleChooseLocation(setStartCoords)}
                 >
-                  {startCoords.lat + ", " + startCoords.lon}
+                  {startCoords.lat === undefined ||
+                  startCoords.lon === undefined
+                    ? "Starting location"
+                    : startCoords.lat + ", " + startCoords.lon}
                 </IonText>
                 <IonButton
                   size="small"
