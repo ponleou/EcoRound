@@ -15,12 +15,27 @@ import L from "leaflet";
 
 export default function Map({
   currentCoords,
-  setCurrentCoords,
   setCenterCoords,
   startCoords,
   destinationCoords,
+  setMapEvents,
 }) {
   const mapRef = useRef(null);
+
+  // map events
+  function MapEvents() {
+    useMapEvents({
+      // stop focusing on current location when map is dragged
+      dragstart: () => {
+        setMapEvents((prevState) => ({ ...prevState, dragging: true }));
+      },
+      dragend: () => {
+        setMapEvents((prevState) => ({ ...prevState, dragging: false }));
+      },
+    });
+
+    return null;
+  }
 
   // Update map view to center location when location changes (only when focus is true)
   useEffect(() => {
@@ -30,6 +45,7 @@ export default function Map({
         mapRef.current.getZoom()
       );
     }
+    // console.log("centered", currentCoords);
   }, [currentCoords]);
 
   // fix leaflet map invalid size
@@ -42,26 +58,18 @@ export default function Map({
     }, 100);
   }, []);
 
-  function MapEvents() {
-    const map = useMapEvents({
-      dragstart: () => {
-        setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
-      },
-    });
-
-    useEffect(() => {
-      const getCenterInterval = setInterval(() => {
-        setCenterCoords((prevState) => ({
-          ...prevState,
-          lat: mapRef.current.getCenter().lat,
-          lon: mapRef.current.getCenter().lng,
-        }));
-      }, 100);
-      return () => clearInterval(getCenterInterval);
-    }, []);
-
-    return null;
-  }
+  // Get center coordinates of map
+  useEffect(() => {
+    const getCenterInterval = setInterval(() => {
+      setCenterCoords((prevState) => ({
+        ...prevState,
+        label: "",
+        lat: mapRef.current.getCenter().lat,
+        lon: mapRef.current.getCenter().lng,
+      }));
+    }, 100);
+    return () => clearInterval(getCenterInterval);
+  }, []);
 
   function getCssVariableValue(variableName) {
     return getComputedStyle(document.documentElement).getPropertyValue(

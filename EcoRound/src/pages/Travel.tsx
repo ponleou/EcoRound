@@ -28,6 +28,8 @@ import { Geolocation } from "@capacitor/geolocation";
 import Map from "../components/Map";
 import { Route } from "react-router-dom";
 import MapPage from "../components/MapPage";
+import { map } from "leaflet";
+import { c } from "vitest/dist/reporters-5f784f42";
 
 export default function Travel({ match }) {
   const navigation = useIonRouter();
@@ -37,6 +39,10 @@ export default function Travel({ match }) {
   const [openModal, setOpenModal] = useState(true);
 
   const [searchInput, setSearchInput] = useState("");
+
+  const [mapEvents, setMapEvents] = useState({
+    dragging: false,
+  });
 
   // status determines if location is available (false when permission is denied)
   const [currentCoords, setCurrentCoords] = useState({
@@ -57,10 +63,20 @@ export default function Travel({ match }) {
   const [centerCoords, setCenterCoords] = useState({
     lat: undefined,
     lon: undefined,
+    label: "",
   });
 
-  // reference to interval for updating location
-  const currentCoordsInterval = useRef(null);
+  // handles focusing on current location
+  const handleCurrentFocus = () => {
+    setCurrentCoords((prevState) => ({ ...prevState, focus: true }));
+  };
+
+  useEffect(() => {
+    if (mapEvents.dragging) {
+      setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
+    }
+    console.log("dragging", mapEvents.dragging);
+  }, [mapEvents]);
 
   // Get current location
   const getCurrentCoords = async () => {
@@ -73,6 +89,7 @@ export default function Travel({ match }) {
     }));
   };
 
+  // location permissions
   const checkLocationPermission = async () => {
     let permission = await Geolocation.checkPermissions();
     if (permission.location === "prompt") {
@@ -80,6 +97,9 @@ export default function Travel({ match }) {
     }
     return permission.location;
   };
+
+  // reference to interval for updating location
+  const currentCoordsInterval = useRef(null);
 
   useEffect(() => {
     checkLocationPermission().then((permission) => {
@@ -102,6 +122,7 @@ export default function Travel({ match }) {
     };
   }, []);
 
+  // set start coords to current location for the first time when startcoord is undefined
   useEffect(() => {
     if (
       (startCoords.lat === undefined || startCoords.lon === undefined) &&
@@ -115,9 +136,9 @@ export default function Travel({ match }) {
     }
   }, [currentCoords, startCoords]);
 
+  // set destination or start coords to center coords with handling choosing state and selected location
   const functionSetter = useRef(null);
 
-  // handles choosing state and selected location
   const handleChooseLocation = (setFunction) => {
     navigation.push(chooseLocationPath.current);
     functionSetter.current = setFunction;
@@ -174,12 +195,7 @@ export default function Travel({ match }) {
             <IonButton
               shape="round"
               color={currentCoords.focus ? "primary" : "light"}
-              onClick={() => {
-                setCurrentCoords((prevState) => ({
-                  ...prevState,
-                  focus: true,
-                }));
-              }}
+              onClick={() => handleCurrentFocus()}
             >
               <IonIcon slot="icon-only" icon={locate}></IonIcon>
             </IonButton>
@@ -279,10 +295,10 @@ export default function Travel({ match }) {
         </span>
       }
       currentCoords={currentCoords}
-      setCurrentCoords={setCurrentCoords}
       setCenterCoords={setCenterCoords}
       startCoords={startCoords}
       destinationCoords={destinationCoords}
+      setMapEvents={setMapEvents}
     ></MapPage>
   );
 }

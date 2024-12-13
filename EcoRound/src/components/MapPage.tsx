@@ -29,10 +29,10 @@ export default function Travel({
   topContent,
   bottomContent,
   currentCoords,
-  setCurrentCoords,
   setCenterCoords,
   startCoords,
   destinationCoords,
+  setMapEvents,
 }) {
   return (
     <IonPage>
@@ -42,10 +42,10 @@ export default function Travel({
         <div className="fixed h-screen top-0 w-screen -z-30">
           <Map
             currentCoords={currentCoords}
-            setCurrentCoords={setCurrentCoords}
             setCenterCoords={setCenterCoords}
             startCoords={startCoords}
             destinationCoords={destinationCoords}
+            setMapEvents={setMapEvents}
           />
         </div>
         {bottomContent}
