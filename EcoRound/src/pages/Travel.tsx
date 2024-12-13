@@ -29,7 +29,7 @@ import Map from "../components/Map";
 import { Route } from "react-router-dom";
 import MapPage from "../components/MapPage";
 import { map } from "leaflet";
-import { c } from "vitest/dist/reporters-5f784f42";
+import api from "../function/api.js";
 
 export default function Travel({ match }) {
   const navigation = useIonRouter();
@@ -55,10 +55,12 @@ export default function Travel({ match }) {
   const [startCoords, setStartCoords] = useState({
     lat: undefined,
     lon: undefined,
+    label: "",
   });
   const [destinationCoords, setDestinationCoords] = useState({
     lat: undefined,
     lon: undefined,
+    label: "",
   });
   const [centerCoords, setCenterCoords] = useState({
     lat: undefined,
@@ -75,7 +77,6 @@ export default function Travel({ match }) {
     if (mapEvents.dragging) {
       setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
     }
-    console.log("dragging", mapEvents.dragging);
   }, [mapEvents]);
 
   // Get current location
@@ -167,6 +168,35 @@ export default function Travel({ match }) {
       setChoosingLocation(false);
     }
   }, [location.pathname]);
+
+  // fetching coordinate names
+  const fetchPlaceName = async () => {
+    try {
+      const response = await api.getPlaceName(
+        centerCoords.lat,
+        centerCoords.lon
+      );
+      console.log(response);
+      setCenterCoords((prevState) => ({
+        ...prevState,
+        label: response.data.name,
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (choosingLocation && !mapEvents.dragging) {
+      if (centerCoords.lat && centerCoords.lon) {
+        fetchPlaceName();
+      }
+    }
+  }, [mapEvents]);
+
+  useEffect(() => {
+    console.log(centerCoords);
+  }, [centerCoords]);
 
   return (
     <MapPage
@@ -267,7 +297,9 @@ export default function Travel({ match }) {
               <div className="bg-white rounded-lg p-4 flex flex-col gap-4">
                 <div className="flex gap-4 items-center">
                   <IonIcon icon={locationSharp} color="tertiary"></IonIcon>
-                  {centerCoords.lat + ", " + centerCoords.lon}
+                  {centerCoords.label
+                    ? centerCoords.label
+                    : centerCoords.lat + ", " + centerCoords.lon}
                 </div>
                 <IonButton
                   shape="round"

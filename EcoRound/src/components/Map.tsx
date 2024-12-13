@@ -45,7 +45,6 @@ export default function Map({
         mapRef.current.getZoom()
       );
     }
-    // console.log("centered", currentCoords);
   }, [currentCoords]);
 
   // fix leaflet map invalid size
@@ -63,7 +62,6 @@ export default function Map({
     const getCenterInterval = setInterval(() => {
       setCenterCoords((prevState) => ({
         ...prevState,
-        label: "",
         lat: mapRef.current.getCenter().lat,
         lon: mapRef.current.getCenter().lng,
       }));
