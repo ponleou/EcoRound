@@ -1,16 +1,10 @@
 import { StatusBar, Style } from "@capacitor/status-bar";
 import {
-  IonPage,
-  IonContent,
   IonButton,
   useIonRouter,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
   IonIcon,
   IonModal,
   IonText,
-  IonRouterOutlet,
 } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
@@ -19,16 +13,12 @@ import {
   locate,
   locationSharp,
   pin,
-  print,
   searchSharp,
   swapVertical,
 } from "ionicons/icons";
 import "./Travel.css";
 import { Geolocation } from "@capacitor/geolocation";
-import Map from "../components/Map";
-import { Route } from "react-router-dom";
 import MapPage from "../components/MapPage";
-import { map } from "leaflet";
 import { getPlaceName } from "../function/api.js";
 
 export default function Travel({ match }) {
