@@ -19,7 +19,7 @@ import {
 import "./Travel.css";
 import { Geolocation } from "@capacitor/geolocation";
 import MapPage from "../components/MapPage";
-import { getPlaceName } from "../function/api.js";
+import { getPlaceName, getBikeRoute } from "../function/api.js";
 
 export default function Travel({ match }) {
   const navigation = useIonRouter();
@@ -34,6 +34,8 @@ export default function Travel({ match }) {
     moving: false,
     dragging: false,
   });
+
+  const [mapPath, setMapPath] = useState([]);
 
   // status determines if location is available (false when permission is denied)
   const [currentCoords, setCurrentCoords] = useState({
@@ -233,6 +235,36 @@ export default function Travel({ match }) {
     }
   }, [destinationCoords]);
 
+  // fetching route
+  useEffect(() => {
+    if (
+      startCoords.lat !== undefined &&
+      startCoords.lon !== undefined &&
+      destinationCoords.lat !== undefined &&
+      destinationCoords.lon !== undefined
+    ) {
+      try {
+        getBikeRoute(
+          startCoords.lat,
+          startCoords.lon,
+          destinationCoords.lat,
+          destinationCoords.lon
+        ).then((response) => {
+          const coordinates = response.geometry.coordinates;
+
+          // Swap [lon, lat] to [lat, lon] if needed
+          const formattedCoordinates = coordinates.map((coord) => [
+            coord[1],
+            coord[0],
+          ]);
+          setMapPath(formattedCoordinates);
+        });
+      } catch (error) {
+        console.error(error); //FIXME: remove this line
+      }
+    }
+  }, [startCoords, destinationCoords]);
+
   return (
     <MapPage
       header={
@@ -370,6 +402,7 @@ export default function Travel({ match }) {
       startCoords={startCoords}
       destinationCoords={destinationCoords}
       setMapEvents={setMapEvents}
+      mapPath={mapPath}
     ></MapPage>
   );
 }

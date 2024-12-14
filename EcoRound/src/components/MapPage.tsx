@@ -4,11 +4,13 @@ import {
   CircleMarker,
   MapContainer,
   Marker,
+  Polyline,
   TileLayer,
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
+import L, { map } from "leaflet";
 
 export default function Travel({
   header,
@@ -19,6 +21,7 @@ export default function Travel({
   startCoords,
   destinationCoords,
   setMapEvents,
+  mapPath,
 }) {
   const mapRef = useRef(null);
 
@@ -122,6 +125,14 @@ export default function Travel({
                 {/* <Popup>Destination</Popup> */}
               </Marker>
             )}
+            {mapPath.length > 0 ? (
+              <Polyline
+                positions={mapPath}
+                color={getCssVariableValue("--ion-color-secondary").trim()}
+                weight={4}
+                opacity={1}
+              />
+            ) : null}
           </MapContainer>
         </div>
         {bottomContent}
