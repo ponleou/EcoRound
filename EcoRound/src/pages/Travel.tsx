@@ -134,21 +134,8 @@ export default function Travel({ match }) {
         ...prevState,
         lat: currentCoords.lat,
         lon: currentCoords.lon,
+        label: "",
       }));
-      try {
-        getPlaceName(currentCoords.lat, currentCoords.lon).then((response) => {
-          setStartCoords((prevState) => ({
-            ...prevState,
-            label: response.name,
-          }));
-        });
-      } catch (error) {
-        console.error(error); //FIXME: remove this line
-        setStartCoords((prevState) => ({
-          ...prevState,
-          label: error.message,
-        }));
-      }
     }
   }, [currentCoords, startCoords]);
 
@@ -185,7 +172,7 @@ export default function Travel({ match }) {
     }
   }, [location.pathname]);
 
-  // fetching coordinate names
+  // fetching place names for center coords
   const fetchPlaceName = async () => {
     try {
       const response = await getPlaceName(centerCoords.lat, centerCoords.lon);
@@ -214,6 +201,47 @@ export default function Travel({ match }) {
       }
     }
   }, [mapEvents]);
+
+  // fetching place names for start and destination coords is label is not set
+  useEffect(() => {
+    if (startCoords.label === "") {
+      try {
+        getPlaceName(startCoords.lat, startCoords.lon).then((response) => {
+          setStartCoords((prevState) => ({
+            ...prevState,
+            label: response.name,
+          }));
+        });
+      } catch (error) {
+        console.error(error); //FIXME: remove this line
+        setStartCoords((prevState) => ({
+          ...prevState,
+          label: error.message,
+        }));
+      }
+    }
+  }, [startCoords]);
+
+  useEffect(() => {
+    if (destinationCoords.label === "") {
+      try {
+        getPlaceName(destinationCoords.lat, destinationCoords.lon).then(
+          (response) => {
+            setDestinationCoords((prevState) => ({
+              ...prevState,
+              label: response.name,
+            }));
+          }
+        );
+      } catch (error) {
+        console.error(error); //FIXME: remove this line
+        setDestinationCoords((prevState) => ({
+          ...prevState,
+          label: error.message,
+        }));
+      }
+    }
+  }, [destinationCoords]);
 
   return (
     <MapPage
@@ -255,7 +283,7 @@ export default function Travel({ match }) {
             className="rounded-t-3l"
             trigger="open-modal"
             isOpen={openModal}
-            initialBreakpoint={0.5}
+            initialBreakpoint={0.25}
             breakpoints={[0.05, 0.25, 0.5, 0.75]}
             backdropDismiss={false}
             backdropBreakpoint={0.5}

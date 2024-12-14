@@ -1,6 +1,6 @@
 import { CapacitorHttp } from "@capacitor/core";
 
-const baseUrl = "http://10.0.2.2:5000/api";
+const baseUrl = "http://10.141.55.82:5000/api";
 
 export const getPlaceName = async (lat, lon) => {
   const response = await CapacitorHttp.request({
