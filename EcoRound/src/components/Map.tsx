@@ -25,7 +25,12 @@ export default function Map({
   // map events
   function MapEvents() {
     useMapEvents({
-      // stop focusing on current location when map is dragged
+      movestart: () => {
+        setMapEvents((prevState) => ({ ...prevState, moving: true }));
+      },
+      moveend: () => {
+        setMapEvents((prevState) => ({ ...prevState, moving: false }));
+      },
       dragstart: () => {
         setMapEvents((prevState) => ({ ...prevState, dragging: true }));
       },

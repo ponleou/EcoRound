@@ -41,6 +41,7 @@ export default function Travel({ match }) {
   const [searchInput, setSearchInput] = useState("");
 
   const [mapEvents, setMapEvents] = useState({
+    moving: false,
     dragging: false,
   });
 
@@ -134,6 +135,20 @@ export default function Travel({ match }) {
         lat: currentCoords.lat,
         lon: currentCoords.lon,
       }));
+      try {
+        getPlaceName(currentCoords.lat, currentCoords.lon).then((response) => {
+          setStartCoords((prevState) => ({
+            ...prevState,
+            label: response.name,
+          }));
+        });
+      } catch (error) {
+        console.error(error); //FIXME: remove this line
+        setStartCoords((prevState) => ({
+          ...prevState,
+          label: error.message,
+        }));
+      }
     }
   }, [currentCoords, startCoords]);
 
@@ -189,7 +204,7 @@ export default function Travel({ match }) {
 
   useEffect(() => {
     if (choosingLocation) {
-      if (!mapEvents.dragging && centerCoords.lat && centerCoords.lon) {
+      if (!mapEvents.moving && centerCoords.lat && centerCoords.lon) {
         fetchPlaceName();
       } else {
         setCenterCoords((prevState) => ({
