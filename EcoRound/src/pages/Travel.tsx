@@ -29,7 +29,7 @@ import Map from "../components/Map";
 import { Route } from "react-router-dom";
 import MapPage from "../components/MapPage";
 import { map } from "leaflet";
-import api from "../function/api.js";
+import { getPlaceName } from "../function/api.js";
 
 export default function Travel({ match }) {
   const navigation = useIonRouter();
@@ -151,6 +151,7 @@ export default function Travel({ match }) {
       ...prevState,
       lat: centerCoords.lat,
       lon: centerCoords.lon,
+      label: centerCoords.label,
     }));
 
     functionSetter.current = null;
@@ -172,31 +173,32 @@ export default function Travel({ match }) {
   // fetching coordinate names
   const fetchPlaceName = async () => {
     try {
-      const response = await api.getPlaceName(
-        centerCoords.lat,
-        centerCoords.lon
-      );
-      console.log(response);
+      const response = await getPlaceName(centerCoords.lat, centerCoords.lon);
       setCenterCoords((prevState) => ({
         ...prevState,
-        label: response.data.name,
+        label: response.name,
       }));
     } catch (error) {
-      console.error(error);
+      console.error(error); //FIXME: remove this line
+      setCenterCoords((prevState) => ({
+        ...prevState,
+        label: error.message,
+      }));
     }
   };
 
   useEffect(() => {
-    if (choosingLocation && !mapEvents.dragging) {
-      if (centerCoords.lat && centerCoords.lon) {
+    if (choosingLocation) {
+      if (!mapEvents.dragging && centerCoords.lat && centerCoords.lon) {
         fetchPlaceName();
+      } else {
+        setCenterCoords((prevState) => ({
+          ...prevState,
+          label: "",
+        }));
       }
     }
   }, [mapEvents]);
-
-  useEffect(() => {
-    console.log(centerCoords);
-  }, [centerCoords]);
 
   return (
     <MapPage
@@ -256,6 +258,8 @@ export default function Travel({ match }) {
                   {startCoords.lat === undefined ||
                   startCoords.lon === undefined
                     ? "Starting location"
+                    : startCoords.label !== ""
+                    ? startCoords.label
                     : startCoords.lat + ", " + startCoords.lon}
                 </IonText>
                 <IonButton
@@ -277,6 +281,8 @@ export default function Travel({ match }) {
                   {destinationCoords.lat === undefined ||
                   destinationCoords.lon === undefined
                     ? "Set destination"
+                    : destinationCoords.label !== ""
+                    ? destinationCoords.label
                     : destinationCoords.lat + ", " + destinationCoords.lon}
                 </IonText>
               </div>

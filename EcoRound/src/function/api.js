@@ -1,14 +1,13 @@
-import axios from "axios";
+import { CapacitorHttp } from "@capacitor/core";
 
-const api = axios.create({
-  baseURL: "http://localhost:5000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const baseUrl = "http://10.0.2.2:5000/api";
 
-export default {
-  getPlaceName(lat, lon) {
-    return api.get(`/place_name?lat=${lat}&lon=${lon}`);
-  },
+export const getPlaceName = async (lat, lon) => {
+  const response = await CapacitorHttp.request({
+    url: `${baseUrl}/place_name?lat=${lat}&lon=${lon}`,
+    headers: { "Content-Type": "application/json" },
+    method: "GET",
+  });
+
+  return response.data;
 };
