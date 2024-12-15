@@ -11,6 +11,7 @@ import HeaderBar from "../components/HeaderBar";
 import {
   bicycle,
   car,
+  chevronForward,
   compass,
   ellipsisVertical,
   locate,
@@ -29,6 +30,7 @@ import {
   getCarRoute,
   getWalkRoute,
 } from "../function/api.js";
+import RouteCardItem from "../components/RouteCardItem";
 
 export default function Travel({ match }) {
   const navigation = useIonRouter();
@@ -179,6 +181,24 @@ export default function Travel({ match }) {
     }));
 
     functionSetter.current = null;
+  };
+
+  const handleCoordSwap = () => {
+    const temp = destinationCoords;
+
+    setDestinationCoords((prevState) => ({
+      ...prevState,
+      lat: startCoords.lat,
+      lon: startCoords.lon,
+      label: startCoords.label,
+    }));
+
+    setStartCoords((prevState) => ({
+      ...prevState,
+      lat: temp.lat,
+      lon: temp.lon,
+      label: temp.label,
+    }));
   };
 
   // modify pages based on route
@@ -382,9 +402,11 @@ export default function Travel({ match }) {
                 </p>
                 <IonButton
                   size="small"
-                  color="light"
+                  fill="clear"
+                  color="dark"
                   className="row-span-3"
                   shape="round"
+                  onClick={() => handleCoordSwap()}
                 >
                   <IonIcon slot="icon-only" icon={swapVertical}></IonIcon>
                 </IonButton>
@@ -407,71 +429,11 @@ export default function Travel({ match }) {
               </div>
               {/* Card 2 */}
               <div className="bg-white rounded-lg p-4 flex flex-col gap-2">
-                <div className="flex justify-between px-4">
-                  <div className="flex flex-col justify-center gap-1">
-                    <IonIcon size="large" icon={walk}></IonIcon>
-                    <p className="text-xs w-full text-center">
-                      <IonText>Walk</IonText>
-                    </p>
-                  </div>
-                  <div className="text-right flex flex-col justify-between">
-                    <p>
-                      <IonText>200 Points</IonText>
-                    </p>
-                    <p className="text-xs flex gap-2">
-                      <IonText color={"secondary"}>
-                        {walkRoute.distance ? walkRoute.distance : ""}
-                      </IonText>
-                      <IonText color={"secondary"}>
-                        {walkRoute.duration ? walkRoute.duration : ""}
-                      </IonText>
-                    </p>
-                  </div>
-                </div>
+                <RouteCardItem text="Walk" icon={walk} route={walkRoute} />
                 <hr />
-                <div className="flex justify-between px-4">
-                  <div className="flex flex-col justify-center gap-1">
-                    <IonIcon size="large" icon={bicycle}></IonIcon>
-                    <p className="text-xs w-full text-center">
-                      <IonText>Bike</IonText>
-                    </p>
-                  </div>
-                  <div className="text-right flex flex-col justify-between">
-                    <p>
-                      <IonText>200 Points</IonText>
-                    </p>
-                    <p className="text-xs flex gap-2">
-                      <IonText color={"secondary"}>
-                        {bikeRoute.distance ? bikeRoute.distance : ""}
-                      </IonText>
-                      <IonText color={"secondary"}>
-                        {bikeRoute.duration ? bikeRoute.duration : ""}
-                      </IonText>
-                    </p>
-                  </div>
-                </div>
+                <RouteCardItem text="Bike" icon={bicycle} route={bikeRoute} />
                 <hr />
-                <div className="flex justify-between px-4">
-                  <div className="flex flex-col justify-center gap-1">
-                    <IonIcon size="large" icon={car}></IonIcon>
-                    <p className="text-xs w-full text-center">
-                      <IonText>Car</IonText>
-                    </p>
-                  </div>
-                  <div className="text-right flex flex-col justify-between">
-                    <p>
-                      <IonText>200 Points</IonText>
-                    </p>
-                    <p className="text-xs flex gap-2">
-                      <IonText color={"secondary"}>
-                        {carRoute.distance ? carRoute.distance : ""}
-                      </IonText>
-                      <IonText color={"secondary"}>
-                        {carRoute.duration ? carRoute.duration : ""}
-                      </IonText>
-                    </p>
-                  </div>
-                </div>
+                <RouteCardItem text="Car" icon={car} route={carRoute} />
               </div>
               {/* Card 3 */}
               <div className="bg-white">tes2</div>
