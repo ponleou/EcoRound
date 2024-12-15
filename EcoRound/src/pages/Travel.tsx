@@ -9,17 +9,26 @@ import {
 import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
 import {
+  bicycle,
+  car,
+  compass,
   ellipsisVertical,
   locate,
   locationSharp,
   pin,
   searchSharp,
   swapVertical,
+  walk,
 } from "ionicons/icons";
 import "./Travel.css";
 import { Geolocation } from "@capacitor/geolocation";
 import MapPage from "../components/MapPage";
-import { getPlaceName, getBikeRoute } from "../function/api.js";
+import {
+  getPlaceName,
+  getBikeRoute,
+  getCarRoute,
+  getWalkRoute,
+} from "../function/api.js";
 
 export default function Travel({ match }) {
   const navigation = useIonRouter();
@@ -36,6 +45,27 @@ export default function Travel({ match }) {
   });
 
   const [mapPath, setMapPath] = useState([]);
+
+  const [carRoute, setCarRoute] = useState({
+    coordinates: [],
+    distance: "",
+    duration: "",
+    steps: {},
+  });
+
+  const [bikeRoute, setBikeRoute] = useState({
+    coordinates: [],
+    distance: "",
+    duration: "",
+    steps: {},
+  });
+
+  const [walkRoute, setWalkRoute] = useState({
+    coordinates: [],
+    distance: "",
+    duration: "",
+    steps: {},
+  });
 
   // status determines if location is available (false when permission is denied)
   const [currentCoords, setCurrentCoords] = useState({
@@ -165,16 +195,17 @@ export default function Travel({ match }) {
   }, [location.pathname]);
 
   // fetching place names for center coords
-  const fetchPlaceName = async () => {
+  const fetchPlaceName = async (coords, setCoords) => {
     try {
-      const response = await getPlaceName(centerCoords.lat, centerCoords.lon);
-      setCenterCoords((prevState) => ({
-        ...prevState,
-        label: response.name,
-      }));
+      getPlaceName(coords.lat, coords.lon).then((response) => {
+        setCoords((prevState) => ({
+          ...prevState,
+          label: response.name,
+        }));
+      });
     } catch (error) {
       console.error(error); //FIXME: remove this line
-      setCenterCoords((prevState) => ({
+      setCoords((prevState) => ({
         ...prevState,
         label: error.message,
       }));
@@ -184,7 +215,7 @@ export default function Travel({ match }) {
   useEffect(() => {
     if (choosingLocation) {
       if (!mapEvents.moving && centerCoords.lat && centerCoords.lon) {
-        fetchPlaceName();
+        fetchPlaceName(centerCoords, setCenterCoords);
       } else {
         setCenterCoords((prevState) => ({
           ...prevState,
@@ -196,46 +227,85 @@ export default function Travel({ match }) {
 
   // fetching place names for start and destination coords is label is not set
   useEffect(() => {
-    if (startCoords.label === "") {
-      try {
-        getPlaceName(startCoords.lat, startCoords.lon).then((response) => {
-          setStartCoords((prevState) => ({
-            ...prevState,
-            label: response.name,
-          }));
-        });
-      } catch (error) {
-        console.error(error); //FIXME: remove this line
-        setStartCoords((prevState) => ({
-          ...prevState,
-          label: error.message,
-        }));
-      }
+    if (
+      startCoords.label === "" &&
+      startCoords.lat !== undefined &&
+      startCoords.lon !== undefined
+    ) {
+      fetchPlaceName(startCoords, setStartCoords);
     }
   }, [startCoords]);
 
   useEffect(() => {
-    if (destinationCoords.label === "") {
-      try {
-        getPlaceName(destinationCoords.lat, destinationCoords.lon).then(
-          (response) => {
-            setDestinationCoords((prevState) => ({
-              ...prevState,
-              label: response.name,
-            }));
-          }
-        );
-      } catch (error) {
-        console.error(error); //FIXME: remove this line
-        setDestinationCoords((prevState) => ({
-          ...prevState,
-          label: error.message,
-        }));
-      }
+    if (
+      destinationCoords.label === "" &&
+      destinationCoords.lat !== undefined &&
+      destinationCoords.lon !== undefined
+    ) {
+      fetchPlaceName(destinationCoords, setDestinationCoords);
     }
   }, [destinationCoords]);
 
   // fetching route
+  const fetchRoutes = async (startCoords, destinationCoords) => {
+    try {
+      const fetchedCarRoute = await getCarRoute(
+        startCoords.lat,
+        startCoords.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+      const fetchedBikeRoute = await getBikeRoute(
+        startCoords.lat,
+        startCoords.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+      const fetchedWalkRoute = await getWalkRoute(
+        startCoords.lat,
+        startCoords.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+
+      const fetchedRouteArray = [
+        fetchedWalkRoute,
+        fetchedBikeRoute,
+        fetchedCarRoute,
+      ];
+      const setRouteArray = [setWalkRoute, setBikeRoute, setCarRoute];
+
+      for (let i = 0; i < setRouteArray.length; i++) {
+        let setFunction = setRouteArray[i];
+
+        let distance = (
+          fetchedRouteArray[i].properties.segments[0].distance / 1000
+        ).toFixed(2);
+
+        let durationHr = Math.trunc(
+          fetchedRouteArray[i].properties.segments[0].duration / 3600
+        );
+        let durationMin =
+          fetchedRouteArray[i].properties.segments[0].duration / 60 -
+          durationHr * 60;
+
+        setFunction((prevState) => ({
+          ...prevState,
+          coordinates: fetchedRouteArray[i].geometry.coordinates.map(
+            (coord) => [coord[1], coord[0]]
+          ),
+          distance: `${distance} km`,
+          duration:
+            (durationHr > 0 ? `${durationHr.toFixed(0)} hr ` : "") +
+            `${durationMin.toFixed(0)} min`,
+          steps: fetchedRouteArray[i].properties.segments[0].steps,
+        }));
+      }
+    } catch (error) {
+      console.log(error); //FIXME: remove
+    }
+  };
+
   useEffect(() => {
     if (
       startCoords.lat !== undefined &&
@@ -243,25 +313,7 @@ export default function Travel({ match }) {
       destinationCoords.lat !== undefined &&
       destinationCoords.lon !== undefined
     ) {
-      try {
-        getBikeRoute(
-          startCoords.lat,
-          startCoords.lon,
-          destinationCoords.lat,
-          destinationCoords.lon
-        ).then((response) => {
-          const coordinates = response.geometry.coordinates;
-
-          // Swap [lon, lat] to [lat, lon] if needed
-          const formattedCoordinates = coordinates.map((coord) => [
-            coord[1],
-            coord[0],
-          ]);
-          setMapPath(formattedCoordinates);
-        });
-      } catch (error) {
-        console.error(error); //FIXME: remove this line
-      }
+      fetchRoutes(startCoords, destinationCoords);
     }
   }, [startCoords, destinationCoords]);
 
@@ -315,18 +367,19 @@ export default function Travel({ match }) {
               {/* Card 1 */}
               <div className="bg-white rounded-lg grid grid-cols-[auto_1fr_auto] grid-rows-3 p-4 gap-x-4 items-center">
                 <IonIcon color="secondary" icon={locate}></IonIcon>
-                <IonText
-                  className="truncate"
-                  class="ion-padding-horizontal"
+                <p
+                  className="truncate w-full"
                   onClick={() => handleChooseLocation(setStartCoords)}
                 >
-                  {startCoords.lat === undefined ||
-                  startCoords.lon === undefined
-                    ? "Starting location"
-                    : startCoords.label !== ""
-                    ? startCoords.label
-                    : startCoords.lat + ", " + startCoords.lon}
-                </IonText>
+                  <IonText class="ion-padding-horizontal">
+                    {startCoords.lat === undefined ||
+                    startCoords.lon === undefined
+                      ? "Starting location"
+                      : startCoords.label !== ""
+                      ? startCoords.label
+                      : startCoords.lat + ", " + startCoords.lon}
+                  </IonText>
+                </p>
                 <IonButton
                   size="small"
                   color="light"
@@ -338,24 +391,87 @@ export default function Travel({ match }) {
                 <IonIcon icon={ellipsisVertical}></IonIcon>
                 <hr />
                 <IonIcon color="tertiary" icon={locationSharp}></IonIcon>
-                <IonText
-                  className="truncate"
-                  class="ion-padding-horizontal"
+                <p
+                  className="truncate w-full"
                   onClick={() => handleChooseLocation(setDestinationCoords)}
                 >
-                  {destinationCoords.lat === undefined ||
-                  destinationCoords.lon === undefined
-                    ? "Set destination"
-                    : destinationCoords.label !== ""
-                    ? destinationCoords.label
-                    : destinationCoords.lat + ", " + destinationCoords.lon}
-                </IonText>
+                  <IonText class="ion-padding-horizontal">
+                    {destinationCoords.lat === undefined ||
+                    destinationCoords.lon === undefined
+                      ? "Set destination"
+                      : destinationCoords.label !== ""
+                      ? destinationCoords.label
+                      : destinationCoords.lat + ", " + destinationCoords.lon}
+                  </IonText>
+                </p>
               </div>
               {/* Card 2 */}
-              <div className="bg-white">
-                {"lat:" + currentCoords.lat + ", " + "lon:" + currentCoords.lon}
-                <br />
-                {currentCoords.status ? "" : "Location not available"}
+              <div className="bg-white rounded-lg p-4 flex flex-col gap-2">
+                <div className="flex justify-between px-4">
+                  <div className="flex flex-col justify-center gap-1">
+                    <IonIcon size="large" icon={walk}></IonIcon>
+                    <p className="text-xs w-full text-center">
+                      <IonText>Walk</IonText>
+                    </p>
+                  </div>
+                  <div className="text-right flex flex-col justify-between">
+                    <p>
+                      <IonText>200 Points</IonText>
+                    </p>
+                    <p className="text-xs flex gap-2">
+                      <IonText color={"secondary"}>
+                        {walkRoute.distance ? walkRoute.distance : ""}
+                      </IonText>
+                      <IonText color={"secondary"}>
+                        {walkRoute.duration ? walkRoute.duration : ""}
+                      </IonText>
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div className="flex justify-between px-4">
+                  <div className="flex flex-col justify-center gap-1">
+                    <IonIcon size="large" icon={bicycle}></IonIcon>
+                    <p className="text-xs w-full text-center">
+                      <IonText>Bike</IonText>
+                    </p>
+                  </div>
+                  <div className="text-right flex flex-col justify-between">
+                    <p>
+                      <IonText>200 Points</IonText>
+                    </p>
+                    <p className="text-xs flex gap-2">
+                      <IonText color={"secondary"}>
+                        {bikeRoute.distance ? bikeRoute.distance : ""}
+                      </IonText>
+                      <IonText color={"secondary"}>
+                        {bikeRoute.duration ? bikeRoute.duration : ""}
+                      </IonText>
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div className="flex justify-between px-4">
+                  <div className="flex flex-col justify-center gap-1">
+                    <IonIcon size="large" icon={car}></IonIcon>
+                    <p className="text-xs w-full text-center">
+                      <IonText>Car</IonText>
+                    </p>
+                  </div>
+                  <div className="text-right flex flex-col justify-between">
+                    <p>
+                      <IonText>200 Points</IonText>
+                    </p>
+                    <p className="text-xs flex gap-2">
+                      <IonText color={"secondary"}>
+                        {carRoute.distance ? carRoute.distance : ""}
+                      </IonText>
+                      <IonText color={"secondary"}>
+                        {carRoute.duration ? carRoute.duration : ""}
+                      </IonText>
+                    </p>
+                  </div>
+                </div>
               </div>
               {/* Card 3 */}
               <div className="bg-white">tes2</div>
