@@ -268,61 +268,103 @@ export default function Travel({ match }) {
 
   // fetching route
   const fetchRoutes = async (startCoords, destinationCoords) => {
+    let defaultFetchedObject = {
+      bbox: [],
+      geometry: {
+        coordinates: [],
+        type: "",
+      },
+      properties: {
+        segments: [
+          {
+            distance: 0,
+            duration: 0,
+            steps: [],
+          },
+        ],
+        summary: {
+          distance: 0,
+          duration: 0,
+        },
+        way_points: [],
+      },
+      type: "",
+    };
+
+    let fetchedWalkRoute = { ...defaultFetchedObject };
+    let fetchedBikeRoute = { ...defaultFetchedObject };
+    let fetchedCarRoute = { ...defaultFetchedObject };
+
     try {
-      const fetchedCarRoute = await getCarRoute(
+      fetchedWalkRoute = await getWalkRoute(
         startCoords.lat,
         startCoords.lon,
         destinationCoords.lat,
         destinationCoords.lon
       );
-      const fetchedBikeRoute = await getBikeRoute(
-        startCoords.lat,
-        startCoords.lon,
-        destinationCoords.lat,
-        destinationCoords.lon
-      );
-      const fetchedWalkRoute = await getWalkRoute(
-        startCoords.lat,
-        startCoords.lon,
-        destinationCoords.lat,
-        destinationCoords.lon
-      );
-
-      const fetchedRouteArray = [
-        fetchedWalkRoute,
-        fetchedBikeRoute,
-        fetchedCarRoute,
-      ];
-      const setRouteArray = [setWalkRoute, setBikeRoute, setCarRoute];
-
-      for (let i = 0; i < setRouteArray.length; i++) {
-        let setFunction = setRouteArray[i];
-
-        let distance = (
-          fetchedRouteArray[i].properties.segments[0].distance / 1000
-        ).toFixed(2);
-
-        let durationHr = Math.trunc(
-          fetchedRouteArray[i].properties.segments[0].duration / 3600
-        );
-        let durationMin =
-          fetchedRouteArray[i].properties.segments[0].duration / 60 -
-          durationHr * 60;
-
-        setFunction((prevState) => ({
-          ...prevState,
-          coordinates: fetchedRouteArray[i].geometry.coordinates.map(
-            (coord) => [coord[1], coord[0]]
-          ),
-          distance: `${distance} km`,
-          duration:
-            (durationHr > 0 ? `${durationHr.toFixed(0)} hr ` : "") +
-            `${durationMin.toFixed(0)} min`,
-          steps: fetchedRouteArray[i].properties.segments[0].steps,
-        }));
-      }
     } catch (error) {
-      console.log(error); //FIXME: remove
+      fetchedWalkRoute = { ...defaultFetchedObject };
+    }
+
+    try {
+      fetchedBikeRoute = await getBikeRoute(
+        startCoords.lat,
+        startCoords.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+      console.log("success", fetchedBikeRoute);
+    } catch (error) {
+      fetchedBikeRoute = { ...defaultFetchedObject };
+      console.log("error", error.message);
+      console.log(fetchedBikeRoute);
+    }
+
+    try {
+      fetchedCarRoute = await getCarRoute(
+        startCoords.lat,
+        startCoords.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+    } catch (error) {
+      fetchedCarRoute = { ...defaultFetchedObject };
+    }
+
+    const fetchedRouteArray = [
+      fetchedWalkRoute,
+      fetchedBikeRoute,
+      fetchedCarRoute,
+    ];
+
+    const setRouteArray = [setWalkRoute, setBikeRoute, setCarRoute];
+
+    for (let i = 0; i < setRouteArray.length; i++) {
+      let setFunction = setRouteArray[i];
+
+      let distance = (
+        fetchedRouteArray[i].properties.segments[0].distance / 1000
+      ).toFixed(2);
+
+      let durationHr = Math.trunc(
+        fetchedRouteArray[i].properties.segments[0].duration / 3600
+      );
+      let durationMin =
+        fetchedRouteArray[i].properties.segments[0].duration / 60 -
+        durationHr * 60;
+
+      setFunction((prevState) => ({
+        ...prevState,
+        coordinates: fetchedRouteArray[i].geometry.coordinates.map((coord) => [
+          coord[1],
+          coord[0],
+        ]),
+        distance: distance ? `${distance} km` : "",
+        duration:
+          (durationHr > 0 ? `${durationHr.toFixed(0)} hr ` : "") +
+          (durationMin ? `${durationMin.toFixed(0)} min` : ""),
+        steps: fetchedRouteArray[i].properties.segments[0].steps,
+      }));
     }
   };
 
