@@ -1,4 +1,6 @@
 import openrouteservice as ors
+from openrouteservice.exceptions import ApiError
+from werkzeug.exceptions import NotFound
 import os
 from dotenv import load_dotenv # type: ignore
 from flask import Flask, jsonify, request # type: ignore
@@ -21,34 +23,52 @@ def route():
 
     profile = request.args.get('profile')
 
-    print(slat, slon, dlat, dlon, profile)
-
+    coordinates = [[float(slon), float(slat)],[float(dlon), float(dlat)]]
     route = client.directions(
-        coordinates=[[float(slon), float(slat)],[float(dlon), float(dlat)]],
+        coordinates=coordinates,
         profile=profile,
         format='geojson'
     )
 
     return jsonify(route["features"][0])
+    
 
 @app.get('/api/place_name')
 def place():
     lat = request.args.get('lat')
     lon = request.args.get('lon')
-    place = client.pelias_reverse([float(lon), float(lat)])
 
+    coordinate = [float(lon), float(lat)]
+    place = client.pelias_reverse(coordinate)
     place_name = {"name": place["features"][0]["properties"]["label"]}
 
     return jsonify(place_name)
 
-# def main():
-#     route = client.directions(
-#         coordinates=[[8.34234,48.23424],[8.34423,48.26424]],
-#         profile='driving-car',
-#         format='geojson'
-#     )
 
-#     print(route)
+@app.errorhandler(ApiError)
+def orsApiError(error):
+    return jsonify(error.args[1]), error.status
 
-# if __name__ == "__main__":
-#     main()
+@app.errorhandler(NotFound)
+def notFoundError(error):
+    response = {
+        "message": str(error), 
+    }
+
+    return jsonify(response), error.code
+
+@app.errorhandler(ValueError)
+def valueError (error):
+    response = {
+        "message": str(error), 
+    }
+
+    return jsonify(response), 400
+
+@app.errorhandler(Exception)
+def exceptionError(error): 
+    response = {
+        "message": str(error), 
+    }
+
+    return jsonify(response), 500
