@@ -44,6 +44,12 @@ def place():
 
     return jsonify(place_name)
 
+@app.get('/api/find_place')
+def findPlace():
+    search = request.args.get('search')
+    place = client.pelias_search(text=search)
+
+    return jsonify(place)
 
 @app.errorhandler(ApiError)
 def orsApiError(error):
