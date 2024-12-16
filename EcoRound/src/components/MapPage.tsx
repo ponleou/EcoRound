@@ -55,10 +55,11 @@ export default function Travel({
     }
   }, [currentCoords]);
 
-  // fix leaflet map invalid size
+  // methods to run when mapRef is loaded
   useEffect(() => {
     const resizeInterval = setInterval(() => {
       if (mapRef.current) {
+        // fix leaflet map invalid size
         mapRef.current.invalidateSize();
         clearInterval(resizeInterval);
       }
@@ -102,6 +103,7 @@ export default function Travel({
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapEvents />
+
             <CircleMarker
               radius={10}
               center={[currentCoords.lat, currentCoords.lon]}

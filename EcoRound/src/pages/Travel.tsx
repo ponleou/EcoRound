@@ -52,7 +52,7 @@ export default function Travel({ match }) {
     coordinates: [],
     distance: "",
     duration: "",
-    steps: {},
+    steps: [],
     error: false,
   });
 
@@ -60,7 +60,7 @@ export default function Travel({ match }) {
     coordinates: [],
     distance: "",
     duration: "",
-    steps: {},
+    steps: [],
     error: false,
   });
 
@@ -68,7 +68,7 @@ export default function Travel({ match }) {
     coordinates: [],
     distance: "",
     duration: "",
-    steps: {},
+    steps: [],
     error: false,
   });
 
@@ -284,7 +284,7 @@ export default function Travel({ match }) {
 
       // caculate values for distance and duration
       let distance = (response.properties.segments[0].distance / 1000).toFixed(
-        2
+        1
       );
 
       let durationHr = Math.trunc(
@@ -421,11 +421,26 @@ export default function Travel({ match }) {
               </div>
               {/* Card 2 */}
               <div className="bg-white rounded-lg p-4 flex flex-col gap-2">
-                <RouteCardItem text="Walk" icon={walk} route={walkRoute} />
+                <RouteCardItem
+                  text="Walk"
+                  icon={walk}
+                  route={walkRoute}
+                  setMapPath={setMapPath}
+                />
                 <hr />
-                <RouteCardItem text="Bike" icon={bicycle} route={bikeRoute} />
+                <RouteCardItem
+                  text="Bike"
+                  icon={bicycle}
+                  route={bikeRoute}
+                  setMapPath={setMapPath}
+                />
                 <hr />
-                <RouteCardItem text="Car" icon={car} route={carRoute} />
+                <RouteCardItem
+                  text="Car"
+                  icon={car}
+                  route={carRoute}
+                  setMapPath={setMapPath}
+                />
               </div>
               {/* Card 3 */}
               <div className="bg-white">tes2</div>
