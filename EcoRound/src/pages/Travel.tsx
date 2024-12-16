@@ -53,6 +53,7 @@ export default function Travel({ match }) {
     distance: "",
     duration: "",
     steps: {},
+    error: false,
   });
 
   const [bikeRoute, setBikeRoute] = useState({
@@ -60,6 +61,7 @@ export default function Travel({ match }) {
     distance: "",
     duration: "",
     steps: {},
+    error: false,
   });
 
   const [walkRoute, setWalkRoute] = useState({
@@ -67,6 +69,7 @@ export default function Travel({ match }) {
     distance: "",
     duration: "",
     steps: {},
+    error: false,
   });
 
   // status determines if location is available (false when permission is denied)
@@ -136,7 +139,6 @@ export default function Travel({ match }) {
           getCurrentCoords();
         }, 3000);
       } else if (permission === "denied") {
-        console.log("Location permission denied"); //FIXME: remove this line
         setCurrentCoords((prevState) => ({ ...prevState, status: false }));
       }
     });
@@ -217,14 +219,12 @@ export default function Travel({ match }) {
   // fetching place names for center coords
   const fetchPlaceName = async (coords, setCoords) => {
     try {
-      getPlaceName(coords.lat, coords.lon).then((response) => {
-        setCoords((prevState) => ({
-          ...prevState,
-          label: response.name,
-        }));
-      });
+      const response = await getPlaceName(coords.lat, coords.lon);
+      setCoords((prevState) => ({
+        ...prevState,
+        label: response.name,
+      }));
     } catch (error) {
-      console.error(error); //FIXME: remove this line
       setCoords((prevState) => ({
         ...prevState,
         label: error.message,
@@ -267,95 +267,36 @@ export default function Travel({ match }) {
   }, [destinationCoords]);
 
   // fetching route
-  const fetchRoutes = async (startCoords, destinationCoords) => {
-    let defaultFetchedObject = {
-      bbox: [],
-      geometry: {
-        coordinates: [],
-        type: "",
-      },
-      properties: {
-        segments: [
-          {
-            distance: 0,
-            duration: 0,
-            steps: [],
-          },
-        ],
-        summary: {
-          distance: 0,
-          duration: 0,
-        },
-        way_points: [],
-      },
-      type: "",
-    };
-
-    let fetchedWalkRoute = { ...defaultFetchedObject };
-    let fetchedBikeRoute = { ...defaultFetchedObject };
-    let fetchedCarRoute = { ...defaultFetchedObject };
-
+  const fetchRoutes = async (
+    startCoords,
+    destinationCoords,
+    fetchRouteFunction,
+    setRouteFunction
+  ) => {
     try {
-      fetchedWalkRoute = await getWalkRoute(
+      // get route
+      const response = await fetchRouteFunction(
         startCoords.lat,
         startCoords.lon,
         destinationCoords.lat,
         destinationCoords.lon
       );
-    } catch (error) {
-      fetchedWalkRoute = { ...defaultFetchedObject };
-    }
 
-    try {
-      fetchedBikeRoute = await getBikeRoute(
-        startCoords.lat,
-        startCoords.lon,
-        destinationCoords.lat,
-        destinationCoords.lon
+      // caculate values for distance and duration
+      let distance = (response.properties.segments[0].distance / 1000).toFixed(
+        2
       );
-      console.log("success", fetchedBikeRoute);
-    } catch (error) {
-      fetchedBikeRoute = { ...defaultFetchedObject };
-      console.log("error", error.message);
-      console.log(fetchedBikeRoute);
-    }
-
-    try {
-      fetchedCarRoute = await getCarRoute(
-        startCoords.lat,
-        startCoords.lon,
-        destinationCoords.lat,
-        destinationCoords.lon
-      );
-    } catch (error) {
-      fetchedCarRoute = { ...defaultFetchedObject };
-    }
-
-    const fetchedRouteArray = [
-      fetchedWalkRoute,
-      fetchedBikeRoute,
-      fetchedCarRoute,
-    ];
-
-    const setRouteArray = [setWalkRoute, setBikeRoute, setCarRoute];
-
-    for (let i = 0; i < setRouteArray.length; i++) {
-      let setFunction = setRouteArray[i];
-
-      let distance = (
-        fetchedRouteArray[i].properties.segments[0].distance / 1000
-      ).toFixed(2);
 
       let durationHr = Math.trunc(
-        fetchedRouteArray[i].properties.segments[0].duration / 3600
+        response.properties.segments[0].duration / 3600
       );
       let durationMin =
-        fetchedRouteArray[i].properties.segments[0].duration / 60 -
-        durationHr * 60;
+        response.properties.segments[0].duration / 60 - durationHr * 60;
 
-      setFunction((prevState) => ({
+      // set route information
+      setRouteFunction((prevState) => ({
         ...prevState,
-        coordinates: fetchedRouteArray[i].geometry.coordinates.map((coord) => [
+        coordinates: response.geometry.coordinates.map((coord) => [
           coord[1],
           coord[0],
         ]),
@@ -363,7 +304,14 @@ export default function Travel({ match }) {
         duration:
           (durationHr > 0 ? `${durationHr.toFixed(0)} hr ` : "") +
           (durationMin ? `${durationMin.toFixed(0)} min` : ""),
-        steps: fetchedRouteArray[i].properties.segments[0].steps,
+        steps: response.properties.segments[0].steps,
+        error: false,
+      }));
+    } catch (error) {
+      // set error if route is not found
+      setRouteFunction((prevState) => ({
+        ...prevState,
+        error: true,
       }));
     }
   };
@@ -375,7 +323,9 @@ export default function Travel({ match }) {
       destinationCoords.lat !== undefined &&
       destinationCoords.lon !== undefined
     ) {
-      fetchRoutes(startCoords, destinationCoords);
+      fetchRoutes(startCoords, destinationCoords, getWalkRoute, setWalkRoute);
+      fetchRoutes(startCoords, destinationCoords, getBikeRoute, setBikeRoute);
+      fetchRoutes(startCoords, destinationCoords, getCarRoute, setCarRoute);
     }
   }, [startCoords, destinationCoords]);
 
