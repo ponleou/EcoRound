@@ -31,6 +31,7 @@ import {
   getWalkRoute,
 } from "../function/api.js";
 import RouteCardItem from "../components/RouteCardItem";
+import SearchBar from "../components/SearchBar";
 
 export default function Travel({ match }) {
   const navigation = useIonRouter();
@@ -38,8 +39,6 @@ export default function Travel({ match }) {
   const chooseLocationPath = useRef(`${match.url}/choose-location`);
   const [choosingLocation, setChoosingLocation] = useState(false);
   const [openModal, setOpenModal] = useState(true);
-
-  const [searchInput, setSearchInput] = useState("");
 
   const [mapEvents, setMapEvents] = useState({
     moving: false,
@@ -339,19 +338,7 @@ export default function Travel({ match }) {
       }
       topContent={
         <span>
-          <div className="bg-primary flex justify-center p-4 rounded-b-3xl shadow-lg">
-            <div className="flex-grow flex rounded-full bg-white items-center justify-between pl-4">
-              <IonIcon icon={searchSharp}></IonIcon>
-              <input
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Find a location"
-                className="border-0 outline-none bg-white rounded-r-full flex-grow pl-3 pr-4 py-2"
-                type="text"
-                name=""
-                id=""
-              />
-            </div>
-          </div>
+          <SearchBar />
           <div className="flex flex-col items-end gap-4 m-4">
             <IonButton
               shape="round"
