@@ -36,15 +36,44 @@ import {
 import RouteCardItem from "../components/RouteCardItem";
 import SearchBar from "../components/SearchBar";
 import TravelCard from "../components/TravelCard";
+import SearchItem from "../components/SearchItem";
+import { render } from "@testing-library/react";
+import { i } from "vite/dist/node/types.d-aGj9QkWt";
+import { Keyboard } from "@capacitor/keyboard";
 
 export default function Travel({ match }) {
+  const renderModal = useRef(true);
+  const reloadModal = () => {
+    renderModal.current = false;
+
+    setTimeout(() => {
+      renderModal.current = true;
+    }, 10);
+  };
+
+  const defaultModalSetting = useRef({
+    isOpen: true,
+    initialBreakpoint: 0.25,
+    breakpoints: [0.05, 0.25, 0.5, 0.75],
+    backdropDismiss: false,
+    backdropBreakpoint: 0.5,
+    showBackdrop: true,
+  });
+  const [modalSettings, setModalSettings] = useState({
+    ...defaultModalSetting.current,
+  });
+
   const navigation = useIonRouter();
 
   const chooseLocationPath = useRef(`${match.url}/choose-location`);
+  const searchLocationPath = useRef(`${match.url}/search-location`);
+
   const [choosingLocation, setChoosingLocation] = useState(false);
-  const [openModal, setOpenModal] = useState(true);
+  const [searchingLocation, setSearchingLocation] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
+  const inputRef = useRef(null);
+  const inputIsFocused = useRef(false);
 
   const [mapEvents, setMapEvents] = useState({
     moving: false,
@@ -211,13 +240,46 @@ export default function Travel({ match }) {
   // modify pages based on route
   useEffect(() => {
     if (location.pathname === chooseLocationPath.current) {
-      setOpenModal(false);
+      setModalSettings({ ...defaultModalSetting.current, isOpen: false });
+
+      // reloadModal();
+
       setChoosingLocation(true);
     }
 
+    if (location.pathname === searchLocationPath.current) {
+      setModalSettings({
+        ...defaultModalSetting.current,
+        showBackdrop: false,
+        initialBreakpoint: 0.65,
+        breakpoints: [0.65],
+        backdropBreakpoint: 0.65,
+      });
+
+      reloadModal();
+
+      setSearchingLocation(true);
+
+      if (inputRef.current) {
+        const focusInterval = setInterval(() => {
+          if (!inputIsFocused.current) {
+            inputRef.current.focus();
+            clearInterval(focusInterval);
+            Keyboard.show();
+          }
+        }, 100);
+      }
+    }
+
     if (location.pathname === match.url) {
-      setOpenModal(true);
+      setModalSettings({ ...defaultModalSetting.current });
+
+      if (searchingLocation || choosingLocation) {
+        reloadModal();
+      }
+
       setChoosingLocation(false);
+      setSearchingLocation(false);
     }
   }, [location.pathname]);
 
@@ -335,14 +397,22 @@ export default function Travel({ match }) {
   }, [startCoords, destinationCoords]);
 
   const handleSearch = () => {
-    navigation.push("/travel/search", "forward");
+    if (!searchingLocation) {
+      navigation.push(searchLocationPath.current, "forward");
+    }
   };
 
   return (
     <IonPage>
       <IonHeader className="shadow-none border-0 outline-0">
         <HeaderBar
-          title={!choosingLocation ? "Travel" : "Choose location"}
+          title={
+            choosingLocation
+              ? "Choose location"
+              : searchingLocation
+              ? "Search location"
+              : "Travel"
+          }
           color="primary"
         />
       </IonHeader>
@@ -352,7 +422,12 @@ export default function Travel({ match }) {
             <span>
               <div className="bg-primary  p-4 rounded-b-3xl shadow-lg">
                 <span onClick={() => handleSearch()}>
-                  <SearchBar setSearchInput={setSearchInput} />
+                  <SearchBar
+                    inputRef={inputRef}
+                    setSearchInput={setSearchInput}
+                    disabled={!searchingLocation}
+                    isFocused={inputIsFocused.current}
+                  />
                 </span>
               </div>
               <div className="flex flex-col items-end gap-4 m-4">
@@ -368,95 +443,109 @@ export default function Travel({ match }) {
           }
           bottomContent={
             <span>
-              <IonModal
-                className="rounded-t-3l"
-                trigger="open-modal"
-                isOpen={openModal}
-                initialBreakpoint={0.25}
-                breakpoints={[0.05, 0.25, 0.5, 0.75]}
-                backdropDismiss={false}
-                backdropBreakpoint={0.5}
-              >
-                <div className="bg-primary h-full px-4 pb-4 pt-6 flex flex-col gap-4">
+              {renderModal.current && (
+                <IonModal
+                  className="rounded-t-3l"
+                  trigger="open-modal"
+                  isOpen={modalSettings.isOpen}
+                  initialBreakpoint={modalSettings.initialBreakpoint}
+                  breakpoints={modalSettings.breakpoints}
+                  backdropDismiss={modalSettings.backdropDismiss}
+                  backdropBreakpoint={modalSettings.backdropBreakpoint}
+                  showBackdrop={modalSettings.showBackdrop}
+                  keyboardClose={false}
+                >
                   {/* Cards inside modal */}
-                  {/* Card 1 */}
-                  <TravelCard>
-                    <div className="grid grid-cols-[auto_1fr_auto] grid-rows-3 gap-x-4 items-center">
-                      {" "}
-                      {/* TODO: create a card component */}
-                      <IonIcon color="secondary" icon={locate}></IonIcon>
-                      <p
-                        className="truncate w-full"
-                        onClick={() => handleChooseLocation(setStartCoords)}
-                      >
-                        <IonText class="ion-padding-horizontal">
-                          {startCoords.lat === undefined ||
-                          startCoords.lon === undefined
-                            ? "Starting location"
-                            : startCoords.label !== ""
-                            ? startCoords.label
-                            : startCoords.lat + ", " + startCoords.lon}
-                        </IonText>
-                      </p>
-                      <IonButton
-                        size="small"
-                        fill="clear"
-                        color="dark"
-                        className="row-span-3"
-                        shape="round"
-                        onClick={() => handleCoordSwap()}
-                      >
-                        <IonIcon slot="icon-only" icon={swapVertical}></IonIcon>
-                      </IonButton>
-                      <IonIcon icon={ellipsisVertical}></IonIcon>
-                      <hr />
-                      <IonIcon color="tertiary" icon={locationSharp}></IonIcon>
-                      <p
-                        className="truncate w-full"
-                        onClick={() =>
-                          handleChooseLocation(setDestinationCoords)
-                        }
-                      >
-                        <IonText class="ion-padding-horizontal">
-                          {destinationCoords.lat === undefined ||
-                          destinationCoords.lon === undefined
-                            ? "Set destination"
-                            : destinationCoords.label !== ""
-                            ? destinationCoords.label
-                            : destinationCoords.lat +
-                              ", " +
-                              destinationCoords.lon}
-                        </IonText>
-                      </p>
+                  {searchingLocation ? (
+                    <SearchItem></SearchItem>
+                  ) : (
+                    <div className="bg-primary h-full px-4 pb-4 pt-6 flex flex-col gap-4">
+                      {/* Card 1 */}
+                      <TravelCard>
+                        <div className="grid grid-cols-[auto_1fr_auto] grid-rows-3 gap-x-4 items-center">
+                          {" "}
+                          {/* TODO: create a card component */}
+                          <IonIcon color="secondary" icon={locate}></IonIcon>
+                          <p
+                            className="truncate w-full"
+                            onClick={() => handleChooseLocation(setStartCoords)}
+                          >
+                            <IonText class="ion-padding-horizontal">
+                              {startCoords.lat === undefined ||
+                              startCoords.lon === undefined
+                                ? "Starting location"
+                                : startCoords.label !== ""
+                                ? startCoords.label
+                                : startCoords.lat + ", " + startCoords.lon}
+                            </IonText>
+                          </p>
+                          <IonButton
+                            size="small"
+                            fill="clear"
+                            color="dark"
+                            className="row-span-3"
+                            shape="round"
+                            onClick={() => handleCoordSwap()}
+                          >
+                            <IonIcon
+                              slot="icon-only"
+                              icon={swapVertical}
+                            ></IonIcon>
+                          </IonButton>
+                          <IonIcon icon={ellipsisVertical}></IonIcon>
+                          <hr />
+                          <IonIcon
+                            color="tertiary"
+                            icon={locationSharp}
+                          ></IonIcon>
+                          <p
+                            className="truncate w-full"
+                            onClick={() =>
+                              handleChooseLocation(setDestinationCoords)
+                            }
+                          >
+                            <IonText class="ion-padding-horizontal">
+                              {destinationCoords.lat === undefined ||
+                              destinationCoords.lon === undefined
+                                ? "Set destination"
+                                : destinationCoords.label !== ""
+                                ? destinationCoords.label
+                                : destinationCoords.lat +
+                                  ", " +
+                                  destinationCoords.lon}
+                            </IonText>
+                          </p>
+                        </div>
+                      </TravelCard>
+                      {/* Card 2 */}
+                      <TravelCard>
+                        <div className="flex flex-col gap-2">
+                          <RouteCardItem
+                            text="Walk"
+                            icon={walk}
+                            route={walkRoute}
+                            setMapPath={setMapPath}
+                          />
+                          <hr />
+                          <RouteCardItem
+                            text="Bike"
+                            icon={bicycle}
+                            route={bikeRoute}
+                            setMapPath={setMapPath}
+                          />
+                          <hr />
+                          <RouteCardItem
+                            text="Car"
+                            icon={car}
+                            route={carRoute}
+                            setMapPath={setMapPath}
+                          />
+                        </div>
+                      </TravelCard>
                     </div>
-                  </TravelCard>
-                  {/* Card 2 */}
-                  <TravelCard>
-                    <div className="flex flex-col gap-2">
-                      <RouteCardItem
-                        text="Walk"
-                        icon={walk}
-                        route={walkRoute}
-                        setMapPath={setMapPath}
-                      />
-                      <hr />
-                      <RouteCardItem
-                        text="Bike"
-                        icon={bicycle}
-                        route={bikeRoute}
-                        setMapPath={setMapPath}
-                      />
-                      <hr />
-                      <RouteCardItem
-                        text="Car"
-                        icon={car}
-                        route={carRoute}
-                        setMapPath={setMapPath}
-                      />
-                    </div>
-                  </TravelCard>
-                </div>
-              </IonModal>
+                  )}
+                </IonModal>
+              )}
               {choosingLocation ? (
                 <div className="fixed bottom-0 left-0 right-0 bg-primary rounded-t-3xl p-4">
                   <div className="bg-white rounded-lg p-4 flex flex-col gap-4">
