@@ -13,7 +13,6 @@ import "./MapPage.css";
 import L, { map } from "leaflet";
 
 export default function Travel({
-  header,
   topContent,
   bottomContent,
   currentCoords,
@@ -55,16 +54,15 @@ export default function Travel({
     }
   }, [currentCoords]);
 
-  // methods to run when mapRef is loaded
+  // fix leaflet map invalid size
   useEffect(() => {
     const resizeInterval = setInterval(() => {
       if (mapRef.current) {
-        // fix leaflet map invalid size
         mapRef.current.invalidateSize();
         clearInterval(resizeInterval);
       }
     }, 100);
-  }, []);
+  }, [location.pathname]);
 
   // Get center coordinates of map
   useEffect(() => {
@@ -85,60 +83,57 @@ export default function Travel({
   }
 
   return (
-    <IonPage>
-      <IonHeader className="shadow-none border-0 outline-0">{header}</IonHeader>
-      <IonContent>
-        {topContent}
-        <div className="fixed h-screen top-0 w-screen -z-30">
-          <MapContainer
-            center={[currentCoords.lat, currentCoords.lon]}
-            zoom={16}
-            zoomControl={false}
-            trackResize={true}
-            bounceAtZoomLimits={false}
-            ref={mapRef}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <MapEvents />
+    <div>
+      {topContent}
+      <div className="fixed h-screen top-0 w-screen -z-30">
+        <MapContainer
+          center={[currentCoords.lat, currentCoords.lon]}
+          zoom={16}
+          zoomControl={false}
+          trackResize={true}
+          bounceAtZoomLimits={false}
+          ref={mapRef}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <MapEvents />
 
+          <CircleMarker
+            radius={10}
+            center={[currentCoords.lat, currentCoords.lon]}
+            fillColor={getCssVariableValue("--ion-color-secondary").trim()}
+            color="white"
+            fillOpacity={0.7}
+          ></CircleMarker>
+          {startCoords.lat && startCoords.lon && (
             <CircleMarker
-              radius={10}
-              center={[currentCoords.lat, currentCoords.lon]}
-              fillColor={getCssVariableValue("--ion-color-secondary").trim()}
-              color="white"
-              fillOpacity={0.7}
-            ></CircleMarker>
-            {startCoords.lat && startCoords.lon && (
-              <CircleMarker
-                radius={7}
-                center={[startCoords.lat, startCoords.lon]}
-                color={getCssVariableValue("--ion-color-primary").trim()}
-                fillColor="white"
-                fillOpacity={1}
-              >
-                {/* <Popup>Start</Popup> */}
-              </CircleMarker>
-            )}
-            {destinationCoords.lat && destinationCoords.lon && (
-              <Marker position={[destinationCoords.lat, destinationCoords.lon]}>
-                {/* <Popup>Destination</Popup> */}
-              </Marker>
-            )}
-            {mapPath.length > 0 ? (
-              <Polyline
-                positions={mapPath}
-                color={getCssVariableValue("--ion-color-secondary").trim()}
-                weight={4}
-                opacity={1}
-              />
-            ) : null}
-          </MapContainer>
-        </div>
-        {bottomContent}
-      </IonContent>
-    </IonPage>
+              radius={7}
+              center={[startCoords.lat, startCoords.lon]}
+              color={getCssVariableValue("--ion-color-primary").trim()}
+              fillColor="white"
+              fillOpacity={1}
+            >
+              {/* <Popup>Start</Popup> */}
+            </CircleMarker>
+          )}
+          {destinationCoords.lat && destinationCoords.lon && (
+            <Marker position={[destinationCoords.lat, destinationCoords.lon]}>
+              {/* <Popup>Destination</Popup> */}
+            </Marker>
+          )}
+          {mapPath.length > 0 ? (
+            <Polyline
+              positions={mapPath}
+              color={getCssVariableValue("--ion-color-secondary").trim()}
+              weight={4}
+              opacity={1}
+            />
+          ) : null}
+        </MapContainer>
+      </div>
+      {bottomContent}
+    </div>
   );
 }
