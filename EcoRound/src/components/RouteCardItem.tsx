@@ -15,15 +15,19 @@ export default function RouteCardItem({ text, icon, route, setMapPath }) {
         </p>
       </div>
 
-      {route.error ? (
-        "No routes found"
+      {!route.loaded ? (
+        <p className="font-bold items-center justify-end flex grow">
+          <IonText>No routes found</IonText>
+        </p>
       ) : (
         <div className="flex gap-4 items-center justify-between grow w-1">
           <div className="flex flex-col justify-between truncate grow">
             <p className="text-xs truncate grow">
               <IonText className="">
-                {route.steps.map((step) =>
-                  step.name !== "-" ? step.name + " > " : ""
+                {route.steps.map(
+                  (step, index) =>
+                    (step.name !== "-" ? step.name + " > " : "") +
+                    (index >= route.steps.length - 1 ? "Destination" : "")
                 )}
               </IonText>
             </p>
