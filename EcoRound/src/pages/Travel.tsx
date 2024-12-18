@@ -421,7 +421,7 @@ export default function Travel({ match }) {
         <MapPage
           topContent={
             <span>
-              <div className="bg-primary  p-4 rounded-b-3xl shadow-lg">
+              <div className="bg-primary p-4 rounded-b-3xl shadow-lg">
                 <span onClick={() => handleSearch()}>
                   <SearchBar
                     inputRef={inputRef}
@@ -462,6 +462,13 @@ export default function Travel({ match }) {
                       // Cards for search location route
                       <TravelCard>
                         <CardList>
+                          {/* TODO: add current location */}
+                          <SearchItem
+                            text={"Melbourne Central"}
+                            subText={"Melbourne VIC 3000"}
+                            distance={"12 km"}
+                          ></SearchItem>
+                          <hr />
                           <SearchItem
                             text={"Melbourne Central"}
                             subText={"Melbourne VIC 3000"}
@@ -471,7 +478,7 @@ export default function Travel({ match }) {
                       </TravelCard>
                     ) : (
                       // Cards for default travel route
-                      <div className="flex flex-col gap-4">
+                      <CardList>
                         {/* Card 1 */}
                         <TravelCard>
                           <div className="grid grid-cols-[auto_1fr_auto] grid-rows-3 gap-x-4 items-center">
@@ -556,7 +563,7 @@ export default function Travel({ match }) {
                             />
                           </CardList>
                         </TravelCard>
-                      </div>
+                      </CardList>
                     )}
                   </div>
                 </IonModal>

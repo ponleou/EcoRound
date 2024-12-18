@@ -1,4 +1,4 @@
-import { IonIcon, IonText, IonButton } from "@ionic/react";
+import { IonIcon, IonText, IonButton, IonRippleEffect } from "@ionic/react";
 import { walk, chevronForward } from "ionicons/icons";
 import IconText from "./IconText";
 
@@ -8,7 +8,7 @@ export default function RouteCardItem({ text, icon, route, setMapPath }) {
   };
 
   return (
-    <div className="flex px-2 gap-4">
+    <div className="flex px-2 gap-4 ion-activatable relative overflow-hidden py-4 rounded-md">
       <IconText icon={icon} text={text} />
 
       {!route.loaded ? (
@@ -57,6 +57,7 @@ export default function RouteCardItem({ text, icon, route, setMapPath }) {
           </div>
         </div>
       )}
+      <IonRippleEffect></IonRippleEffect>
     </div>
   );
 }
