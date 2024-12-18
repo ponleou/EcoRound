@@ -81,7 +81,7 @@ function Main() {
       hexColor.current = getCssVariableValue("--ion-color-primary-contrast");
       style.current = Style.Light;
     }
-    if (location.pathname === travelPath.current) {
+    if (location.pathname.startsWith(travelPath.current)) {
       hexColor.current = getCssVariableValue("--ion-color-primary");
       style.current = Style.Dark;
     }
