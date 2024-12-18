@@ -1,5 +1,6 @@
 import { IonIcon, IonText, IonButton } from "@ionic/react";
 import { walk, chevronForward } from "ionicons/icons";
+import IconText from "./IconText";
 
 export default function RouteCardItem({ text, icon, route, setMapPath }) {
   const handleClick = () => {
@@ -8,12 +9,7 @@ export default function RouteCardItem({ text, icon, route, setMapPath }) {
 
   return (
     <div className="flex px-2 gap-4">
-      <div className="flex flex-col justify-center gap-1 w-fit">
-        <IonIcon size="large" icon={icon}></IonIcon>
-        <p className="text-xs w-full text-center">
-          <IonText>{text}</IonText>
-        </p>
-      </div>
+      <IconText icon={icon} text={text} />
 
       {!route.loaded ? (
         <p className="font-bold items-center justify-end flex grow">

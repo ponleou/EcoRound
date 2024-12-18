@@ -40,6 +40,7 @@ import SearchItem from "../components/SearchItem";
 import { render } from "@testing-library/react";
 import { i } from "vite/dist/node/types.d-aGj9QkWt";
 import { Keyboard } from "@capacitor/keyboard";
+import CardList from "../components/CardList";
 
 export default function Travel({ match }) {
   const renderModal = useRef(true);
@@ -251,9 +252,9 @@ export default function Travel({ match }) {
       setModalSettings({
         ...defaultModalSetting.current,
         showBackdrop: false,
-        initialBreakpoint: 0.65,
-        breakpoints: [0.65],
-        backdropBreakpoint: 0.65,
+        initialBreakpoint: 0.75,
+        breakpoints: [0.75],
+        backdropBreakpoint: 0.75,
       });
 
       reloadModal();
@@ -456,94 +457,108 @@ export default function Travel({ match }) {
                   keyboardClose={false}
                 >
                   {/* Cards inside modal */}
-                  {searchingLocation ? (
-                    <SearchItem></SearchItem>
-                  ) : (
-                    <div className="bg-primary h-full px-4 pb-4 pt-6 flex flex-col gap-4">
-                      {/* Card 1 */}
+                  <div className="bg-primary h-full px-4 pb-4 pt-6">
+                    {searchingLocation ? (
+                      // Cards for search location route
                       <TravelCard>
-                        <div className="grid grid-cols-[auto_1fr_auto] grid-rows-3 gap-x-4 items-center">
-                          {" "}
-                          {/* TODO: create a card component */}
-                          <IonIcon color="secondary" icon={locate}></IonIcon>
-                          <p
-                            className="truncate w-full"
-                            onClick={() => handleChooseLocation(setStartCoords)}
-                          >
-                            <IonText class="ion-padding-horizontal">
-                              {startCoords.lat === undefined ||
-                              startCoords.lon === undefined
-                                ? "Starting location"
-                                : startCoords.label !== ""
-                                ? startCoords.label
-                                : startCoords.lat + ", " + startCoords.lon}
-                            </IonText>
-                          </p>
-                          <IonButton
-                            size="small"
-                            fill="clear"
-                            color="dark"
-                            className="row-span-3"
-                            shape="round"
-                            onClick={() => handleCoordSwap()}
-                          >
+                        <CardList>
+                          <SearchItem
+                            text={"Melbourne Central"}
+                            subText={"Melbourne VIC 3000"}
+                            distance={"12 km"}
+                          ></SearchItem>
+                        </CardList>
+                      </TravelCard>
+                    ) : (
+                      // Cards for default travel route
+                      <div className="flex flex-col gap-4">
+                        {/* Card 1 */}
+                        <TravelCard>
+                          <div className="grid grid-cols-[auto_1fr_auto] grid-rows-3 gap-x-4 items-center">
+                            {" "}
+                            {/* TODO: create a card component */}
+                            <IonIcon color="secondary" icon={locate}></IonIcon>
+                            <p
+                              className="truncate w-full"
+                              onClick={() =>
+                                handleChooseLocation(setStartCoords)
+                              }
+                            >
+                              <IonText class="ion-padding-horizontal">
+                                {startCoords.lat === undefined ||
+                                startCoords.lon === undefined
+                                  ? "Starting location"
+                                  : startCoords.label !== ""
+                                  ? startCoords.label
+                                  : startCoords.lat + ", " + startCoords.lon}
+                              </IonText>
+                            </p>
+                            <IonButton
+                              size="small"
+                              fill="clear"
+                              color="dark"
+                              className="row-span-3"
+                              shape="round"
+                              onClick={() => handleCoordSwap()}
+                            >
+                              <IonIcon
+                                slot="icon-only"
+                                icon={swapVertical}
+                              ></IonIcon>
+                            </IonButton>
+                            <IonIcon icon={ellipsisVertical}></IonIcon>
+                            <hr />
                             <IonIcon
-                              slot="icon-only"
-                              icon={swapVertical}
+                              color="tertiary"
+                              icon={locationSharp}
                             ></IonIcon>
-                          </IonButton>
-                          <IonIcon icon={ellipsisVertical}></IonIcon>
-                          <hr />
-                          <IonIcon
-                            color="tertiary"
-                            icon={locationSharp}
-                          ></IonIcon>
-                          <p
-                            className="truncate w-full"
-                            onClick={() =>
-                              handleChooseLocation(setDestinationCoords)
-                            }
-                          >
-                            <IonText class="ion-padding-horizontal">
-                              {destinationCoords.lat === undefined ||
-                              destinationCoords.lon === undefined
-                                ? "Set destination"
-                                : destinationCoords.label !== ""
-                                ? destinationCoords.label
-                                : destinationCoords.lat +
-                                  ", " +
-                                  destinationCoords.lon}
-                            </IonText>
-                          </p>
-                        </div>
-                      </TravelCard>
-                      {/* Card 2 */}
-                      <TravelCard>
-                        <div className="flex flex-col gap-2">
-                          <RouteCardItem
-                            text="Walk"
-                            icon={walk}
-                            route={walkRoute}
-                            setMapPath={setMapPath}
-                          />
-                          <hr />
-                          <RouteCardItem
-                            text="Bike"
-                            icon={bicycle}
-                            route={bikeRoute}
-                            setMapPath={setMapPath}
-                          />
-                          <hr />
-                          <RouteCardItem
-                            text="Car"
-                            icon={car}
-                            route={carRoute}
-                            setMapPath={setMapPath}
-                          />
-                        </div>
-                      </TravelCard>
-                    </div>
-                  )}
+                            <p
+                              className="truncate w-full"
+                              onClick={() =>
+                                handleChooseLocation(setDestinationCoords)
+                              }
+                            >
+                              <IonText class="ion-padding-horizontal">
+                                {destinationCoords.lat === undefined ||
+                                destinationCoords.lon === undefined
+                                  ? "Set destination"
+                                  : destinationCoords.label !== ""
+                                  ? destinationCoords.label
+                                  : destinationCoords.lat +
+                                    ", " +
+                                    destinationCoords.lon}
+                              </IonText>
+                            </p>
+                          </div>
+                        </TravelCard>
+                        {/* Card 2 */}
+                        <TravelCard>
+                          <CardList>
+                            <RouteCardItem
+                              text="Walk"
+                              icon={walk}
+                              route={walkRoute}
+                              setMapPath={setMapPath}
+                            />
+                            <hr />
+                            <RouteCardItem
+                              text="Bike"
+                              icon={bicycle}
+                              route={bikeRoute}
+                              setMapPath={setMapPath}
+                            />
+                            <hr />
+                            <RouteCardItem
+                              text="Car"
+                              icon={car}
+                              route={carRoute}
+                              setMapPath={setMapPath}
+                            />
+                          </CardList>
+                        </TravelCard>
+                      </div>
+                    )}
+                  </div>
                 </IonModal>
               )}
               {choosingLocation ? (
