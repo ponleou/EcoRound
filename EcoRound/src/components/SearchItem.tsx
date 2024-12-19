@@ -14,10 +14,21 @@ import { locationSharp } from "ionicons/icons";
 import IconText from "./IconText";
 import CardList from "./CardList";
 
-export default function SearchItem({ text, subText, distance }) {
+export default function SearchItem({
+  text,
+  subText,
+  icon = locationSharp,
+  iconText,
+  iconColor = "",
+}) {
   return (
     <div className="flex gap-4 items-center px-2 ion-activatable relative overflow-hidden py-4 rounded-md">
-      <IconText icon={locationSharp} text={distance} iconSize="small" />
+      <IconText
+        iconColor={iconColor}
+        icon={icon}
+        text={iconText}
+        iconSize="small"
+      />
       <p className="flex flex-col">
         <IonText className="font-bold">{text}</IonText>
         <IonText color={"secondary"} className="text-xs">
