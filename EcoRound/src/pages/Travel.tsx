@@ -249,6 +249,7 @@ export default function Travel({ match }) {
 
       // reloadModal();
 
+      setSearchingLocation(false);
       setChoosingLocation(true);
     }
 
@@ -263,6 +264,7 @@ export default function Travel({ match }) {
 
       reloadModal();
 
+      setChoosingLocation(false);
       setSearchingLocation(true);
 
       if (inputRef.current) {
