@@ -32,6 +32,7 @@ import {
   getBikeRoute,
   getCarRoute,
   getWalkRoute,
+  getPlaceList,
 } from "../function/api.js";
 import RouteCardItem from "../components/RouteCardItem";
 import SearchBar from "../components/SearchBar";
@@ -41,6 +42,7 @@ import { render } from "@testing-library/react";
 import { i } from "vite/dist/node/types.d-aGj9QkWt";
 import { Keyboard } from "@capacitor/keyboard";
 import CardList from "../components/CardList";
+import distance from "../function/calculateDistance";
 
 export default function Travel({ match }) {
   const renderModal = useRef(true);
@@ -73,6 +75,8 @@ export default function Travel({ match }) {
   const [searchingLocation, setSearchingLocation] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+
   const inputRef = useRef(null);
   const inputIsFocused = useRef(false);
 
@@ -299,7 +303,6 @@ export default function Travel({ match }) {
       }));
     }
   };
-
   useEffect(() => {
     if (choosingLocation) {
       if (!mapEvents.moving && centerCoords.lat && centerCoords.lon) {
@@ -403,6 +406,58 @@ export default function Travel({ match }) {
     }
   };
 
+  const [debounceSearchInput, setDebounceSearchInput] = useState("");
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebounceSearchInput(searchInput);
+    }, 500);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [searchInput]);
+
+  const searchPlace = async (text, saveResult) => {
+    try {
+      const response = await getPlaceList(
+        text,
+        centerCoords.lat,
+        centerCoords.lon
+      );
+      saveResult(
+        response.features
+          .map((place) => ({
+            name: place.properties.name,
+            subLocation: place.properties.label,
+            lat: place.geometry.coordinates[1],
+            lon: place.geometry.coordinates[0],
+            distance: currentCoords.status
+              ? distance(
+                  currentCoords.lat,
+                  currentCoords.lon,
+                  place.geometry.coordinates[1],
+                  place.geometry.coordinates[0]
+                ).toFixed(1) + " km"
+              : "",
+          }))
+          .sort((a, b) => {
+            const distanceA = parseFloat(a.distance);
+            const distanceB = parseFloat(b.distance);
+            return distanceA - distanceB;
+          })
+      );
+    } catch (error) {
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    if (debounceSearchInput !== "") {
+      searchPlace(debounceSearchInput, setSearchResults);
+    }
+  }, [debounceSearchInput]);
+
   return (
     <IonPage>
       <IonHeader className="shadow-none border-0 outline-0">
@@ -460,22 +515,30 @@ export default function Travel({ match }) {
                   <div className="bg-primary h-full px-4 pb-4 pt-6">
                     {searchingLocation ? (
                       // Cards for search location route
-                      <TravelCard>
-                        <CardList>
-                          {/* TODO: add current location */}
-                          <SearchItem
-                            text={"Melbourne Central"}
-                            subText={"Melbourne VIC 3000"}
-                            distance={"12 km"}
-                          ></SearchItem>
-                          <hr />
-                          <SearchItem
-                            text={"Melbourne Central"}
-                            subText={"Melbourne VIC 3000"}
-                            distance={"12 km"}
-                          ></SearchItem>
-                        </CardList>
-                      </TravelCard>
+                      <div className="h-3/4 overflow-scroll rounded-lg">
+                        <TravelCard>
+                          <CardList>
+                            {/* TODO: add current location */}
+                            <SearchItem
+                              text={"Current location"}
+                              subText={"Your current location"}
+                              iconText={"0 km"}
+                              icon={locate}
+                              iconColor="secondary"
+                            ></SearchItem>
+                            <hr />
+                            {searchResults.map((result, index) => (
+                              <SearchItem
+                                key={index}
+                                text={result.name}
+                                subText={result.subLocation}
+                                iconText={result.distance}
+                                iconColor="tertiary"
+                              ></SearchItem>
+                            ))}
+                          </CardList>
+                        </TravelCard>
+                      </div>
                     ) : (
                       // Cards for default travel route
                       <CardList>
