@@ -47,8 +47,9 @@ def place():
 @app.get('/api/find_place')
 def findPlace():
     search = request.args.get('search')
-    place = client.pelias_search(text=search)
-
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    place = client.pelias_search(text=search, circle_point=(float(lon), float(lat)), circle_radius=1000, validate=False, focus_point=(float(lon), float(lat)))
     return jsonify(place)
 
 @app.errorhandler(ApiError)
