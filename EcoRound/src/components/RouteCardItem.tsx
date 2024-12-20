@@ -2,11 +2,7 @@ import { IonIcon, IonText, IonButton, IonRippleEffect } from "@ionic/react";
 import { walk, chevronForward } from "ionicons/icons";
 import IconText from "./IconText";
 
-export default function RouteCardItem({ text, icon, route, setMapPath }) {
-  const handleClick = () => {
-    setMapPath(route.coordinates);
-  };
-
+export default function RouteCardItem({ text, icon, route }) {
   return (
     <div className="flex px-2 gap-4 ion-activatable relative overflow-hidden py-4 rounded-md">
       <IconText icon={icon} text={text} />
@@ -43,12 +39,7 @@ export default function RouteCardItem({ text, icon, route, setMapPath }) {
               </p>
             </div>
             {route.coordinates.length > 0 ? (
-              <IonButton
-                onClick={() => handleClick()}
-                fill="clear"
-                color="dark"
-                shape="round"
-              >
+              <IonButton fill="clear" color="dark" shape="round">
                 <IonIcon slot="icon-only" icon={chevronForward}></IonIcon>
               </IonButton>
             ) : (
