@@ -85,10 +85,7 @@ export default function Travel({
 
   useEffect(() => {
     if (setCenter.lat !== undefined && setCenter.lon !== undefined) {
-      mapRef.current.setView(
-        [setCenter.lat, setCenter.lon],
-        mapRef.current.getZoom()
-      );
+      mapRef.current.setView([setCenter.lat, setCenter.lon], 20);
     }
   }, [setCenter]);
 

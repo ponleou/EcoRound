@@ -8,6 +8,7 @@ export default function SearchBar({
   inputRef = null,
   disabled = false,
   isFocused = null,
+  searchInput,
 }) {
   return (
     <div className="flex justify-center">
@@ -19,6 +20,7 @@ export default function SearchBar({
           ref={inputRef}
           readOnly={disabled}
           onChange={(e) => setSearchInput(e.target.value)}
+          value={searchInput}
           onFocus={() => {
             if (isFocused !== null) isFocused(true);
           }}

@@ -502,6 +502,22 @@ export default function Travel({ match }) {
     }
   }, [debounceSearchInput]);
 
+  const handleSelectResult = (lat, lon) => {
+    setCenter((prevState) => ({
+      ...prevState,
+      lat: lat,
+      lon: lon,
+    }));
+
+    setCurrentCoords((prevState) => ({
+      ...prevState,
+      focus: false,
+    }));
+    setSearchInput("");
+    setSearchResults([]);
+    navigation.goBack();
+  };
+
   return (
     <IonPage>
       <IonHeader className="shadow-none border-0 outline-0">
@@ -527,6 +543,7 @@ export default function Travel({ match }) {
                     setSearchInput={setSearchInput}
                     disabled={!searchingLocation}
                     isFocused={inputIsFocused.current}
+                    searchInput={searchInput}
                   />
                 </span>
               </div>
@@ -563,22 +580,37 @@ export default function Travel({ match }) {
                         <TravelCard>
                           <CardList>
                             {/* TODO: add current location */}
-                            <SearchItem
-                              text={"Current location"}
-                              subText={"Your current location"}
-                              iconText={"0 km"}
-                              icon={locate}
-                              iconColor="secondary"
-                            ></SearchItem>
+                            <span
+                              onClick={() =>
+                                handleSelectResult(
+                                  currentCoords.lat,
+                                  currentCoords.lon
+                                )
+                              }
+                            >
+                              <SearchItem
+                                text={"Current location"}
+                                subText={"Your current location"}
+                                iconText={"0 km"}
+                                icon={locate}
+                                iconColor="secondary"
+                              ></SearchItem>
+                            </span>
                             <hr />
                             {searchResults.map((result, index) => (
-                              <SearchItem
+                              <span
                                 key={index}
-                                text={result.name}
-                                subText={result.subLocation}
-                                iconText={result.distance}
-                                iconColor="tertiary"
-                              ></SearchItem>
+                                onClick={() =>
+                                  handleSelectResult(result.lat, result.lon)
+                                }
+                              >
+                                <SearchItem
+                                  text={result.name}
+                                  subText={result.subLocation}
+                                  iconText={result.distance}
+                                  iconColor="tertiary"
+                                ></SearchItem>
+                              </span>
                             ))}
                           </CardList>
                         </TravelCard>
