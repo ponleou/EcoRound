@@ -21,6 +21,7 @@ export default function Travel({
   destinationCoords,
   setMapEvents,
   mapPath,
+  setCenter = { lat: undefined, lon: undefined },
 }) {
   const mapRef = useRef(null);
 
@@ -81,6 +82,15 @@ export default function Travel({
       variableName
     );
   }
+
+  useEffect(() => {
+    if (setCenter.lat !== undefined && setCenter.lon !== undefined) {
+      mapRef.current.setView(
+        [setCenter.lat, setCenter.lon],
+        mapRef.current.getZoom()
+      );
+    }
+  }, [setCenter]);
 
   return (
     <div>

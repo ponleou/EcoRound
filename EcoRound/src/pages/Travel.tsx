@@ -45,7 +45,34 @@ import CardList from "../components/CardList";
 import distance from "../function/calculateDistance";
 
 export default function Travel({ match }) {
+  /*
+  ========== GLOBAL FUNCTIONS ==========
+  */
+  // fetching place names for center coords
+  const fetchPlaceName = async (coords, setCoords) => {
+    try {
+      const response = await getPlaceName(coords.lat, coords.lon);
+      setCoords((prevState) => ({
+        ...prevState,
+        label: response.name,
+      }));
+    } catch (error) {
+      setCoords((prevState) => ({
+        ...prevState,
+        label: error.message,
+      }));
+    }
+  };
+
+  const navigation = useIonRouter();
+
+  /*
+  ========== TRAVEL PAGE NAVIGATIONS ==========
+  */
+  // true if modal is rendered, false if not
   const renderModal = useRef(true);
+
+  // reload modal by changing renderModal value to false and then back to true
   const reloadModal = () => {
     renderModal.current = false;
 
@@ -54,6 +81,7 @@ export default function Travel({ match }) {
     }, 10);
   };
 
+  // saving default modal settings
   const defaultModalSetting = useRef({
     isOpen: true,
     initialBreakpoint: 0.25,
@@ -62,185 +90,16 @@ export default function Travel({ match }) {
     backdropBreakpoint: 0.5,
     showBackdrop: true,
   });
+  // changing modal settings
   const [modalSettings, setModalSettings] = useState({
     ...defaultModalSetting.current,
   });
-
-  const navigation = useIonRouter();
 
   const chooseLocationPath = useRef(`${match.url}/choose-location`);
   const searchLocationPath = useRef(`${match.url}/search-location`);
 
   const [choosingLocation, setChoosingLocation] = useState(false);
   const [searchingLocation, setSearchingLocation] = useState(false);
-
-  const [searchInput, setSearchInput] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-
-  const inputRef = useRef(null);
-  const inputIsFocused = useRef(false);
-
-  const [mapEvents, setMapEvents] = useState({
-    moving: false,
-    dragging: false,
-  });
-
-  const [mapPath, setMapPath] = useState([]);
-
-  const [carRoute, setCarRoute] = useState({
-    coordinates: [],
-    distance: "",
-    duration: "",
-    steps: [],
-    loaded: false,
-  });
-
-  const [bikeRoute, setBikeRoute] = useState({
-    coordinates: [],
-    distance: "",
-    duration: "",
-    steps: [],
-    loaded: false,
-  });
-
-  const [walkRoute, setWalkRoute] = useState({
-    coordinates: [],
-    distance: "",
-    duration: "",
-    steps: [],
-    loaded: false,
-  });
-
-  // status determines if location is available (false when permission is denied)
-  const [currentCoords, setCurrentCoords] = useState({
-    lat: 0,
-    lon: 0,
-    status: false,
-    focus: true,
-  });
-
-  const [startCoords, setStartCoords] = useState({
-    lat: undefined,
-    lon: undefined,
-    label: "",
-  });
-  const [destinationCoords, setDestinationCoords] = useState({
-    lat: undefined,
-    lon: undefined,
-    label: "",
-  });
-  const [centerCoords, setCenterCoords] = useState({
-    lat: undefined,
-    lon: undefined,
-    label: "",
-  });
-
-  // handles focusing on current location
-  const handleCurrentFocus = () => {
-    setCurrentCoords((prevState) => ({ ...prevState, focus: true }));
-  };
-
-  useEffect(() => {
-    if (mapEvents.dragging) {
-      setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
-    }
-  }, [mapEvents]);
-
-  // Get current location
-  const getCurrentCoords = async () => {
-    const location = await Geolocation.getCurrentPosition();
-    setCurrentCoords((prevState) => ({
-      ...prevState,
-      lat: location.coords.latitude,
-      lon: location.coords.longitude,
-      status: true,
-    }));
-  };
-
-  // location permissions
-  const checkLocationPermission = async () => {
-    let permission = await Geolocation.checkPermissions();
-    if (permission.location === "prompt") {
-      permission = await Geolocation.requestPermissions();
-    }
-    return permission.location;
-  };
-
-  // reference to interval for updating location
-  const currentCoordsInterval = useRef(null);
-
-  useEffect(() => {
-    checkLocationPermission().then((permission) => {
-      if (permission === "granted") {
-        getCurrentCoords();
-
-        currentCoordsInterval.current = setInterval(() => {
-          getCurrentCoords();
-        }, 3000);
-      } else if (permission === "denied") {
-        setCurrentCoords((prevState) => ({ ...prevState, status: false }));
-      }
-    });
-
-    return () => {
-      if (currentCoordsInterval.current) {
-        clearInterval(currentCoordsInterval.current);
-      }
-    };
-  }, []);
-
-  // set start coords to current location for the first time when startcoord is undefined
-  useEffect(() => {
-    if (
-      (startCoords.lat === undefined || startCoords.lon === undefined) &&
-      currentCoords.status
-    ) {
-      setStartCoords((prevState) => ({
-        ...prevState,
-        lat: currentCoords.lat,
-        lon: currentCoords.lon,
-        label: "",
-      }));
-    }
-  }, [currentCoords, startCoords]);
-
-  // set destination or start coords to center coords with handling choosing state and selected location
-  const functionSetter = useRef(null);
-
-  const handleChooseLocation = (setFunction) => {
-    navigation.push(chooseLocationPath.current);
-    functionSetter.current = setFunction;
-  };
-
-  const handleSelectLocation = () => {
-    navigation.goBack();
-    functionSetter.current((prevState) => ({
-      ...prevState,
-      lat: centerCoords.lat,
-      lon: centerCoords.lon,
-      label: centerCoords.label,
-    }));
-
-    functionSetter.current = null;
-  };
-
-  const handleCoordSwap = () => {
-    const temp = destinationCoords;
-
-    setDestinationCoords((prevState) => ({
-      ...prevState,
-      lat: startCoords.lat,
-      lon: startCoords.lon,
-      label: startCoords.label,
-    }));
-
-    setStartCoords((prevState) => ({
-      ...prevState,
-      lat: temp.lat,
-      lon: temp.lon,
-      label: temp.label,
-    }));
-  };
 
   // modify pages based on route
   useEffect(() => {
@@ -290,21 +149,91 @@ export default function Travel({ match }) {
     }
   }, [location.pathname]);
 
-  // fetching place names for center coords
-  const fetchPlaceName = async (coords, setCoords) => {
-    try {
-      const response = await getPlaceName(coords.lat, coords.lon);
-      setCoords((prevState) => ({
-        ...prevState,
-        label: response.name,
-      }));
-    } catch (error) {
-      setCoords((prevState) => ({
-        ...prevState,
-        label: error.message,
-      }));
-    }
+  /*
+  ========== CURRENT LOCATION ==========
+  */
+  // user's current location
+  const [currentCoords, setCurrentCoords] = useState({
+    lat: 0,
+    lon: 0,
+    status: false, // status determines if location is available (false when permission is denied)
+    focus: true,
+  });
+
+  // Get current location
+  const getCurrentCoords = async () => {
+    const location = await Geolocation.getCurrentPosition();
+    setCurrentCoords((prevState) => ({
+      ...prevState,
+      lat: location.coords.latitude,
+      lon: location.coords.longitude,
+      status: true,
+    }));
   };
+
+  // location permissions
+  const checkLocationPermission = async () => {
+    let permission = await Geolocation.checkPermissions();
+    if (permission.location === "prompt") {
+      permission = await Geolocation.requestPermissions();
+    }
+    return permission.location;
+  };
+
+  // reference to interval for updating location
+  const currentCoordsInterval = useRef(null);
+
+  // update current location every interval (3 seconds)
+  useEffect(() => {
+    checkLocationPermission().then((permission) => {
+      if (permission === "granted") {
+        getCurrentCoords();
+
+        currentCoordsInterval.current = setInterval(() => {
+          getCurrentCoords();
+        }, 3000);
+      } else if (permission === "denied") {
+        setCurrentCoords((prevState) => ({ ...prevState, status: false }));
+      }
+    });
+
+    return () => {
+      if (currentCoordsInterval.current) {
+        clearInterval(currentCoordsInterval.current);
+      }
+    };
+  }, []);
+
+  /*
+  ========== CENTERING MAP ==========
+  */
+  // center coords of map
+  const [centerCoords, setCenterCoords] = useState({
+    lat: undefined,
+    lon: undefined,
+    label: "",
+  });
+
+  // keep track of map events
+  const [mapEvents, setMapEvents] = useState({
+    moving: false,
+    dragging: false,
+  });
+
+  // passed to set the ceenter of the map
+  const [center, setCenter] = useState({ lat: undefined, lon: undefined });
+
+  // handles focusing on current location
+  const handleCurrentFocus = () => {
+    setCurrentCoords((prevState) => ({ ...prevState, focus: true }));
+  };
+
+  useEffect(() => {
+    if (mapEvents.dragging) {
+      setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
+    }
+  }, [mapEvents]);
+
   useEffect(() => {
     if (choosingLocation) {
       if (!mapEvents.moving && centerCoords.lat && centerCoords.lon) {
@@ -317,6 +246,75 @@ export default function Travel({ match }) {
       }
     }
   }, [mapEvents]);
+
+  /*
+  ========== START AND DESTINATION COORDS ==========
+  */
+  // start and destination coords
+  const [startCoords, setStartCoords] = useState({
+    lat: undefined,
+    lon: undefined,
+    label: "",
+  });
+  const [destinationCoords, setDestinationCoords] = useState({
+    lat: undefined,
+    lon: undefined,
+    label: "",
+  });
+
+  // set start coords to current location for the first time when startcoord is undefined
+  useEffect(() => {
+    if (
+      (startCoords.lat === undefined || startCoords.lon === undefined) &&
+      currentCoords.status
+    ) {
+      setStartCoords((prevState) => ({
+        ...prevState,
+        lat: currentCoords.lat,
+        lon: currentCoords.lon,
+        label: "",
+      }));
+    }
+  }, [currentCoords, startCoords]);
+
+  // set destination or start coords to center coords with handling choosing state and selected location
+  const functionSetter = useRef(null);
+
+  const handleChooseLocation = (setFunction) => {
+    navigation.push(chooseLocationPath.current);
+    functionSetter.current = setFunction;
+  };
+
+  const handleSelectLocation = () => {
+    navigation.goBack();
+    functionSetter.current((prevState) => ({
+      ...prevState,
+      lat: centerCoords.lat,
+      lon: centerCoords.lon,
+      label: centerCoords.label,
+    }));
+
+    functionSetter.current = null;
+  };
+
+  // swap start and destination coords
+  const handleCoordSwap = () => {
+    const temp = destinationCoords;
+
+    setDestinationCoords((prevState) => ({
+      ...prevState,
+      lat: startCoords.lat,
+      lon: startCoords.lon,
+      label: startCoords.label,
+    }));
+
+    setStartCoords((prevState) => ({
+      ...prevState,
+      lat: temp.lat,
+      lon: temp.lon,
+      label: temp.label,
+    }));
+  };
 
   // fetching place names for start and destination coords is label is not set
   useEffect(() => {
@@ -339,7 +337,34 @@ export default function Travel({ match }) {
     }
   }, [destinationCoords]);
 
-  // fetching route
+  /*
+  ========== ROUTES ==========
+  */
+  // fetched routes
+  const [carRoute, setCarRoute] = useState({
+    coordinates: [],
+    distance: "",
+    duration: "",
+    steps: [],
+    loaded: false,
+  });
+
+  const [bikeRoute, setBikeRoute] = useState({
+    coordinates: [],
+    distance: "",
+    duration: "",
+    steps: [],
+    loaded: false,
+  });
+
+  const [walkRoute, setWalkRoute] = useState({
+    coordinates: [],
+    distance: "",
+    duration: "",
+    steps: [],
+    loaded: false,
+  });
+
   const fetchRoutes = async (
     startCoords,
     destinationCoords,
@@ -401,6 +426,23 @@ export default function Travel({ match }) {
       fetchRoutes(startCoords, destinationCoords, getCarRoute, setCarRoute);
     }
   }, [startCoords, destinationCoords]);
+
+  // polyline path for map to draw
+  const [mapPath, setMapPath] = useState([]);
+
+  const handleRouteItem = (route) => {
+    setMapPath(route.coordinates);
+  };
+
+  /*
+  ========== SEARCH ==========
+  */
+  // for search bar
+  const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+
+  const inputRef = useRef(null);
+  const inputIsFocused = useRef(false);
 
   const handleSearch = () => {
     if (!searchingLocation) {
@@ -606,26 +648,29 @@ export default function Travel({ match }) {
                         {/* Card 2 */}
                         <TravelCard>
                           <CardList>
-                            <RouteCardItem
-                              text="Walk"
-                              icon={walk}
-                              route={walkRoute}
-                              setMapPath={setMapPath}
-                            />
+                            <span onClick={() => handleRouteItem(walkRoute)}>
+                              <RouteCardItem
+                                text="Walk"
+                                icon={walk}
+                                route={walkRoute}
+                              />
+                            </span>
                             <hr />
-                            <RouteCardItem
-                              text="Bike"
-                              icon={bicycle}
-                              route={bikeRoute}
-                              setMapPath={setMapPath}
-                            />
+                            <span onClick={() => handleRouteItem(bikeRoute)}>
+                              <RouteCardItem
+                                text="Bike"
+                                icon={bicycle}
+                                route={bikeRoute}
+                              />
+                            </span>
                             <hr />
-                            <RouteCardItem
-                              text="Car"
-                              icon={car}
-                              route={carRoute}
-                              setMapPath={setMapPath}
-                            />
+                            <span onClick={() => handleRouteItem(carRoute)}>
+                              <RouteCardItem
+                                text="Car"
+                                icon={car}
+                                route={carRoute}
+                              />
+                            </span>
                           </CardList>
                         </TravelCard>
                       </CardList>
@@ -673,6 +718,7 @@ export default function Travel({ match }) {
           destinationCoords={destinationCoords}
           setMapEvents={setMapEvents}
           mapPath={mapPath}
+          setCenter={center}
         ></MapPage>
       </IonContent>
     </IonPage>
