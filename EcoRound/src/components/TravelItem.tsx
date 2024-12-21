@@ -6,23 +6,22 @@ import {
   IonRippleEffect,
   IonText,
 } from "@ionic/react";
-import HeaderBar from "./HeaderBar";
-import SearchBar from "./SearchBar";
-import { useState } from "react";
-import TravelCard from "./TravelCard";
-import { locationSharp } from "ionicons/icons";
 import IconText from "./IconText";
-import CardList from "./CardList";
 
 export default function SearchItem({
   text,
   subText,
-  icon = locationSharp,
+  icon,
   iconText,
   iconColor = "",
+  ripple = true,
 }) {
   return (
-    <div className="flex gap-4 items-center px-2 ion-activatable relative overflow-hidden py-4 rounded-md">
+    <div
+      className={`flex gap-4 items-center px-2 relative overflow-hidden py-4 rounded-md ${
+        ripple ? "ion-activatable" : ""
+      }`}
+    >
       <IconText
         iconColor={iconColor}
         icon={icon}

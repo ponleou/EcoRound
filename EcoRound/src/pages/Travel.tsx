@@ -37,7 +37,7 @@ import {
 import RouteCardItem from "../components/RouteCardItem";
 import SearchBar from "../components/SearchBar";
 import TravelCard from "../components/TravelCard";
-import SearchItem from "../components/SearchItem";
+import TravelItem from "../components/TravelItem";
 import { render } from "@testing-library/react";
 import { i } from "vite/dist/node/types.d-aGj9QkWt";
 import { Keyboard } from "@capacitor/keyboard";
@@ -599,13 +599,13 @@ export default function Travel({ match }) {
                                 )
                               }
                             >
-                              <SearchItem
+                              <TravelItem
                                 text={"Current location"}
                                 subText={"Your current location"}
                                 iconText={"0 km"}
                                 icon={locate}
                                 iconColor="secondary"
-                              ></SearchItem>
+                              ></TravelItem>
                             </span>
                             <hr />
                             {searchResults.map((result, index) => (
@@ -615,12 +615,13 @@ export default function Travel({ match }) {
                                   handleSelectResult(result.lat, result.lon)
                                 }
                               >
-                                <SearchItem
+                                <TravelItem
                                   text={result.name}
                                   subText={result.subLocation}
                                   iconText={result.distance}
                                   iconColor="tertiary"
-                                ></SearchItem>
+                                  icon={locationSharp}
+                                ></TravelItem>
                               </span>
                             ))}
                           </CardList>
