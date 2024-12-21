@@ -97,19 +97,28 @@ export default function Travel({ match }) {
 
   const chooseLocationPath = useRef(`${match.url}/choose-location`);
   const searchLocationPath = useRef(`${match.url}/search-location`);
+  const routePath = useRef(`${match.url}/route`);
 
   const [choosingLocation, setChoosingLocation] = useState(false);
   const [searchingLocation, setSearchingLocation] = useState(false);
+  const [showingRoute, setShowingRoute] = useState(false);
+
+  const activateSubpage = ({
+    chooseLocation = false,
+    searchLocation = false,
+    showRoute = false,
+  } = {}) => {
+    setShowingRoute(showRoute);
+    setSearchingLocation(searchLocation);
+    setChoosingLocation(chooseLocation);
+  };
 
   // modify pages based on route
   useEffect(() => {
     if (location.pathname === chooseLocationPath.current) {
       setModalSettings({ ...defaultModalSetting.current, isOpen: false });
 
-      // reloadModal();
-
-      setSearchingLocation(false);
-      setChoosingLocation(true);
+      activateSubpage({ chooseLocation: true });
     }
 
     if (location.pathname === searchLocationPath.current) {
@@ -123,8 +132,7 @@ export default function Travel({ match }) {
 
       reloadModal();
 
-      setChoosingLocation(false);
-      setSearchingLocation(true);
+      activateSubpage({ searchLocation: true });
 
       if (inputRef.current) {
         const focusInterval = setInterval(() => {
@@ -144,8 +152,7 @@ export default function Travel({ match }) {
         reloadModal();
       }
 
-      setChoosingLocation(false);
-      setSearchingLocation(false);
+      activateSubpage();
     }
   }, [location.pathname]);
 
@@ -381,9 +388,9 @@ export default function Travel({ match }) {
       );
 
       // caculate values for distance and duration
-      let distance = (response.properties.segments[0].distance / 1000).toFixed(
-        1
-      );
+      let distance = Math.round(response.properties.segments[0].distance);
+      let distanceKm =
+        distance > 999 ? response.properties.segments[0].distance / 1000 : 0;
 
       let durationHr = Math.trunc(
         response.properties.segments[0].duration / 3600
@@ -398,7 +405,11 @@ export default function Travel({ match }) {
           coord[1],
           coord[0],
         ]),
-        distance: distance ? `${distance} km` : "",
+        distance: distanceKm
+          ? `${distanceKm.toFixed(1)} km`
+          : distance
+          ? `${distance.toFixed(0)} m`
+          : "",
         duration:
           (durationHr > 0 ? `${durationHr.toFixed(0)} hr ` : "") +
           (durationMin ? `${durationMin.toFixed(0)} min` : ""),
