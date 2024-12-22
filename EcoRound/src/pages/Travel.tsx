@@ -1,4 +1,3 @@
-import { StatusBar, Style } from "@capacitor/status-bar";
 import {
   IonButton,
   useIonRouter,
@@ -17,13 +16,10 @@ import {
   arrowUp,
   bicycle,
   car,
-  chevronForward,
-  compass,
   ellipsisVertical,
   locate,
   locationSharp,
   pin,
-  searchSharp,
   swapVertical,
   walk,
 } from "ionicons/icons";
@@ -41,12 +37,9 @@ import RouteCardItem from "../components/RouteCardItem";
 import SearchBar from "../components/SearchBar";
 import TravelCard from "../components/TravelCard";
 import TravelItem from "../components/TravelItem";
-import { render } from "@testing-library/react";
-import { i } from "vite/dist/node/types.d-aGj9QkWt";
 import { Keyboard } from "@capacitor/keyboard";
 import CardList from "../components/CardList";
 import distance from "../function/calculateDistance";
-import { icon } from "leaflet";
 
 export default function Travel({ match }) {
   /*
@@ -150,7 +143,11 @@ export default function Travel({ match }) {
     }
 
     if (location.pathname === routePath.current) {
-      setModalSettings({ ...defaultModalSetting.current });
+      setModalSettings({
+        ...defaultModalSetting.current,
+        initialBreakpoint: 0.5,
+        breakpoints: [0.5, 0.75],
+      });
       reloadModal();
 
       activateSubpage({ showRoute: true });
@@ -159,7 +156,7 @@ export default function Travel({ match }) {
     if (location.pathname === match.url) {
       setModalSettings({ ...defaultModalSetting.current });
 
-      if (searchingLocation || choosingLocation) {
+      if (searchingLocation || choosingLocation || showingRoute) {
         reloadModal();
       }
 
@@ -486,7 +483,7 @@ export default function Travel({ match }) {
       },
     }));
 
-    navigation.push(routePath.current);
+    navigation.push(routePath.current, "forward");
   };
 
   useEffect(() => {
@@ -533,26 +530,20 @@ export default function Travel({ match }) {
         centerCoords.lon
       );
       saveResult(
-        response.features
-          .map((place) => ({
-            name: place.properties.name,
-            subLocation: place.properties.label,
-            lat: place.geometry.coordinates[1],
-            lon: place.geometry.coordinates[0],
-            distance: currentCoords.status
-              ? distance(
-                  currentCoords.lat,
-                  currentCoords.lon,
-                  place.geometry.coordinates[1],
-                  place.geometry.coordinates[0]
-                ).toFixed(1) + " km"
-              : "",
-          }))
-          .sort((a, b) => {
-            const distanceA = parseFloat(a.distance);
-            const distanceB = parseFloat(b.distance);
-            return distanceA - distanceB;
-          })
+        response.features.map((place) => ({
+          name: place.properties.name,
+          subLocation: place.properties.label,
+          lat: place.geometry.coordinates[1],
+          lon: place.geometry.coordinates[0],
+          distance: currentCoords.status
+            ? distance(
+                currentCoords.lat,
+                currentCoords.lon,
+                place.geometry.coordinates[1],
+                place.geometry.coordinates[0]
+              ).toFixed(1) + " km"
+            : "",
+        }))
       );
     } catch (error) {
       return [];
@@ -721,6 +712,12 @@ export default function Travel({ match }) {
                                   }
                                   iconText={step.distance}
                                   subTexts={[step.duration]}
+                                  ripple={false}
+                                  iconColor={
+                                    index >= displayRoute.route.steps.length - 1
+                                      ? "tertiary"
+                                      : "secondary"
+                                  }
                                 />
                               ))}
                             </CardList>

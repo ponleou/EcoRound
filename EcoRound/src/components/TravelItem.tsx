@@ -1,11 +1,4 @@
-import {
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonPage,
-  IonRippleEffect,
-  IonText,
-} from "@ionic/react";
+import { IonRippleEffect, IonText } from "@ionic/react";
 import IconText from "./IconText";
 
 export default function SearchItem({

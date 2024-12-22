@@ -1,9 +1,7 @@
 import { Redirect, Route } from "react-router-dom";
 import {
   IonApp,
-  IonPage,
   IonRouterOutlet,
-  IonTabs,
   setupIonicReact,
   useIonRouter,
 } from "@ionic/react";

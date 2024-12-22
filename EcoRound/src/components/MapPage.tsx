@@ -1,4 +1,3 @@
-import { IonPage, IonContent, IonHeader } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import {
   CircleMarker,
