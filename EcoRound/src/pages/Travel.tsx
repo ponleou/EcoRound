@@ -12,6 +12,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
 import {
+  arrowBack,
+  arrowForward,
+  arrowUp,
   bicycle,
   car,
   chevronForward,
@@ -377,6 +380,27 @@ export default function Travel({ match }) {
     loaded: false,
   });
 
+  const formatDistanceString = (distance) => {
+    let distanceM = Math.round(distance);
+    let distanceKm = distance > 999 ? distance / 1000 : 0;
+
+    return distanceKm
+      ? `${distanceKm.toFixed(1)} km`
+      : distanceM
+      ? `${distance.toFixed(0)} m`
+      : "";
+  };
+
+  const formatDurationString = (duration) => {
+    let durationHr = Math.trunc(duration / 3600);
+    let durationMin = duration / 60 - durationHr * 60;
+
+    return (
+      (durationHr > 0 ? `${durationHr.toFixed(0)} hr ` : "") +
+      (durationMin ? `${durationMin.toFixed(0)} min` : "")
+    );
+  };
+
   const fetchRoutes = async (
     startCoords,
     destinationCoords,
@@ -392,17 +416,6 @@ export default function Travel({ match }) {
         destinationCoords.lon
       );
 
-      // caculate values for distance and duration
-      let distance = Math.round(response.properties.segments[0].distance);
-      let distanceKm =
-        distance > 999 ? response.properties.segments[0].distance / 1000 : 0;
-
-      let durationHr = Math.trunc(
-        response.properties.segments[0].duration / 3600
-      );
-      let durationMin =
-        response.properties.segments[0].duration / 60 - durationHr * 60;
-
       // set route information
       setRouteFunction((prevState) => ({
         ...prevState,
@@ -410,15 +423,17 @@ export default function Travel({ match }) {
           coord[1],
           coord[0],
         ]),
-        distance: distanceKm
-          ? `${distanceKm.toFixed(1)} km`
-          : distance
-          ? `${distance.toFixed(0)} m`
-          : "",
-        duration:
-          (durationHr > 0 ? `${durationHr.toFixed(0)} hr ` : "") +
-          (durationMin ? `${durationMin.toFixed(0)} min` : ""),
-        steps: response.properties.segments[0].steps,
+        distance: formatDistanceString(
+          response.properties.segments[0].distance
+        ),
+        duration: formatDurationString(
+          response.properties.segments[0].duration
+        ),
+        steps: response.properties.segments[0].steps.map((step) => ({
+          ...step,
+          distance: formatDistanceString(step.distance),
+          duration: formatDurationString(step.duration),
+        })),
         loaded: true,
       }));
     } catch (error) {
@@ -575,6 +590,8 @@ export default function Travel({ match }) {
               ? "Choose location"
               : searchingLocation
               ? "Search location"
+              : showingRoute
+              ? "Route"
               : "Travel"
           }
           color="primary"
@@ -683,6 +700,30 @@ export default function Travel({ match }) {
                               iconSize="large"
                               ripple={false}
                             />
+                            <hr />
+                            <CardList>
+                              {displayRoute.route.steps.map((step, index) => (
+                                <TravelItem
+                                  key={index}
+                                  text={step.instruction}
+                                  icon={
+                                    index >= displayRoute.route.steps.length - 1
+                                      ? locationSharp
+                                      : step.instruction
+                                          .toLowerCase()
+                                          .includes("turn")
+                                      ? step.instruction
+                                          .toLowerCase()
+                                          .includes("right")
+                                        ? arrowForward
+                                        : arrowBack
+                                      : arrowUp
+                                  }
+                                  iconText={step.distance}
+                                  subTexts={[step.duration]}
+                                />
+                              ))}
+                            </CardList>
                           </CardList>
                         </TravelCard>
                       </div>
