@@ -10,8 +10,9 @@ import IconText from "./IconText";
 
 export default function SearchItem({
   text,
-  subText,
+  subTexts = [],
   icon,
+  iconSize = "small",
   iconText,
   iconColor = "",
   ripple = true,
@@ -26,12 +27,17 @@ export default function SearchItem({
         iconColor={iconColor}
         icon={icon}
         text={iconText}
-        iconSize="small"
+        iconSize={iconSize}
       />
-      <p className="flex flex-col">
-        <IonText className="font-bold">{text}</IonText>
-        <IonText color={"secondary"} className="text-xs">
-          {subText}
+      <p className="flex flex-col grow min-w-1">
+        <IonText className="font-bold truncate w-full">{text}</IonText>
+        <IonText
+          color={"secondary"}
+          className="text-xs truncate w-full flex gap-2"
+        >
+          {subTexts.map((subText, index) => (
+            <span key={index}>{subText}</span>
+          ))}
         </IonText>
       </p>
       <IonRippleEffect></IonRippleEffect>

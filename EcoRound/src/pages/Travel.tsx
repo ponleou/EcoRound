@@ -43,6 +43,7 @@ import { i } from "vite/dist/node/types.d-aGj9QkWt";
 import { Keyboard } from "@capacitor/keyboard";
 import CardList from "../components/CardList";
 import distance from "../function/calculateDistance";
+import { icon } from "leaflet";
 
 export default function Travel({ match }) {
   /*
@@ -143,6 +144,13 @@ export default function Travel({ match }) {
           }
         }, 100);
       }
+    }
+
+    if (location.pathname === routePath.current) {
+      setModalSettings({ ...defaultModalSetting.current });
+      reloadModal();
+
+      activateSubpage({ showRoute: true });
     }
 
     if (location.pathname === match.url) {
@@ -347,28 +355,25 @@ export default function Travel({ match }) {
   /*
   ========== ROUTES ==========
   */
-  // fetched routes
-  const [carRoute, setCarRoute] = useState({
+  const defaultRoute = useRef({
     coordinates: [],
     distance: "",
     duration: "",
     steps: [],
+  });
+  // fetched routes
+  const [carRoute, setCarRoute] = useState({
+    ...defaultRoute.current,
     loaded: false,
   });
 
   const [bikeRoute, setBikeRoute] = useState({
-    coordinates: [],
-    distance: "",
-    duration: "",
-    steps: [],
+    ...defaultRoute.current,
     loaded: false,
   });
 
   const [walkRoute, setWalkRoute] = useState({
-    coordinates: [],
-    distance: "",
-    duration: "",
-    steps: [],
+    ...defaultRoute.current,
     loaded: false,
   });
 
@@ -438,12 +443,44 @@ export default function Travel({ match }) {
     }
   }, [startCoords, destinationCoords]);
 
+  const [displayRoute, setDisplayRoute] = useState({
+    icon: locationSharp,
+    destinationLabel: "",
+    route: {
+      ...defaultRoute.current,
+    },
+  });
+
   // polyline path for map to draw
   const [mapPath, setMapPath] = useState([]);
 
-  const handleRouteItem = (route) => {
-    setMapPath(route.coordinates);
+  // set route to display on page
+  const handleRouteItem = (route, icon = null) => {
+    if (!route.loaded) return;
+
+    setDisplayRoute((prevState) => ({
+      ...prevState,
+      icon: icon ? icon : prevState.icon,
+      destinationLabel: destinationCoords.label,
+      route: {
+        ...prevState.route,
+        coordinates: route.coordinates,
+        distance: route.distance,
+        duration: route.duration,
+        steps: route.steps,
+      },
+    }));
+
+    navigation.push(routePath.current);
   };
+
+  useEffect(() => {
+    if (showingRoute) {
+      setMapPath(displayRoute.route.coordinates);
+    } else {
+      setMapPath([]);
+    }
+  }, [showingRoute]);
 
   /*
   ========== SEARCH ==========
@@ -601,7 +638,7 @@ export default function Travel({ match }) {
                             >
                               <TravelItem
                                 text={"Current location"}
-                                subText={"Your current location"}
+                                subTexts={["Your current location"]}
                                 iconText={"0 km"}
                                 icon={locate}
                                 iconColor="secondary"
@@ -617,13 +654,35 @@ export default function Travel({ match }) {
                               >
                                 <TravelItem
                                   text={result.name}
-                                  subText={result.subLocation}
+                                  subTexts={[result.subLocation]}
                                   iconText={result.distance}
                                   iconColor="tertiary"
                                   icon={locationSharp}
                                 ></TravelItem>
                               </span>
                             ))}
+                          </CardList>
+                        </TravelCard>
+                      </div>
+                    ) : showingRoute ? (
+                      // Cards for showing a chosen route
+                      <div className="h-3/4 overflow-scroll rounded-lg">
+                        <TravelCard>
+                          <CardList>
+                            <TravelItem
+                              iconText={""}
+                              icon={displayRoute.icon}
+                              text={displayRoute.destinationLabel}
+                              subTexts={[
+                                displayRoute.route.distance,
+                                displayRoute.route.duration,
+                                <span className="font-bold">
+                                  {"200 Points"}
+                                </span>,
+                              ]}
+                              iconSize="large"
+                              ripple={false}
+                            />
                           </CardList>
                         </TravelCard>
                       </div>
@@ -692,7 +751,9 @@ export default function Travel({ match }) {
                         {/* Card 2 */}
                         <TravelCard>
                           <CardList>
-                            <span onClick={() => handleRouteItem(walkRoute)}>
+                            <span
+                              onClick={() => handleRouteItem(walkRoute, walk)}
+                            >
                               <RouteCardItem
                                 text="Walk"
                                 icon={walk}
@@ -700,7 +761,11 @@ export default function Travel({ match }) {
                               />
                             </span>
                             <hr />
-                            <span onClick={() => handleRouteItem(bikeRoute)}>
+                            <span
+                              onClick={() =>
+                                handleRouteItem(bikeRoute, bicycle)
+                              }
+                            >
                               <RouteCardItem
                                 text="Bike"
                                 icon={bicycle}
@@ -708,7 +773,9 @@ export default function Travel({ match }) {
                               />
                             </span>
                             <hr />
-                            <span onClick={() => handleRouteItem(carRoute)}>
+                            <span
+                              onClick={() => handleRouteItem(carRoute, car)}
+                            >
                               <RouteCardItem
                                 text="Car"
                                 icon={car}
