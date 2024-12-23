@@ -46,7 +46,7 @@ export default function Travel({ match }) {
   ========== GLOBAL FUNCTIONS ==========
   */
   // fetching place names for center coords
-  const fetchPlaceName = async (coords, setCoords) => {
+  const setPlaceName = async (coords, setCoords) => {
     try {
       const response = await getPlaceName(coords.lat, coords.lon);
       setCoords((prevState) => ({
@@ -252,7 +252,7 @@ export default function Travel({ match }) {
   useEffect(() => {
     if (choosingLocation) {
       if (!mapEvents.moving && centerCoords.lat && centerCoords.lon) {
-        fetchPlaceName(centerCoords, setCenterCoords);
+        setPlaceName(centerCoords, setCenterCoords);
       } else {
         setCenterCoords((prevState) => ({
           ...prevState,
@@ -338,7 +338,7 @@ export default function Travel({ match }) {
       startCoords.lat !== undefined &&
       startCoords.lon !== undefined
     ) {
-      fetchPlaceName(startCoords, setStartCoords);
+      setPlaceName(startCoords, setStartCoords);
     }
   }, [startCoords]);
 
@@ -348,7 +348,7 @@ export default function Travel({ match }) {
       destinationCoords.lat !== undefined &&
       destinationCoords.lon !== undefined
     ) {
-      fetchPlaceName(destinationCoords, setDestinationCoords);
+      setPlaceName(destinationCoords, setDestinationCoords);
     }
   }, [destinationCoords]);
 
