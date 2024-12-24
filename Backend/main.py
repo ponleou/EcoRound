@@ -190,6 +190,8 @@ def transitRoute():
             totalDistance += leg['distance']
             totalDuration += leg['duration']
 
+            estSpeed = leg['distance'] / leg['duration']
+
             segment = {
                 "path": decode_polyline(leg['legGeometry']['points']),
                 "distance": leg['distance'],
@@ -203,6 +205,7 @@ def transitRoute():
                 },
                 "steps": [{
                     "distance": step["distance"],
+                    "duration": round(step["distance"] / estSpeed),
                     "name": "-" if step["bogusName"] else step["streetName"],
                     "instruction": stepInstruction(step["relativeDirection"], step["streetName"], step["bogusName"], step["absoluteDirection"])
                     } for step in leg['steps']],
@@ -223,6 +226,7 @@ def transitRoute():
 
 @app.get("/api/walk-route")
 def walkRoute():
+
     route = fetchRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "foot-walking")
 
     response = {
