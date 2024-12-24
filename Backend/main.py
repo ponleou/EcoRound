@@ -100,16 +100,16 @@ def stepInstruction(direction, street, bogusName, absoluteDirection):
     instruction = ""
 
     if direction.lower() == "depart":
-        instruction = "Head " + absoluteDirection.lower().replace("_", " ") + ("" if bogusName else "on " + street)
+        instruction = "Head " + absoluteDirection.title().replace("_", " ") + ("" if bogusName else " on " + street)
         return instruction
 
 
     if direction.lower() == "continue":
-        instruction = "Continue straight " + ("to " + absoluteDirection.lower().replace("_", " ") if bogusName else "on " + street)
+        instruction = "Continue straight " + ("to " + absoluteDirection.title().replace("_", " ") if bogusName else "on " + street)
         return instruction
     
     if "uturn" in direction.lower():
-        instruction = direction.title().replace("_", " ") + (" to " + absoluteDirection.lower().replace("_", " ") if bogusName else " onto " + street)
+        instruction = direction.title().replace("_", " ") + (" to " + absoluteDirection.title().replace("_", " ") if bogusName else " onto " + street)
         return instruction
 
     instruction = "Turn " + direction.lower().replace("_", " ") + ("" if bogusName else " onto " + street)
@@ -226,15 +226,29 @@ def transitRoute():
 
 @app.get("/api/walk-route")
 def walkRoute():
-
-    route = fetchRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "foot-walking")
+    # TODO: add fallback to ORS if OTP fails to get route (empty response)
+    OTPRoute = queryOTPRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "WALK")["data"]["plan"]["itineraries"][0]["legs"][0]
 
     response = {
-        "path": [[coord[1], coord[0]] for coord in route["features"][0]["geometry"]["coordinates"]],
-        "distance": route["features"][0]["properties"]["segments"][0]["distance"],
-        "duration": route["features"][0]["properties"]["segments"][0]["duration"],
-        "steps": route["features"][0]["properties"]["segments"][0]["steps"],
+        "path": decode_polyline(OTPRoute["legGeometry"]["points"]),
+        "distance": OTPRoute["distance"],
+        "duration": OTPRoute["duration"],
+        "steps": [{
+            "distance": step["distance"],
+            "duration": round(step["distance"] / 1.4),  # 1.4 m/s is the average walking speed
+            "name": "-" if step["bogusName"] else step["streetName"],
+            "instruction": stepInstruction(step["relativeDirection"], step["streetName"], step["bogusName"], step["absoluteDirection"])
+        } for step in OTPRoute["steps"]],
     }
+
+    # route = fetchRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "foot-walking")
+
+    # response = {
+    #     "path": [[coord[1], coord[0]] for coord in route["features"][0]["geometry"]["coordinates"]],
+    #     "distance": route["features"][0]["properties"]["segments"][0]["distance"],
+    #     "duration": route["features"][0]["properties"]["segments"][0]["duration"],
+    #     "steps": route["features"][0]["properties"]["segments"][0]["steps"],
+    # }
 
     return jsonify(response)
 
