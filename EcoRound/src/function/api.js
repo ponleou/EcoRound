@@ -21,7 +21,7 @@ export const getPlaceName = async (lat, lon) => {
 
 export const getCarRoute = async (slat, slon, dlat, dlon) => {
   const reponse = await CapacitorHttp.request({
-    url: `${baseUrl}/route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}&profile=driving-car`,
+    url: `${baseUrl}/car-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
     headers: { "Content-Type": "application/json" },
     method: "GET",
   });
@@ -31,7 +31,7 @@ export const getCarRoute = async (slat, slon, dlat, dlon) => {
 
 export const getWalkRoute = async (slat, slon, dlat, dlon) => {
   const reponse = await CapacitorHttp.request({
-    url: `${baseUrl}/route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}&profile=foot-walking`,
+    url: `${baseUrl}/walk-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
     headers: { "Content-Type": "application/json" },
     method: "GET",
   });
@@ -41,7 +41,7 @@ export const getWalkRoute = async (slat, slon, dlat, dlon) => {
 
 export const getBikeRoute = async (slat, slon, dlat, dlon) => {
   const reponse = await CapacitorHttp.request({
-    url: `${baseUrl}/route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}&profile=cycling-regular`,
+    url: `${baseUrl}/bike-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
     headers: { "Content-Type": "application/json" },
     method: "GET",
   });
