@@ -416,17 +416,10 @@ export default function Travel({ match }) {
       // set route information
       setRouteFunction((prevState) => ({
         ...prevState,
-        coordinates: response.geometry.coordinates.map((coord) => [
-          coord[1],
-          coord[0],
-        ]),
-        distance: formatDistanceString(
-          response.properties.segments[0].distance
-        ),
-        duration: formatDurationString(
-          response.properties.segments[0].duration
-        ),
-        steps: response.properties.segments[0].steps.map((step) => ({
+        coordinates: response.path,
+        distance: formatDistanceString(response.distance),
+        duration: formatDurationString(response.duration),
+        steps: response.steps.map((step) => ({
           ...step,
           distance: formatDistanceString(step.distance),
           duration: formatDurationString(step.duration),
@@ -530,17 +523,17 @@ export default function Travel({ match }) {
         centerCoords.lon
       );
       saveResult(
-        response.features.map((place) => ({
-          name: place.properties.name,
-          subLocation: place.properties.label,
-          lat: place.geometry.coordinates[1],
-          lon: place.geometry.coordinates[0],
+        response.places.map((place) => ({
+          name: place.name,
+          subLocation: place.label,
+          lat: place.lat,
+          lon: place.lon,
           distance: currentCoords.status
             ? distance(
                 currentCoords.lat,
                 currentCoords.lon,
-                place.geometry.coordinates[1],
-                place.geometry.coordinates[0]
+                place.lat,
+                place.lon
               ).toFixed(1) + " km"
             : "",
         }))
