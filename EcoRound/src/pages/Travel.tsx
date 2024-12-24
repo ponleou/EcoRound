@@ -690,11 +690,9 @@ export default function Travel({ match }) {
                                   key={index}
                                   text={step.instruction}
                                   icon={
-                                    index >= displayRoute.route.steps.length - 1
-                                      ? locationSharp
-                                      : step.instruction
-                                          .toLowerCase()
-                                          .includes("turn")
+                                    step.instruction
+                                      .toLowerCase()
+                                      .includes("turn")
                                       ? step.instruction
                                           .toLowerCase()
                                           .includes("right")
@@ -705,13 +703,19 @@ export default function Travel({ match }) {
                                   iconText={step.distance}
                                   subTexts={[step.duration]}
                                   ripple={false}
-                                  iconColor={
-                                    index >= displayRoute.route.steps.length - 1
-                                      ? "tertiary"
-                                      : "secondary"
-                                  }
+                                  iconColor={"secondary"}
                                 />
                               ))}
+                              <TravelItem
+                                text={
+                                  "Arrive at " + displayRoute.destinationLabel
+                                }
+                                icon={locationSharp}
+                                iconText={""}
+                                subTexts={[""]}
+                                ripple={false}
+                                iconColor={"tertiary"}
+                              />
                             </CardList>
                           </CardList>
                         </TravelCard>
