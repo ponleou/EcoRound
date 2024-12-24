@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv  # type: ignore
 from flask import Flask, jsonify, request  # type: ignore
 from flask_cors import CORS
+from polyline import decode
 
 load_dotenv()
 
@@ -115,48 +116,6 @@ def stepInstruction(direction, street, bogusName, absoluteDirection):
     instruction = "Turn " + direction.lower().replace("_", " ") + ("" if bogusName else " onto " + street)
     return instruction
 
-# function to decode polyline
-def decode_polyline(encoded_polyline):
-    # Initialize the list to store the decoded points
-    decoded_points = []
-    
-    # Variables for current latitude and longitude
-    index = 0
-    lat = 0
-    lon = 0
-
-    while index < len(encoded_polyline):
-        # Decode latitude
-        shift = 0
-        result = 0
-        while True:
-            byte = ord(encoded_polyline[index]) - 63
-            index += 1
-            result |= (byte & 0x1f) << shift
-            shift += 5
-            if byte < 0x20:
-                break
-        lat_change = ~(result & 1) + (result >> 1)
-        lat += lat_change
-
-        # Decode longitude
-        shift = 0
-        result = 0
-        while True:
-            byte = ord(encoded_polyline[index]) - 63
-            index += 1
-            result |= (byte & 0x1f) << shift
-            shift += 5
-            if byte < 0x20:
-                break
-        lon_change = ~(result & 1) + (result >> 1)
-        lon += lon_change
-
-        # Add the decoded point (latitude, longitude) to the list
-        decoded_points.append([lat / 1E5, lon / 1E5])  # Convert to decimal and divide by 1E5
-
-    return decoded_points
-
 
 @app.get("/api/transit-route")
 def transitRoute():
@@ -193,7 +152,7 @@ def transitRoute():
             estSpeed = leg['distance'] / leg['duration']
 
             segment = {
-                "path": decode_polyline(leg['legGeometry']['points']),
+                "path": decode(leg['legGeometry']['points']),
                 "distance": leg['distance'],
                 "duration": leg['duration'],
                 "mode": leg['mode'],
@@ -230,12 +189,12 @@ def walkRoute():
     OTPRoute = queryOTPRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "WALK")["data"]["plan"]["itineraries"][0]["legs"][0]
 
     response = {
-        "path": decode_polyline(OTPRoute["legGeometry"]["points"]),
+        "path": decode(OTPRoute["legGeometry"]["points"]),
         "distance": OTPRoute["distance"],
         "duration": OTPRoute["duration"],
         "steps": [{
             "distance": step["distance"],
-            "duration": round(step["distance"] / 1.4),  # 1.4 m/s is the average walking speed
+            "duration": round(step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])),  
             "name": "-" if step["bogusName"] else step["streetName"],
             "instruction": stepInstruction(step["relativeDirection"], step["streetName"], step["bogusName"], step["absoluteDirection"])
         } for step in OTPRoute["steps"]],
