@@ -628,7 +628,6 @@ export default function Travel({ match }) {
                       <div className="h-3/4 overflow-scroll rounded-lg">
                         <TravelCard>
                           <CardList>
-                            {/* TODO: add current location */}
                             <span
                               onClick={() =>
                                 handleSelectResult(
@@ -724,7 +723,6 @@ export default function Travel({ match }) {
                         <TravelCard>
                           <div className="grid grid-cols-[auto_1fr_auto] grid-rows-3 gap-x-4 items-center">
                             {" "}
-                            {/* TODO: create a card component */}
                             <IonIcon color="secondary" icon={locate}></IonIcon>
                             <p
                               className="truncate w-full"

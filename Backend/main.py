@@ -17,6 +17,7 @@ OTP_URL = "http://localhost:8080/otp/gtfs/v1"
 app = Flask(__name__)
 CORS(app)
 
+# function to query OTP server for route
 def queryOTPRoute(slat, slon, dlat, dlon, mode):
     graphql_query = {
         "query": """
@@ -85,6 +86,7 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode):
 
     return response
 
+# function to fetch route from ORS
 def fetchRoute(slat, slon, dlat, dlon, profile):
     coordinates = [[float(slon), float(slat)], [float(dlon), float(dlat)]]
     route = CLIENT.directions(
@@ -93,6 +95,7 @@ def fetchRoute(slat, slon, dlat, dlon, profile):
 
     return route
 
+# function to generate step instruction (from OTP steps response)
 def stepInstruction(direction, street, bogusName, absoluteDirection):
     instruction = ""
 
@@ -112,6 +115,7 @@ def stepInstruction(direction, street, bogusName, absoluteDirection):
     instruction = "Turn " + direction.lower().replace("_", " ") + ("" if bogusName else " onto " + street)
     return instruction
 
+# function to decode polyline
 def decode_polyline(encoded_polyline):
     # Initialize the list to store the decoded points
     decoded_points = []
@@ -172,7 +176,15 @@ def transitRoute():
         totalDuration = 0
         segments = []
 
+        #  Check if the route is a transit route (which has at least one transit leg)
         isTransitRoute = False
+        for leg in route['legs']:
+            if leg["transitLeg"]:
+                isTransitRoute = True
+                break
+        # Skip if not a transit route
+        if not isTransitRoute:
+            continue
 
         for leg in route['legs']:
             totalDistance += leg['distance']
@@ -198,17 +210,13 @@ def transitRoute():
 
             segments.append(segment)
 
-            if leg["transitLeg"]:
-                isTransitRoute = True
         
-        if isTransitRoute:
-            response["routes"].append({
-                "distance": totalDistance,
-                "duration": totalDuration,
-                "segments": segments
-            })
-
-    # print(decode_polyline(response['data']['plan']['itineraries'][0]['legs'][0]['legGeometry']['points']))
+        # Append route to response
+        response["routes"].append({
+            "distance": totalDistance,
+            "duration": totalDuration,
+            "segments": segments
+        })
 
     return jsonify(response)
 
