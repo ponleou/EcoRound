@@ -17,6 +17,74 @@ OTP_URL = "http://localhost:8080/otp/gtfs/v1"
 app = Flask(__name__)
 CORS(app)
 
+def queryOTPRoute(slat, slon, dlat, dlon, mode):
+    graphql_query = {
+        "query": """
+        query plan(
+        $fromLat: Float!, 
+        $fromLon: Float!, 
+        $toLat: Float!, 
+        $toLon: Float!,
+        $mode: Mode!
+        ) {
+        plan(
+            from: {lat: $fromLat, lon: $fromLon}
+            to: {lat: $toLat, lon: $toLon}
+            transportModes: {mode: $mode}
+        ) {
+            itineraries {
+                legs {
+                    transitLeg
+                    duration
+                    distance
+                    mode
+                    headsign
+                    from {
+                        stop {
+                            name
+                        }
+                    }
+                    to {
+                        stop {
+                            name
+                        }
+                    }
+                    intermediateStops {
+                        name
+                    }
+                    steps {
+                        distance
+                        relativeDirection
+                        absoluteDirection
+                        streetName
+                        bogusName
+                    }
+                    legGeometry {
+                        points
+                    }
+                }
+            }
+        }
+        }
+        """,
+        "variables": {
+            "fromLat": float(slat),
+            "fromLon": float(slon),
+            "toLat": float(dlat),
+            "toLon": float(dlon),
+            "mode": mode,
+        }
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "OTPTimeout": "180000"  # Timeout in milliseconds
+    }
+
+    response = requests.post(OTP_URL, headers=headers, json=graphql_query).json()
+
+    return response
+
 def fetchRoute(slat, slon, dlat, dlon, profile):
     coordinates = [[float(slon), float(slat)], [float(dlon), float(dlat)]]
     route = CLIENT.directions(
@@ -29,19 +97,19 @@ def stepInstruction(direction, street, bogusName, absoluteDirection):
     instruction = ""
 
     if direction.lower() == "depart":
-        instruction = "Head " + absoluteDirection.lower() + "" if bogusName else ("on " + street)
+        instruction = "Head " + absoluteDirection.lower().replace("_", " ") + ("" if bogusName else "on " + street)
         return instruction
 
 
     if direction.lower() == "continue":
-        instruction = "Continue straight " + ("to " + absoluteDirection.lower()) if bogusName else ("on " + street)
+        instruction = "Continue straight " + ("to " + absoluteDirection.lower().replace("_", " ") if bogusName else "on " + street)
         return instruction
     
     if "uturn" in direction.lower():
-        instruction = direction.title() + (" to " + absoluteDirection.lower()) if bogusName else (" onto " + street)
+        instruction = direction.title().replace("_", " ") + (" to " + absoluteDirection.lower().replace("_", " ") if bogusName else " onto " + street)
         return instruction
 
-    instruction = "Turn " + direction.lower() + "" if bogusName else (" onto " + street)
+    instruction = "Turn " + direction.lower().replace("_", " ") + ("" if bogusName else " onto " + street)
     return instruction
 
 def decode_polyline(encoded_polyline):
@@ -93,66 +161,54 @@ def transitRoute():
     dlat = request.args.get("dlat")
     dlon = request.args.get("dlon")
 
-    graphql_query = {
-        "query": """
-        query plan(
-        $fromLat: Float!, 
-        $fromLon: Float!, 
-        $toLat: Float!, 
-        $toLon: Float!, 
-        ) {
-        plan(
-            from: {lat: $fromLat, lon: $fromLon}
-            to: {lat: $toLat, lon: $toLon}
-            transportModes: {mode: TRANSIT}
-        ) {
-            itineraries {
-            duration
-            legs {
-                transitLeg
-                duration
-                distance
-                mode
-                headsign
-                from {
-                name
-                }
-                to {
-                name
-                }
-                intermediateStops {
-                name
-                }
-                steps {
-                distance
-                relativeDirection
-                absoluteDirection
-                streetName
-                bogusName
-                }
-                legGeometry {
-                points
-                }
-            }
-            }
-        }
-        }
-        """,
-        "variables": {
-            "fromLat": float(slat),
-            "fromLon": float(slon),
-            "toLat": float(dlat),
-            "toLon": float(dlon),
-        }
+    routes = queryOTPRoute(slat, slon, dlat, dlon, "TRANSIT")
+
+    response = {
+        "routes": []
     }
 
-    headers = {
-        "Content-Type": "application/json",
-        "OTPTimeout": "180000"  # Timeout in milliseconds
-    }
+    for route in routes['data']['plan']['itineraries']:
+        totalDistance = 0
+        totalDuration = 0
+        segments = []
 
-    response = requests.post(OTP_URL, headers=headers, json=graphql_query).json()
-    print(decode_polyline(response['data']['plan']['itineraries'][0]['legs'][0]['legGeometry']['points']))
+        isTransitRoute = False
+
+        for leg in route['legs']:
+            totalDistance += leg['distance']
+            totalDuration += leg['duration']
+
+            segment = {
+                "path": decode_polyline(leg['legGeometry']['points']),
+                "distance": leg['distance'],
+                "duration": leg['duration'],
+                "mode": leg['mode'],
+                "stops": {
+                    "startHeadsign": "" if not leg['headsign'] else leg['headsign'],
+                    "startStop": "" if not leg['from']['stop'] else leg['from']['stop']['name'],
+                    "endStop": "" if  not leg['to']['stop'] else leg['to']['stop']['name'],
+                    "middleStops": [stop['name'] for stop in leg['intermediateStops']] if leg['transitLeg'] else [],
+                },
+                "steps": [{
+                    "distance": step["distance"],
+                    "name": "-" if step["bogusName"] else step["streetName"],
+                    "instruction": stepInstruction(step["relativeDirection"], step["streetName"], step["bogusName"], step["absoluteDirection"])
+                    } for step in leg['steps']],
+            }
+
+            segments.append(segment)
+
+            if leg["transitLeg"]:
+                isTransitRoute = True
+        
+        if isTransitRoute:
+            response["routes"].append({
+                "distance": totalDistance,
+                "duration": totalDuration,
+                "segments": segments
+            })
+
+    # print(decode_polyline(response['data']['plan']['itineraries'][0]['legs'][0]['legGeometry']['points']))
 
     return jsonify(response)
 
