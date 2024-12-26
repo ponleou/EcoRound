@@ -32,6 +32,7 @@ import {
   getCarRoute,
   getWalkRoute,
   getPlaceList,
+  getTransitRoute,
 } from "../function/api.js";
 import RouteCardItem from "../components/RouteCardItem";
 import SearchBar from "../components/SearchBar";
@@ -416,7 +417,7 @@ export default function Travel({ match }) {
       // set route information
       setRouteFunction((prevState) => ({
         ...prevState,
-        coordinates: response.path,
+        coordinates: [{ path: response.path, type: "primary" }],
         distance: formatDistanceString(response.distance),
         duration: formatDurationString(response.duration),
         steps: response.steps.map((step) => ({
@@ -457,7 +458,7 @@ export default function Travel({ match }) {
   });
 
   // polyline path for map to draw
-  const [mapPath, setMapPath] = useState([]);
+  const [mapPaths, setMapPaths] = useState([]);
 
   // set route to display on page
   const handleRouteItem = (route, icon = null) => {
@@ -481,9 +482,12 @@ export default function Travel({ match }) {
 
   useEffect(() => {
     if (showingRoute) {
-      setMapPath(displayRoute.route.coordinates);
+      setMapPaths((prevState) => [
+        ...prevState,
+        ...displayRoute.route.coordinates,
+      ]);
     } else {
-      setMapPath([]);
+      setMapPaths([]);
     }
   }, [showingRoute]);
 
@@ -563,6 +567,68 @@ export default function Travel({ match }) {
     setSearchInput("");
     setSearchResults([]);
     navigation.goBack();
+  };
+
+  /*
+  ========== TRANSIT ROUTES ==========
+  */
+
+  const [transitRoutes, setTransitRoutes] = useState([]);
+  const transitRoute = useRef({
+    distance: "",
+    duration: "",
+    paths: [],
+  });
+
+  const fetchTransitRoutes = async () => {
+    try {
+      const response = await getTransitRoute(
+        startCoords.lat,
+        startCoords.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+
+      response.map((route) => {
+        setTransitRoutes((prevState) => [
+          ...prevState,
+          {
+            distance: formatDistanceString(route.distance),
+            duration: formatDurationString(route.duration),
+            segments: route.segments.map((segment) =>
+              segment.transitSegment
+                ? {
+                    distance: formatDistanceString(segment.distance),
+                    duration: formatDurationString(segment.duration),
+                    transitSegment: segment.transitSegment,
+                    mode: segment.mode,
+                    stops: segment.stops,
+                    transitNames: segment.transitNames,
+                  }
+                : {
+                    distance: formatDistanceString(segment.distance),
+                    duration: formatDurationString(segment.duration),
+                    transitSegment: segment.transitSegment,
+                    mode: segment.mode,
+                    steps: segment.steps.map((step) => ({
+                      distance: formatDistanceString(step.distance),
+                      duration: formatDurationString(step.duration),
+                      instruction: step.instruction,
+                      name: step.name,
+                    })),
+                    stops: segment.stops,
+                  }
+            ),
+            paths: route.segments.map((segment) => ({
+              type: segment.transitSegment ? "primary" : "secondary",
+              path: segment.path,
+            })),
+          },
+        ]);
+      });
+    } catch (error) {
+      setTransitRoutes([]);
+    }
   };
 
   return (
@@ -790,7 +856,12 @@ export default function Travel({ match }) {
                               <RouteCardItem
                                 text="Walk"
                                 icon={walk}
-                                route={walkRoute}
+                                isAvailable={walkRoute.loaded}
+                                routeStepsNames={walkRoute.steps.map(
+                                  (step) => step.name
+                                )}
+                                routeDistance={walkRoute.distance}
+                                routeDuration={walkRoute.duration}
                               />
                             </span>
                             <hr />
@@ -802,7 +873,12 @@ export default function Travel({ match }) {
                               <RouteCardItem
                                 text="Bike"
                                 icon={bicycle}
-                                route={bikeRoute}
+                                isAvailable={bikeRoute.loaded}
+                                routeStepsNames={bikeRoute.steps.map(
+                                  (step) => step.name
+                                )}
+                                routeDistance={bikeRoute.distance}
+                                routeDuration={bikeRoute.duration}
                               />
                             </span>
                             <hr />
@@ -812,7 +888,12 @@ export default function Travel({ match }) {
                               <RouteCardItem
                                 text="Car"
                                 icon={car}
-                                route={carRoute}
+                                isAvailable={carRoute.loaded}
+                                routeStepsNames={carRoute.steps.map(
+                                  (step) => step.name
+                                )}
+                                routeDistance={carRoute.distance}
+                                routeDuration={carRoute.duration}
                               />
                             </span>
                           </CardList>
@@ -861,7 +942,7 @@ export default function Travel({ match }) {
           startCoords={startCoords}
           destinationCoords={destinationCoords}
           setMapEvents={setMapEvents}
-          mapPath={mapPath}
+          mapPaths={mapPaths}
           setCenter={center}
         ></MapPage>
       </IonContent>

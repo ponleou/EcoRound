@@ -19,7 +19,7 @@ export default function Travel({
   startCoords,
   destinationCoords,
   setMapEvents,
-  mapPath,
+  mapPaths,
   setCenter = { lat: undefined, lon: undefined },
 }) {
   const mapRef = useRef(null);
@@ -129,14 +129,22 @@ export default function Travel({
               {/* <Popup>Destination</Popup> */}
             </Marker>
           )}
-          {mapPath.length > 0 ? (
+          {mapPaths.map((mapPath, index) => (
             <Polyline
-              positions={mapPath}
-              color={getCssVariableValue("--ion-color-secondary").trim()}
+              key={index}
+              positions={mapPath.path}
+              color={
+                mapPath.type === "primary"
+                  ? getCssVariableValue("--ion-color-secondary").trim()
+                  : mapPath.type === "secondary"
+                  ? getCssVariableValue("--ion-color-primary").trim()
+                  : getCssVariableValue("--ion-color-secondary").trim()
+              }
               weight={4}
               opacity={1}
+              dashArray={mapPath.type === "secondary" ? "4, 8" : ""}
             />
-          ) : null}
+          ))}
         </MapContainer>
       </div>
       {bottomContent}

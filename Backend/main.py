@@ -159,6 +159,7 @@ def transitRoute():
                 "distance": leg['distance'],
                 "duration": leg['duration'],
                 "mode": leg['mode'],
+                "transitSegment": leg['transitLeg'],
                 "transitNames":{} if not leg['trip'] else {
                     "headsign": leg['trip']['tripHeadsign'],
                     "code": leg['trip']['routeShortName']
