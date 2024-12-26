@@ -187,6 +187,10 @@ def transitRoute():
             "segments": segments
         })
 
+# TODO: better error handling (put it as a function or route)
+    if len(response["routes"]) < 1:
+        return jsonify({"message": "No transit routes found"}), 404
+
     return jsonify(response)
 
 

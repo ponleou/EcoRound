@@ -860,10 +860,7 @@ export default function Travel({ match }) {
                         <TravelCard>
                           <CardList>
                             <span
-                              onClick={() =>
-                                transitRoutes.loaded &&
-                                handleRouteItem(transitRoutes.routes[0], train)
-                              }
+                              onClick={() => handleRouteItem(walkRoute, walk)}
                             >
                               <RouteCardItem
                                 text="Transit"
@@ -892,26 +889,28 @@ export default function Travel({ match }) {
                               />
                             </span>
                             <span
-                              onClick={() =>
-                                walkRoute.loaded &&
-                                handleRouteItem(walkRoute, walk)
-                              }
+                              onClick={() => handleRouteItem(walkRoute, walk)}
                             >
                               <RouteCardItem
                                 text="Walk"
                                 icon={walk}
                                 isAvailable={walkRoute.loaded}
-                                routeStepsNames={walkRoute.steps.map(
-                                  (step) => step.name
-                                )}
-                                routeDistance={walkRoute.distance}
-                                routeDuration={walkRoute.duration}
+                                routeStepsNames={
+                                  walkRoute.loaded
+                                    ? walkRoute.steps.map((step) => step.name)
+                                    : []
+                                }
+                                routeDistance={
+                                  walkRoute.loaded ? walkRoute.distance : ""
+                                }
+                                routeDuration={
+                                  walkRoute.loaded ? walkRoute.duration : ""
+                                }
                               />
                             </span>
                             <hr />
                             <span
                               onClick={() =>
-                                bikeRoute.loaded &&
                                 handleRouteItem(bikeRoute, bicycle)
                               }
                             >
@@ -919,29 +918,38 @@ export default function Travel({ match }) {
                                 text="Bike"
                                 icon={bicycle}
                                 isAvailable={bikeRoute.loaded}
-                                routeStepsNames={bikeRoute.steps.map(
-                                  (step) => step.name
-                                )}
-                                routeDistance={bikeRoute.distance}
-                                routeDuration={bikeRoute.duration}
+                                routeStepsNames={
+                                  bikeRoute.loaded
+                                    ? bikeRoute.steps.map((step) => step.name)
+                                    : []
+                                }
+                                routeDistance={
+                                  bikeRoute.loaded ? bikeRoute.distance : ""
+                                }
+                                routeDuration={
+                                  bikeRoute.loaded ? bikeRoute.duration : ""
+                                }
                               />
                             </span>
                             <hr />
                             <span
-                              onClick={() =>
-                                carRoute.loaded &&
-                                handleRouteItem(carRoute, car)
-                              }
+                              onClick={() => handleRouteItem(carRoute, car)}
                             >
                               <RouteCardItem
                                 text="Car"
                                 icon={car}
                                 isAvailable={carRoute.loaded}
-                                routeStepsNames={carRoute.steps.map(
-                                  (step) => step.name
-                                )}
-                                routeDistance={carRoute.distance}
-                                routeDuration={carRoute.duration}
+                                routeStepsNames={
+                                  carRoute.loaded
+                                    ? carRoute.steps.map((step) => step.name)
+                                    : []
+                                }
+                                routeDistance={
+                                  carRoute.loaded ? carRoute.distance : ""
+                                }
+                                routeDuration={
+                                  carRoute.loaded ? carRoute.duration : ""
+                                }
                               />
                             </span>
                           </CardList>
