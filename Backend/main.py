@@ -40,7 +40,10 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode):
                     duration
                     distance
                     mode
-                    headsign
+                    trip {
+                      routeShortName
+                      tripHeadsign
+                    }
                     from {
                         stop {
                             name
@@ -156,8 +159,11 @@ def transitRoute():
                 "distance": leg['distance'],
                 "duration": leg['duration'],
                 "mode": leg['mode'],
+                "transitNames":{} if not leg['trip'] else {
+                    "headsign": leg['trip']['tripHeadsign'],
+                    "code": leg['trip']['routeShortName']
+                },
                 "stops": {
-                    "startHeadsign": "" if not leg['headsign'] else leg['headsign'],
                     "startStop": "" if not leg['from']['stop'] else leg['from']['stop']['name'],
                     "endStop": "" if  not leg['to']['stop'] else leg['to']['stop']['name'],
                     "middleStops": [stop['name'] for stop in leg['intermediateStops']] if leg['transitLeg'] else [],
@@ -175,8 +181,8 @@ def transitRoute():
         
         # Append route to response
         response["routes"].append({
-            "distance": totalDistance,
-            "duration": totalDuration,
+            "distance": round(totalDistance,2),
+            "duration": round(totalDuration),
             "segments": segments
         })
 

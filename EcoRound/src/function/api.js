@@ -49,6 +49,16 @@ export const getBikeRoute = async (slat, slon, dlat, dlon) => {
   return handleResponse(reponse);
 };
 
+export const getTransitRoute = async (slat, slon, dlat, dlon) => {
+  const reponse = await CapacitorHttp.request({
+    url: `${baseUrl}/transit-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
+    headers: { "Content-Type": "application/json" },
+    method: "GET",
+  });
+
+  return handleResponse(reponse);
+};
+
 export const getPlaceList = async (search, lat, lon) => {
   const reponse = await CapacitorHttp.request({
     url: `${baseUrl}/find_place?search=${search}&lat=${lat}&lon=${lon}`,
