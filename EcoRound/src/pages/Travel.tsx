@@ -21,6 +21,7 @@ import {
   locationSharp,
   pin,
   swapVertical,
+  train,
   walk,
 } from "ionicons/icons";
 import "./Travel.css";
@@ -460,7 +461,7 @@ export default function Travel({ match }) {
       );
 
       setTransitRoutes({
-        routes: response.map((route) => ({
+        routes: response.routes.map((route) => ({
           distance: formatDistanceString(route.distance),
           duration: formatDurationString(route.duration),
           segments: route.segments.map((segment) =>
@@ -496,6 +497,7 @@ export default function Travel({ match }) {
       });
     } catch (error) {
       setTransitRoutes({ routes: [], loaded: false });
+      console.log(error);
     }
   };
 
@@ -858,7 +860,42 @@ export default function Travel({ match }) {
                         <TravelCard>
                           <CardList>
                             <span
-                              onClick={() => handleRouteItem(walkRoute, walk)}
+                              onClick={() =>
+                                transitRoutes.loaded &&
+                                handleRouteItem(transitRoutes.routes[0], train)
+                              }
+                            >
+                              <RouteCardItem
+                                text="Transit"
+                                icon={train}
+                                isAvailable={transitRoutes.loaded}
+                                routeStepsNames={
+                                  transitRoutes.loaded
+                                    ? transitRoutes.routes[0].segments.map(
+                                        (segment) =>
+                                          segment.transitSegment
+                                            ? segment.transitNames.code
+                                            : "-"
+                                      )
+                                    : []
+                                }
+                                routeDistance={
+                                  transitRoutes.loaded
+                                    ? transitRoutes.routes[0].distance
+                                    : ""
+                                }
+                                routeDuration={
+                                  transitRoutes.loaded
+                                    ? transitRoutes.routes[0].duration
+                                    : ""
+                                }
+                              />
+                            </span>
+                            <span
+                              onClick={() =>
+                                walkRoute.loaded &&
+                                handleRouteItem(walkRoute, walk)
+                              }
                             >
                               <RouteCardItem
                                 text="Walk"
@@ -874,6 +911,7 @@ export default function Travel({ match }) {
                             <hr />
                             <span
                               onClick={() =>
+                                bikeRoute.loaded &&
                                 handleRouteItem(bikeRoute, bicycle)
                               }
                             >
@@ -890,7 +928,10 @@ export default function Travel({ match }) {
                             </span>
                             <hr />
                             <span
-                              onClick={() => handleRouteItem(carRoute, car)}
+                              onClick={() =>
+                                carRoute.loaded &&
+                                handleRouteItem(carRoute, car)
+                              }
                             >
                               <RouteCardItem
                                 text="Car"
