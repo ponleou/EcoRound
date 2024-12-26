@@ -436,6 +436,69 @@ export default function Travel({ match }) {
     }
   };
 
+  /*
+  ---------- TRANSIT ROUTES ----------
+  */
+
+  const [transitRoutes, setTransitRoutes] = useState({
+    routes: [],
+    loaded: false,
+  });
+
+  const fetchTransitRoutes = async (
+    startCoords,
+    destinationCoords,
+    getTransitRoutes,
+    setTransitRoutes
+  ) => {
+    try {
+      const response = await getTransitRoutes(
+        startCoords.lat,
+        startCoords.lon,
+        destinationCoords.lat,
+        destinationCoords.lon
+      );
+
+      setTransitRoutes({
+        routes: response.map((route) => ({
+          distance: formatDistanceString(route.distance),
+          duration: formatDurationString(route.duration),
+          segments: route.segments.map((segment) =>
+            segment.transitSegment
+              ? {
+                  distance: formatDistanceString(segment.distance),
+                  duration: formatDurationString(segment.duration),
+                  transitSegment: segment.transitSegment,
+                  mode: segment.mode,
+                  stops: segment.stops,
+                  transitNames: segment.transitNames,
+                }
+              : {
+                  distance: formatDistanceString(segment.distance),
+                  duration: formatDurationString(segment.duration),
+                  transitSegment: segment.transitSegment,
+                  mode: segment.mode,
+                  steps: segment.steps.map((step) => ({
+                    distance: formatDistanceString(step.distance),
+                    duration: formatDurationString(step.duration),
+                    instruction: step.instruction,
+                    name: step.name,
+                  })),
+                  stops: segment.stops,
+                }
+          ),
+          paths: route.segments.map((segment) => ({
+            type: segment.transitSegment ? "primary" : "secondary",
+            path: segment.path,
+          })),
+        })),
+        loaded: true,
+      });
+    } catch (error) {
+      setTransitRoutes({ routes: [], loaded: false });
+    }
+  };
+
   useEffect(() => {
     if (
       startCoords.lat !== undefined &&
@@ -446,6 +509,12 @@ export default function Travel({ match }) {
       fetchRoutes(startCoords, destinationCoords, getWalkRoute, setWalkRoute);
       fetchRoutes(startCoords, destinationCoords, getBikeRoute, setBikeRoute);
       fetchRoutes(startCoords, destinationCoords, getCarRoute, setCarRoute);
+      fetchTransitRoutes(
+        startCoords,
+        destinationCoords,
+        getTransitRoute,
+        setTransitRoutes
+      );
     }
   }, [startCoords, destinationCoords]);
 
@@ -567,68 +636,6 @@ export default function Travel({ match }) {
     setSearchInput("");
     setSearchResults([]);
     navigation.goBack();
-  };
-
-  /*
-  ========== TRANSIT ROUTES ==========
-  */
-
-  const [transitRoutes, setTransitRoutes] = useState([]);
-  const transitRoute = useRef({
-    distance: "",
-    duration: "",
-    paths: [],
-  });
-
-  const fetchTransitRoutes = async () => {
-    try {
-      const response = await getTransitRoute(
-        startCoords.lat,
-        startCoords.lon,
-        destinationCoords.lat,
-        destinationCoords.lon
-      );
-
-      response.map((route) => {
-        setTransitRoutes((prevState) => [
-          ...prevState,
-          {
-            distance: formatDistanceString(route.distance),
-            duration: formatDurationString(route.duration),
-            segments: route.segments.map((segment) =>
-              segment.transitSegment
-                ? {
-                    distance: formatDistanceString(segment.distance),
-                    duration: formatDurationString(segment.duration),
-                    transitSegment: segment.transitSegment,
-                    mode: segment.mode,
-                    stops: segment.stops,
-                    transitNames: segment.transitNames,
-                  }
-                : {
-                    distance: formatDistanceString(segment.distance),
-                    duration: formatDurationString(segment.duration),
-                    transitSegment: segment.transitSegment,
-                    mode: segment.mode,
-                    steps: segment.steps.map((step) => ({
-                      distance: formatDistanceString(step.distance),
-                      duration: formatDurationString(step.duration),
-                      instruction: step.instruction,
-                      name: step.name,
-                    })),
-                    stops: segment.stops,
-                  }
-            ),
-            paths: route.segments.map((segment) => ({
-              type: segment.transitSegment ? "primary" : "secondary",
-              path: segment.path,
-            })),
-          },
-        ]);
-      });
-    } catch (error) {
-      setTransitRoutes([]);
-    }
   };
 
   return (
