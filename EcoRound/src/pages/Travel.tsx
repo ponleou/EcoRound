@@ -7,6 +7,7 @@ import {
   IonPage,
   IonHeader,
   IonContent,
+  IonToast,
 } from "@ionic/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
@@ -37,6 +38,7 @@ import distance from "../function/calculateDistance";
 import { CoordinateContext } from "../context/CoordinateContext";
 import MapCenterButton from "../components/MapCenterButton";
 import { RouteContext } from "../context/RouteContext";
+import PermissionToast from "../components/PermissionToast";
 
 export default function Travel({ match }) {
   const {
@@ -372,6 +374,7 @@ export default function Travel({ match }) {
           }
           bottomContent={
             <span>
+              <PermissionToast />
               {renderModal.current && (
                 <IonModal
                   className="rounded-t-3l"
@@ -576,6 +579,8 @@ export default function Travel({ match }) {
                                 }
                               />
                             </span>
+                            <hr />
+
                             <span
                               onClick={() => handleRouteItem(walkRoute, walk)}
                             >

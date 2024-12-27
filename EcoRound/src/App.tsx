@@ -110,11 +110,9 @@ function Main() {
       <Route
         path={travelPath.current}
         render={(props) => (
-          <CoordinateProvider>
-            <RouteProvider>
-              <Travel {...props} />
-            </RouteProvider>
-          </CoordinateProvider>
+          <RouteProvider>
+            <Travel {...props} />
+          </RouteProvider>
         )}
       />
     </IonRouterOutlet>

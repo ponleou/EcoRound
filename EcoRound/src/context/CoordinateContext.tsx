@@ -1,6 +1,7 @@
 import { createContext, useEffect, useRef, useState } from "react";
 import { getPlaceName } from "../function/api";
 import { Geolocation } from "@capacitor/geolocation";
+import { checkValidCoords } from "../function/api";
 
 const CoordinateContext = createContext({});
 
@@ -27,7 +28,9 @@ function CoordinateProvider({ children }) {
   const [currentCoords, setCurrentCoords] = useState({
     lat: 0,
     lon: 0,
-    status: false, // status determines if location is available (false when permission is denied)
+    status: true, // status determines if location is available (false when permission is denied)
+    valid: true, // valid determines if location is supported (false when location is not supported)
+    enabled: true, // enabled determines if location is enabled (false when location is disabled), only used for toast, treated as permission denied
   });
 
   // Get current location
@@ -38,16 +41,37 @@ function CoordinateProvider({ children }) {
       lat: location.coords.latitude,
       lon: location.coords.longitude,
       status: true,
+      valid: true,
     }));
   };
 
   // location permissions
   const checkLocationPermission = async () => {
-    let permission = await Geolocation.checkPermissions();
-    if (permission.location === "prompt") {
-      permission = await Geolocation.requestPermissions();
+    try {
+      let permission = await Geolocation.checkPermissions();
+      if (
+        permission.location === "prompt" ||
+        permission.location === "prompt-with-rationale"
+      ) {
+        permission = await Geolocation.requestPermissions();
+      }
+
+      if (permission.location === "granted") {
+        const location = await Geolocation.getCurrentPosition();
+        try {
+          await checkValidCoords(
+            location.coords.latitude,
+            location.coords.longitude
+          );
+        } catch (error) {
+          return "invalid";
+        }
+      }
+
+      return permission.location;
+    } catch (error) {
+      return "disabled";
     }
-    return permission.location;
   };
 
   // reference to interval for updating location
@@ -63,7 +87,30 @@ function CoordinateProvider({ children }) {
           updateCurrentCoords();
         }, 3000);
       } else if (permission === "denied") {
-        setCurrentCoords((prevState) => ({ ...prevState, status: false }));
+        setCurrentCoords((prevState) => ({
+          ...prevState,
+          status: false,
+          lat: -6.1944,
+          lon: 106.8229,
+          valid: false,
+        }));
+      } else if (permission === "invalid") {
+        setCurrentCoords((prevState) => ({
+          ...prevState,
+          status: true,
+          lat: -6.1944,
+          lon: 106.8229,
+          valid: false,
+        }));
+      } else if (permission === "disabled") {
+        setCurrentCoords((prevState) => ({
+          ...prevState,
+          status: false,
+          lat: -6.1944,
+          lon: 106.8229,
+          valid: false,
+          enabled: false,
+        }));
       }
     });
 
@@ -150,7 +197,9 @@ function CoordinateProvider({ children }) {
   useEffect(() => {
     if (
       (startCoords.lat === undefined || startCoords.lon === undefined) &&
-      currentCoords.status
+      currentCoords.status &&
+      currentCoords.valid &&
+      (currentCoords.lat || startCoords.lat)
     ) {
       setStartCoords((prevState) => ({
         ...prevState,
@@ -186,7 +235,6 @@ function CoordinateProvider({ children }) {
     <CoordinateContext.Provider
       value={{
         currentCoords,
-
         centerCoords,
         setCenterCoords,
         center,

@@ -117,13 +117,15 @@ export default function MapPage({
           />
           <MapEvents />
 
-          <CircleMarker
-            radius={10}
-            center={[currentCoords.lat, currentCoords.lon]}
-            fillColor={getCssVariableValue("--ion-color-secondary").trim()}
-            color="white"
-            fillOpacity={0.7}
-          ></CircleMarker>
+          {currentCoords.valid && (
+            <CircleMarker
+              radius={10}
+              center={[currentCoords.lat, currentCoords.lon]}
+              fillColor={getCssVariableValue("--ion-color-secondary").trim()}
+              color="white"
+              fillOpacity={0.7}
+            ></CircleMarker>
+          )}
           {startCoords.lat && startCoords.lon && (
             <CircleMarker
               radius={7}

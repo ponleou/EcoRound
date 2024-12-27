@@ -28,6 +28,7 @@ import TabBar from "../components/TabBar";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useEffect } from "react";
 import HeaderBar from "../components/HeaderBar";
+import PermissionToast from "../components/PermissionToast";
 
 export default function Home() {
   return (
@@ -51,6 +52,7 @@ export default function Home() {
             </IonButtons>
           </IonToolbar>
         </IonHeader>
+        <PermissionToast />
 
         <p>1</p>
         <p>2</p>
