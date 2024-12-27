@@ -294,6 +294,29 @@ def findPlace():
 
     return jsonify(response)
 
+# Jakarta bounding box
+JAKARTA_BOUNDING_BOX = {
+    "min_lat": -6.379377,
+    "max_lat": -6.06743,
+    "min_lon": 106.670417,
+    "max_lon": 106.979407
+}
+
+def isInJakarta(lat, lng):
+    return (
+        JAKARTA_BOUNDING_BOX["min_lat"] <= lat <= JAKARTA_BOUNDING_BOX["max_lat"]
+        and JAKARTA_BOUNDING_BOX["min_lon"] <= lng <= JAKARTA_BOUNDING_BOX["max_lon"]
+    )
+
+@app.get("/api/check_valid_coords")
+def checkValidCoords():
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+
+    if isInJakarta(lat, lon):
+        return jsonify({"message": "Location is within Jakarta"}), 200
+    else:
+        return jsonify({"message": "Location is outside Jakarta"}), 403
 
 @app.errorhandler(ApiError)
 def orsApiError(error):

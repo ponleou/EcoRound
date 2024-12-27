@@ -68,3 +68,13 @@ export const getPlaceList = async (search, lat, lon) => {
 
   return handleResponse(reponse);
 };
+
+export const checkValidCoords = async (lat, lon) => {
+  const reponse = await CapacitorHttp.request({
+    url: `${baseUrl}/check_valid_coords?lat=${lat}&lon=${lon}`,
+    headers: { "Content-Type": "application/json" },
+    method: "GET",
+  });
+
+  return handleResponse(reponse);
+};
