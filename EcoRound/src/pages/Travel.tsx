@@ -41,7 +41,6 @@ import { RouteContext } from "../context/RouteContext";
 export default function Travel({ match }) {
   const {
     currentCoords,
-    focusCurrentCoords,
     centerCoords,
     setCenter,
     startCoords,
@@ -52,6 +51,8 @@ export default function Travel({ match }) {
 
   const { carRoute, bikeRoute, walkRoute, transitRoutes, defaultRoute } =
     useContext(RouteContext) as any;
+
+  const [focusCurrentCoords, setFocusCurrentCoords] = useState(true);
 
   const navigation = useIonRouter();
 
@@ -164,7 +165,7 @@ export default function Travel({ match }) {
 
   useEffect(() => {
     if (mapEvents.dragging) {
-      focusCurrentCoords.current = false;
+      setFocusCurrentCoords(false);
     }
   }, [mapEvents]);
 
@@ -326,7 +327,7 @@ export default function Travel({ match }) {
       lon: lon,
     }));
 
-    focusCurrentCoords.current = false;
+    setFocusCurrentCoords(false);
     setSearchInput("");
     setSearchResults([]);
     navigation.goBack();
@@ -363,7 +364,10 @@ export default function Travel({ match }) {
                   />
                 </span>
               </div>
-              <MapCenterButton></MapCenterButton>
+              <MapCenterButton
+                setFocusCurrentCoords={setFocusCurrentCoords}
+                focusCurrentCoords={focusCurrentCoords}
+              ></MapCenterButton>
             </span>
           }
           bottomContent={
@@ -679,6 +683,7 @@ export default function Travel({ match }) {
           }
           setMapEvents={setMapEvents}
           mapPaths={mapPaths}
+          focusCurrentCoords={focusCurrentCoords}
         ></MapPage>
       </IonContent>
     </IonPage>

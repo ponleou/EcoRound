@@ -17,10 +17,10 @@ export default function MapPage({
   bottomContent,
   setMapEvents = null,
   mapPaths = [],
+  focusCurrentCoords = false,
 }) {
   const {
     currentCoords,
-    focusCurrentCoords,
     center,
     startCoords,
     destinationCoords,
@@ -55,13 +55,13 @@ export default function MapPage({
 
   // Update map view to center location when location changes (only when focus is true)
   useEffect(() => {
-    if (focusCurrentCoords.current && mapRef.current) {
+    if (focusCurrentCoords && mapRef.current) {
       mapRef.current.setView(
         [currentCoords.lat, currentCoords.lon],
         mapRef.current.getZoom()
       );
     }
-  }, [currentCoords, focusCurrentCoords.current]);
+  }, [currentCoords, focusCurrentCoords]);
 
   // fix leaflet map invalid size
   useEffect(() => {

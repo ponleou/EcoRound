@@ -30,8 +30,6 @@ function CoordinateProvider({ children }) {
     status: false, // status determines if location is available (false when permission is denied)
   });
 
-  const focusCurrentCoords = useRef(true);
-
   // Get current location
   const updateCurrentCoords = async () => {
     const location = await Geolocation.getCurrentPosition();
@@ -188,7 +186,7 @@ function CoordinateProvider({ children }) {
     <CoordinateContext.Provider
       value={{
         currentCoords,
-        focusCurrentCoords,
+
         centerCoords,
         setCenterCoords,
         center,
