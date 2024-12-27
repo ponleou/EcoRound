@@ -43,6 +43,7 @@ import { useEffect, useRef } from "react";
 import { App as CApp } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { CoordinateProvider } from "./context/CoordinateContext";
+import { RouteProvider } from "./context/RouteContext";
 
 setupIonicReact();
 
@@ -106,7 +107,16 @@ function Main() {
         <Redirect to="/home" />
       </Route>
       <Route exact={true} path={homePath.current} component={Home} />
-      <Route path={travelPath.current} component={Travel} />
+      <Route
+        path={travelPath.current}
+        render={(props) => (
+          <CoordinateProvider>
+            <RouteProvider>
+              <Travel {...props} />
+            </RouteProvider>
+          </CoordinateProvider>
+        )}
+      />
     </IonRouterOutlet>
   );
 }
