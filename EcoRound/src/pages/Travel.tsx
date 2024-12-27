@@ -8,7 +8,7 @@ import {
   IonHeader,
   IonContent,
 } from "@ionic/react";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
 import {
   arrowBack,
@@ -25,7 +25,6 @@ import {
   walk,
 } from "ionicons/icons";
 import "./Travel.css";
-import { Geolocation } from "@capacitor/geolocation";
 import MapPage from "../components/MapPage";
 import {
   getPlaceName,
@@ -42,26 +41,24 @@ import TravelItem from "../components/TravelItem";
 import { Keyboard } from "@capacitor/keyboard";
 import CardList from "../components/CardList";
 import distance from "../function/calculateDistance";
+import { CoordinateContext } from "../context/CoordinateContext";
+import MapCenterButton from "../components/MapCenterButton";
 
 export default function Travel({ match }) {
+  const {
+    currentCoords,
+    focusCurrentCoords,
+    centerCoords,
+    setCenter,
+    startCoords,
+    setStartCoords,
+    destinationCoords,
+    setDestinationCoords,
+  } = useContext(CoordinateContext) as any;
+
   /*
   ========== GLOBAL FUNCTIONS ==========
   */
-  // fetching place names for center coords
-  const setPlaceName = async (coords, setCoords) => {
-    try {
-      const response = await getPlaceName(coords.lat, coords.lon);
-      setCoords((prevState) => ({
-        ...prevState,
-        label: response.name,
-      }));
-    } catch (error) {
-      setCoords((prevState) => ({
-        ...prevState,
-        label: error.message,
-      }));
-    }
-  };
 
   const navigation = useIonRouter();
 
@@ -169,67 +166,10 @@ export default function Travel({ match }) {
   /*
   ========== CURRENT LOCATION ==========
   */
-  // user's current location
-  const [currentCoords, setCurrentCoords] = useState({
-    lat: 0,
-    lon: 0,
-    status: false, // status determines if location is available (false when permission is denied)
-    focus: true,
-  });
-
-  // Get current location
-  const getCurrentCoords = async () => {
-    const location = await Geolocation.getCurrentPosition();
-    setCurrentCoords((prevState) => ({
-      ...prevState,
-      lat: location.coords.latitude,
-      lon: location.coords.longitude,
-      status: true,
-    }));
-  };
-
-  // location permissions
-  const checkLocationPermission = async () => {
-    let permission = await Geolocation.checkPermissions();
-    if (permission.location === "prompt") {
-      permission = await Geolocation.requestPermissions();
-    }
-    return permission.location;
-  };
-
-  // reference to interval for updating location
-  const currentCoordsInterval = useRef(null);
-
-  // update current location every interval (3 seconds)
-  useEffect(() => {
-    checkLocationPermission().then((permission) => {
-      if (permission === "granted") {
-        getCurrentCoords();
-
-        currentCoordsInterval.current = setInterval(() => {
-          getCurrentCoords();
-        }, 3000);
-      } else if (permission === "denied") {
-        setCurrentCoords((prevState) => ({ ...prevState, status: false }));
-      }
-    });
-
-    return () => {
-      if (currentCoordsInterval.current) {
-        clearInterval(currentCoordsInterval.current);
-      }
-    };
-  }, []);
 
   /*
   ========== CENTERING MAP ==========
   */
-  // center coords of map
-  const [centerCoords, setCenterCoords] = useState({
-    lat: undefined,
-    lon: undefined,
-    label: "",
-  });
 
   // keep track of map events
   const [mapEvents, setMapEvents] = useState({
@@ -237,62 +177,15 @@ export default function Travel({ match }) {
     dragging: false,
   });
 
-  // passed to set the ceenter of the map
-  const [center, setCenter] = useState({ lat: undefined, lon: undefined });
-
-  // handles focusing on current location
-  const handleCurrentFocus = () => {
-    setCurrentCoords((prevState) => ({ ...prevState, focus: true }));
-  };
-
   useEffect(() => {
     if (mapEvents.dragging) {
-      setCurrentCoords((prevState) => ({ ...prevState, focus: false }));
-    }
-  }, [mapEvents]);
-
-  useEffect(() => {
-    if (choosingLocation) {
-      if (!mapEvents.moving && centerCoords.lat && centerCoords.lon) {
-        setPlaceName(centerCoords, setCenterCoords);
-      } else {
-        setCenterCoords((prevState) => ({
-          ...prevState,
-          label: "",
-        }));
-      }
+      focusCurrentCoords.current = false;
     }
   }, [mapEvents]);
 
   /*
   ========== START AND DESTINATION COORDS ==========
   */
-  // start and destination coords
-  const [startCoords, setStartCoords] = useState({
-    lat: undefined,
-    lon: undefined,
-    label: "",
-  });
-  const [destinationCoords, setDestinationCoords] = useState({
-    lat: undefined,
-    lon: undefined,
-    label: "",
-  });
-
-  // set start coords to current location for the first time when startcoord is undefined
-  useEffect(() => {
-    if (
-      (startCoords.lat === undefined || startCoords.lon === undefined) &&
-      currentCoords.status
-    ) {
-      setStartCoords((prevState) => ({
-        ...prevState,
-        lat: currentCoords.lat,
-        lon: currentCoords.lon,
-        label: "",
-      }));
-    }
-  }, [currentCoords, startCoords]);
 
   // set destination or start coords to center coords with handling choosing state and selected location
   const functionSetter = useRef(null);
@@ -332,27 +225,6 @@ export default function Travel({ match }) {
       label: temp.label,
     }));
   };
-
-  // fetching place names for start and destination coords is label is not set
-  useEffect(() => {
-    if (
-      startCoords.label === "" &&
-      startCoords.lat !== undefined &&
-      startCoords.lon !== undefined
-    ) {
-      setPlaceName(startCoords, setStartCoords);
-    }
-  }, [startCoords]);
-
-  useEffect(() => {
-    if (
-      destinationCoords.label === "" &&
-      destinationCoords.lat !== undefined &&
-      destinationCoords.lon !== undefined
-    ) {
-      setPlaceName(destinationCoords, setDestinationCoords);
-    }
-  }, [destinationCoords]);
 
   /*
   ========== ROUTES ==========
@@ -631,10 +503,7 @@ export default function Travel({ match }) {
       lon: lon,
     }));
 
-    setCurrentCoords((prevState) => ({
-      ...prevState,
-      focus: false,
-    }));
+    focusCurrentCoords.current = false;
     setSearchInput("");
     setSearchResults([]);
     navigation.goBack();
@@ -671,15 +540,7 @@ export default function Travel({ match }) {
                   />
                 </span>
               </div>
-              <div className="flex flex-col items-end gap-4 m-4">
-                <IonButton
-                  shape="round"
-                  color={currentCoords.focus ? "primary" : "light"}
-                  onClick={() => handleCurrentFocus()}
-                >
-                  <IonIcon slot="icon-only" icon={locate}></IonIcon>
-                </IonButton>
-              </div>
+              <MapCenterButton></MapCenterButton>
             </span>
           }
           bottomContent={
@@ -993,13 +854,8 @@ export default function Travel({ match }) {
               )}
             </span>
           }
-          currentCoords={currentCoords}
-          setCenterCoords={setCenterCoords}
-          startCoords={startCoords}
-          destinationCoords={destinationCoords}
           setMapEvents={setMapEvents}
           mapPaths={mapPaths}
-          setCenter={center}
         ></MapPage>
       </IonContent>
     </IonPage>

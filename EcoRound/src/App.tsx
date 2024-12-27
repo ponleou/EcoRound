@@ -42,15 +42,18 @@ import Travel from "./pages/Travel";
 import { useEffect, useRef } from "react";
 import { App as CApp } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import { CoordinateProvider } from "./context/CoordinateContext";
 
 setupIonicReact();
 
 function App() {
   return (
     <IonApp>
-      <IonReactRouter>
-        <Main />
-      </IonReactRouter>
+      <CoordinateProvider>
+        <IonReactRouter>
+          <Main />
+        </IonReactRouter>
+      </CoordinateProvider>
     </IonApp>
   );
 }

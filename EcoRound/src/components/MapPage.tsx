@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -10,34 +10,43 @@ import {
 import "leaflet/dist/leaflet.css";
 import "./MapPage.css";
 import L, { map } from "leaflet";
+import { CoordinateContext } from "../context/CoordinateContext";
 
-export default function Travel({
+export default function MapPage({
   topContent,
   bottomContent,
-  currentCoords,
-  setCenterCoords,
-  startCoords,
-  destinationCoords,
-  setMapEvents,
-  mapPaths,
-  setCenter = { lat: undefined, lon: undefined },
+  setMapEvents = null,
+  mapPaths = [],
 }) {
+  const {
+    currentCoords,
+    focusCurrentCoords,
+    center,
+    startCoords,
+    destinationCoords,
+    setCenterCoords,
+  } = useContext(CoordinateContext) as any;
+
   const mapRef = useRef(null);
 
   // map events
   function MapEvents() {
     useMapEvents({
       movestart: () => {
-        setMapEvents((prevState) => ({ ...prevState, moving: true }));
+        if (setMapEvents)
+          setMapEvents((prevState) => ({ ...prevState, moving: true }));
       },
       moveend: () => {
-        setMapEvents((prevState) => ({ ...prevState, moving: false }));
+        if (setMapEvents)
+          setMapEvents((prevState) => ({ ...prevState, moving: false }));
       },
       dragstart: () => {
-        setMapEvents((prevState) => ({ ...prevState, dragging: true }));
+        if (setMapEvents)
+          setMapEvents((prevState) => ({ ...prevState, dragging: true }));
       },
       dragend: () => {
-        setMapEvents((prevState) => ({ ...prevState, dragging: false }));
+        if (setMapEvents)
+          setMapEvents((prevState) => ({ ...prevState, dragging: false }));
       },
     });
 
@@ -46,13 +55,13 @@ export default function Travel({
 
   // Update map view to center location when location changes (only when focus is true)
   useEffect(() => {
-    if (currentCoords.focus && mapRef.current) {
+    if (focusCurrentCoords.current && mapRef.current) {
       mapRef.current.setView(
         [currentCoords.lat, currentCoords.lon],
         mapRef.current.getZoom()
       );
     }
-  }, [currentCoords]);
+  }, [currentCoords, focusCurrentCoords.current]);
 
   // fix leaflet map invalid size
   useEffect(() => {
@@ -67,11 +76,13 @@ export default function Travel({
   // Get center coordinates of map
   useEffect(() => {
     const getCenterInterval = setInterval(() => {
-      setCenterCoords((prevState) => ({
-        ...prevState,
-        lat: mapRef.current.getCenter().lat,
-        lon: mapRef.current.getCenter().lng,
-      }));
+      if (mapRef.current) {
+        setCenterCoords((prevState) => ({
+          ...prevState,
+          lat: mapRef.current.getCenter().lat,
+          lon: mapRef.current.getCenter().lng,
+        }));
+      }
     }, 100);
     return () => clearInterval(getCenterInterval);
   }, []);
@@ -83,10 +94,10 @@ export default function Travel({
   }
 
   useEffect(() => {
-    if (setCenter.lat !== undefined && setCenter.lon !== undefined) {
-      mapRef.current.setView([setCenter.lat, setCenter.lon], 20);
+    if (center.lat !== undefined && center.lon !== undefined) {
+      mapRef.current.setView([center.lat, center.lon], 20);
     }
-  }, [setCenter]);
+  }, [center]);
 
   return (
     <div>
