@@ -163,18 +163,6 @@ def stepInstruction(direction, street, bogusName, absoluteDirection):
     return instruction
 
 
-def toServerTimezone(datetime_str):
-    # Parse the input datetime with offset (format: "YYYY-MM-DDTHH:MM:SS±HH:MM")
-    naive_time = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S%z")
-
-    # Get the server's local timezone
-    server_tz = get_localzone()
-    server_time = naive_time.astimezone(server_tz)
-
-    # Return the result in 'YYYY-MM-DDTHH:MM:SS' format
-    return server_time.strftime("%Y-%m-%dT%H:%M:%S")
-
-
 @app.get("/api/transit-route")
 def transitRoute():
     slat = request.args.get("slat")
@@ -184,7 +172,6 @@ def transitRoute():
     datetime = request.args.get("datetime")
     isArrival = True if request.args.get("isarrival") == "1" else False
 
-    datetime = toServerTimezone(datetime)
     date = datetime.split("T")[0]
     time = datetime.split("T")[1]
 
