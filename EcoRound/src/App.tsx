@@ -44,17 +44,20 @@ import { App as CApp } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { CoordinateProvider } from "./context/CoordinateContext";
 import { RouteProvider } from "./context/RouteContext";
+import { DateProvider } from "./context/DateContext";
 
 setupIonicReact();
 
 function App() {
   return (
     <IonApp>
-      <CoordinateProvider>
-        <IonReactRouter>
-          <Main />
-        </IonReactRouter>
-      </CoordinateProvider>
+      <DateProvider>
+        <CoordinateProvider>
+          <IonReactRouter>
+            <Main />
+          </IonReactRouter>
+        </CoordinateProvider>
+      </DateProvider>
     </IonApp>
   );
 }

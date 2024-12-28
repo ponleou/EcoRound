@@ -8,6 +8,7 @@ import {
   pointsCalculation,
 } from "../function/api.js";
 import { car } from "ionicons/icons";
+import { DateContext } from "./DateContext";
 
 const RouteContext = createContext({});
 
@@ -111,18 +112,22 @@ function RouteProvider({ children }) {
     loaded: false,
   });
 
+  const { getCurrentTime } = useContext(DateContext) as any;
+
   const fetchTransitRoutes = async (
     startCoords,
     destinationCoords,
     getTransitRoutes,
-    setTransitRoutes
+    setTransitRoutes,
+    datetime = getCurrentTime()
   ) => {
     try {
       const response = await getTransitRoutes(
         startCoords.lat,
         startCoords.lon,
         destinationCoords.lat,
-        destinationCoords.lon
+        destinationCoords.lon,
+        datetime
       );
 
       setTransitRoutes({

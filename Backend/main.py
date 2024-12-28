@@ -7,6 +7,8 @@ from dotenv import load_dotenv  # type: ignore
 from flask import Flask, jsonify, request  # type: ignore
 from flask_cors import CORS
 from polyline import decode
+from datetime import datetime
+from tzlocal import get_localzone  # To get the server's local timezone
 
 load_dotenv()
 
@@ -26,7 +28,7 @@ busEF = 0.0385
 
 
 # function to query OTP server for route
-def queryOTPRoute(slat, slon, dlat, dlon, mode):
+def queryOTPRoute(slat, slon, dlat, dlon, mode, date=None, time=None, isArrival=False):
     graphql_query = {
         "query": """
         query plan(
@@ -35,11 +37,17 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode):
         $toLat: Float!, 
         $toLon: Float!,
         $mode: Mode!
+        $time: String
+        $date: String
+        $arriveBy: Boolean!
         ) {
         plan(
             from: {lat: $fromLat, lon: $fromLon}
             to: {lat: $toLat, lon: $toLon}
             transportModes: {mode: $mode}
+            time: $time
+            date: $date
+            arriveBy: $arriveBy
         ) {
             itineraries {
                 start
@@ -93,6 +101,9 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode):
             "toLat": float(dlat),
             "toLon": float(dlon),
             "mode": mode,
+            "arriveBy": isArrival,
+            "date": date,
+            "time": time,
         },
     }
 
@@ -152,14 +163,32 @@ def stepInstruction(direction, street, bogusName, absoluteDirection):
     return instruction
 
 
+def toServerTimezone(datetime_str):
+    # Parse the input datetime with offset (format: "YYYY-MM-DDTHH:MM:SS±HH:MM")
+    naive_time = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S%z")
+
+    # Get the server's local timezone
+    server_tz = get_localzone()
+    server_time = naive_time.astimezone(server_tz)
+
+    # Return the result in 'YYYY-MM-DDTHH:MM:SS' format
+    return server_time.strftime("%Y-%m-%dT%H:%M:%S")
+
+
 @app.get("/api/transit-route")
 def transitRoute():
     slat = request.args.get("slat")
     slon = request.args.get("slon")
     dlat = request.args.get("dlat")
     dlon = request.args.get("dlon")
+    datetime = request.args.get("datetime")
+    isArrival = True if request.args.get("isarrival") == "1" else False
 
-    routes = queryOTPRoute(slat, slon, dlat, dlon, "TRANSIT")
+    datetime = toServerTimezone(datetime)
+    date = datetime.split("T")[0]
+    time = datetime.split("T")[1]
+
+    routes = queryOTPRoute(slat, slon, dlat, dlon, "TRANSIT", date, time, isArrival)
 
     response = {"routes": []}
 

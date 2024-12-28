@@ -49,9 +49,19 @@ export const getBikeRoute = async (slat, slon, dlat, dlon) => {
   return handleResponse(reponse);
 };
 
-export const getTransitRoute = async (slat, slon, dlat, dlon) => {
+export const getTransitRoute = async (
+  slat,
+  slon,
+  dlat,
+  dlon,
+  datetime,
+  isArrival = 0
+) => {
   const reponse = await CapacitorHttp.request({
-    url: `${baseUrl}/transit-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
+    url: `${baseUrl}/transit-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}&datetime=${datetime.replace(
+      "+",
+      "%2B"
+    )}&isarrival=${isArrival}`,
     headers: { "Content-Type": "application/json" },
     method: "GET",
   });
