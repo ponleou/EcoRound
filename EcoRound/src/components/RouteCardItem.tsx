@@ -3,16 +3,16 @@ import { walk, chevronForward } from "ionicons/icons";
 import IconText from "./IconText";
 
 export default function RouteCardItem({
-  text,
+  iconText,
+  points,
   icon,
   isAvailable = false,
   routeStepsNames = [],
-  routeDistance = "",
-  routeDuration = "",
+  routeDescriptions = [],
 }) {
   return (
     <div className="flex px-2 gap-4 ion-activatable relative overflow-hidden py-4 rounded-md">
-      <IconText icon={icon} text={text} />
+      <IconText icon={icon} text={iconText} />
 
       {!isAvailable ? (
         <p className="font-bold items-center justify-end flex grow">
@@ -31,18 +31,23 @@ export default function RouteCardItem({
               </IonText>
             </p>
             <p className="text-xs flex gap-2">
-              <IonText color={"secondary"}>
-                {routeDistance ? routeDistance : ""}
-              </IonText>
-              <IonText className="font-bold" color={"secondary"}>
-                {routeDuration ? routeDuration : ""}
-              </IonText>
+              {routeDescriptions.map((description, index) => (
+                <IonText
+                  key={index}
+                  color={"secondary"}
+                  className={
+                    routeDescriptions.length - 1 <= index ? "font-bold" : ""
+                  }
+                >
+                  {description}
+                </IonText>
+              ))}
             </p>
           </div>
           <div className="flex items-center w-fit text-nowrap">
             <div className="text-right flex items-center h-full">
               <p className="font-bold">
-                <IonText>200 Points</IonText>
+                <IonText>{points ? points : ""}</IonText>
               </p>
             </div>
             <IonButton fill="clear" color="dark" shape="round">

@@ -5,7 +5,9 @@ import {
   getCarRoute,
   getWalkRoute,
   getTransitRoute,
+  pointsCalculation,
 } from "../function/api.js";
+import { car } from "ionicons/icons";
 
 const RouteContext = createContext({});
 
@@ -19,6 +21,8 @@ function RouteProvider({ children }) {
     distance: "",
     duration: "",
     steps: [],
+    emission: "",
+    points: "",
   });
   // fetched routes
   const [carRoute, setCarRoute] = useState({
@@ -83,14 +87,18 @@ function RouteProvider({ children }) {
           distance: formatDistanceString(step.distance),
           duration: formatDurationString(step.duration),
         })),
+        emission: response.emission.toFixed(3) + " CO₂",
         loaded: true,
       }));
+
+      return response;
     } catch (error) {
       // set error if route is not found
       setRouteFunction((prevState) => ({
         ...prevState,
         loaded: false,
       }));
+      return error;
     }
   };
 
@@ -149,13 +157,43 @@ function RouteProvider({ children }) {
             type: segment.transitSegment ? "primary" : "secondary",
             path: segment.path,
           })),
+          emission: route.emission.toFixed(3) + " CO₂",
         })),
         loaded: true,
       });
+
+      return response;
     } catch (error) {
       setTransitRoutes({ routes: [], loaded: false });
-      console.log(error);
     }
+  };
+
+  const fetchRoutePoints = async (base, value, setRoute) => {
+    try {
+      let response = await pointsCalculation(base, value);
+      setRoute((prevState) => ({
+        ...prevState,
+        points: Math.round(response.points) + " Points",
+      }));
+    } catch (error) {}
+  };
+
+  const fetchTransitRoutePoints = async (base, value, setRoute, index) => {
+    try {
+      let response = await pointsCalculation(base, value);
+      setRoute((prevState) => ({
+        ...prevState,
+        routes: prevState.routes.map((route, i) => {
+          if (i === index) {
+            return {
+              ...route,
+              points: Math.round(response.points) + " Points",
+            };
+          }
+          return route;
+        }),
+      }));
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -165,17 +203,65 @@ function RouteProvider({ children }) {
       destinationCoords.lat !== undefined &&
       destinationCoords.lon !== undefined
     ) {
-      fetchRoutes(startCoords, destinationCoords, getWalkRoute, setWalkRoute);
-      fetchRoutes(startCoords, destinationCoords, getBikeRoute, setBikeRoute);
-      fetchRoutes(startCoords, destinationCoords, getCarRoute, setCarRoute);
-      fetchTransitRoutes(
+      fetchRoutes(
         startCoords,
         destinationCoords,
-        getTransitRoute,
-        setTransitRoutes
-      );
+        getCarRoute,
+        setCarRoute
+      ).then((carResponse) => {
+        fetchRoutePoints(
+          carResponse.emission,
+          carResponse.emission,
+          setCarRoute
+        );
+
+        fetchRoutes(
+          startCoords,
+          destinationCoords,
+          getWalkRoute,
+          setWalkRoute
+        ).then((response) => {
+          fetchRoutePoints(
+            carResponse.emission,
+            response.emission,
+            setWalkRoute
+          );
+        });
+        fetchRoutes(
+          startCoords,
+          destinationCoords,
+          getBikeRoute,
+          setBikeRoute
+        ).then((response) => {
+          fetchRoutePoints(
+            carResponse.emission,
+            response.emission,
+            setBikeRoute
+          );
+        });
+
+        fetchTransitRoutes(
+          startCoords,
+          destinationCoords,
+          getTransitRoute,
+          setTransitRoutes
+        ).then((responses) => {
+          responses.routes.forEach((response, index) => {
+            fetchTransitRoutePoints(
+              carResponse.emission,
+              response.emission,
+              setTransitRoutes,
+              index
+            );
+          });
+        });
+      });
     }
   }, [startCoords, destinationCoords]);
+
+  useEffect(() => {
+    console.log("carRoute", carRoute);
+  }, [carRoute, bikeRoute, walkRoute, transitRoutes]);
 
   return (
     <RouteContext.Provider

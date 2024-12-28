@@ -442,8 +442,10 @@ export default function Travel({ match }) {
                               subTexts={[
                                 displayRoute.route.distance,
                                 displayRoute.route.duration,
+                                displayRoute.route.emission,
+                                displayRoute.route.points,
                                 <span className="font-bold">
-                                  {"200 Points"}
+                                  {displayRoute.route.points}
                                 </span>,
                               ]}
                               iconSize="large"
@@ -554,7 +556,12 @@ export default function Travel({ match }) {
                               onClick={() => handleRouteItem(walkRoute, walk)}
                             >
                               <RouteCardItem
-                                text="Transit"
+                                iconText="Transit"
+                                points={
+                                  transitRoutes.loaded
+                                    ? transitRoutes.routes[0].points
+                                    : ""
+                                }
                                 icon={train}
                                 isAvailable={transitRoutes.loaded}
                                 routeStepsNames={
@@ -567,15 +574,14 @@ export default function Travel({ match }) {
                                       )
                                     : []
                                 }
-                                routeDistance={
+                                routeDescriptions={
                                   transitRoutes.loaded
-                                    ? transitRoutes.routes[0].distance
-                                    : ""
-                                }
-                                routeDuration={
-                                  transitRoutes.loaded
-                                    ? transitRoutes.routes[0].duration
-                                    : ""
+                                    ? [
+                                        transitRoutes.routes[0].distance,
+                                        transitRoutes.routes[0].duration,
+                                        transitRoutes.routes[0].emission,
+                                      ]
+                                    : []
                                 }
                               />
                             </span>
@@ -585,7 +591,10 @@ export default function Travel({ match }) {
                               onClick={() => handleRouteItem(walkRoute, walk)}
                             >
                               <RouteCardItem
-                                text="Walk"
+                                iconText="Walk"
+                                points={
+                                  walkRoute.loaded ? walkRoute.points : ""
+                                }
                                 icon={walk}
                                 isAvailable={walkRoute.loaded}
                                 routeStepsNames={
@@ -593,11 +602,14 @@ export default function Travel({ match }) {
                                     ? walkRoute.steps.map((step) => step.name)
                                     : []
                                 }
-                                routeDistance={
-                                  walkRoute.loaded ? walkRoute.distance : ""
-                                }
-                                routeDuration={
-                                  walkRoute.loaded ? walkRoute.duration : ""
+                                routeDescriptions={
+                                  walkRoute.loaded
+                                    ? [
+                                        walkRoute.distance,
+                                        walkRoute.duration,
+                                        walkRoute.emission,
+                                      ]
+                                    : []
                                 }
                               />
                             </span>
@@ -608,7 +620,10 @@ export default function Travel({ match }) {
                               }
                             >
                               <RouteCardItem
-                                text="Bike"
+                                iconText="Bike"
+                                points={
+                                  bikeRoute.loaded ? bikeRoute.points : ""
+                                }
                                 icon={bicycle}
                                 isAvailable={bikeRoute.loaded}
                                 routeStepsNames={
@@ -616,11 +631,14 @@ export default function Travel({ match }) {
                                     ? bikeRoute.steps.map((step) => step.name)
                                     : []
                                 }
-                                routeDistance={
-                                  bikeRoute.loaded ? bikeRoute.distance : ""
-                                }
-                                routeDuration={
-                                  bikeRoute.loaded ? bikeRoute.duration : ""
+                                routeDescriptions={
+                                  bikeRoute.loaded
+                                    ? [
+                                        bikeRoute.distance,
+                                        bikeRoute.duration,
+                                        bikeRoute.emission,
+                                      ]
+                                    : []
                                 }
                               />
                             </span>
@@ -629,7 +647,8 @@ export default function Travel({ match }) {
                               onClick={() => handleRouteItem(carRoute, car)}
                             >
                               <RouteCardItem
-                                text="Car"
+                                iconText="Car"
+                                points={carRoute.loaded ? carRoute.points : ""}
                                 icon={car}
                                 isAvailable={carRoute.loaded}
                                 routeStepsNames={
@@ -637,11 +656,14 @@ export default function Travel({ match }) {
                                     ? carRoute.steps.map((step) => step.name)
                                     : []
                                 }
-                                routeDistance={
-                                  carRoute.loaded ? carRoute.distance : ""
-                                }
-                                routeDuration={
-                                  carRoute.loaded ? carRoute.duration : ""
+                                routeDescriptions={
+                                  carRoute.loaded
+                                    ? [
+                                        carRoute.distance,
+                                        carRoute.duration,
+                                        carRoute.emission,
+                                      ]
+                                    : []
                                 }
                               />
                             </span>
