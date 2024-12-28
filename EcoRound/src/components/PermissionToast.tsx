@@ -28,7 +28,7 @@ export default function PermissionToast() {
   }, [currentCoords]);
 
   return (
-    <span>
+    <span onClick={() => setOpenToast(false)}>
       <IonToast
         isOpen={openToast}
         message={toastMessage.current}
