@@ -270,9 +270,10 @@ def pointsCalculation():
     base = request.args.get("base")
     value = request.args.get("value")
 
-    ponits = 0 if int(value) - int(base) < 0 else int(value) - int(base)
+    points = 0 if float(base) - float(value) < 0 else (float(base) - float(value)) * 1000
 
-    return jsonify({"points": ponits})
+    return jsonify({"points": points})
+
 
 @app.get("/api/place_name")
 def place():
