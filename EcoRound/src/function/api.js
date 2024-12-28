@@ -78,3 +78,13 @@ export const checkValidCoords = async (lat, lon) => {
 
   return handleResponse(reponse);
 };
+
+export const pointsCalculation = async (base, value) => {
+  const reponse = await CapacitorHttp.request({
+    url: `${baseUrl}/points_calculation?base=${base}&value=${value}`,
+    headers: { "Content-Type": "application/json" },
+    method: "GET",
+  });
+
+  return handleResponse(reponse);
+};

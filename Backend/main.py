@@ -18,6 +18,12 @@ OTP_URL = "http://localhost:8080/otp/gtfs/v1"
 app = Flask(__name__)
 CORS(app)
 
+# emission factors
+carEF = 0.137
+walkEF = 0.053
+mikrotransEF = 0.0347
+busEF = 0.0385
+
 # function to query OTP server for route
 def queryOTPRoute(slat, slon, dlat, dlon, mode):
     graphql_query = {
@@ -136,6 +142,7 @@ def transitRoute():
     for route in routes['data']['plan']['itineraries']:
         totalDistance = 0
         totalDuration = 0
+        emission = 0
         segments = []
 
         #  Check if the route is a transit route (which has at least one transit leg)
@@ -154,6 +161,8 @@ def transitRoute():
 
             estSpeed = leg['distance'] / leg['duration']
 
+            emission += (leg['distance']/1000 * mikrotransEF if "jak" in leg['trip']['routeShortName'].lower() else leg['distance']/1000 * busEF) if leg['transitLeg'] else leg['distance']/1000 * walkEF
+
             segment = {
                 "path": decode(leg['legGeometry']['points']),
                 "distance": leg['distance'],
@@ -166,7 +175,7 @@ def transitRoute():
                 },
                 "stops": {
                     "startStop": "" if not leg['from']['stop'] else leg['from']['stop']['name'],
-                    "endStop": "" if  not leg['to']['stop'] else leg['to']['stop']['name'],
+                    "endStop": "" if not leg['to']['stop'] else leg['to']['stop']['name'],
                     "middleStops": [stop['name'] for stop in leg['intermediateStops']] if leg['transitLeg'] else [],
                 },
                 "steps": [{
@@ -184,7 +193,8 @@ def transitRoute():
         response["routes"].append({
             "distance": round(totalDistance,2),
             "duration": round(totalDuration),
-            "segments": segments
+            "segments": segments,
+            "emission": emission,
         })
 
 # TODO: better error handling (put it as a function or route)
@@ -212,6 +222,7 @@ def walkRoute():
                 "name": "-" if step["bogusName"] else step["streetName"],
                 "instruction": stepInstruction(step["relativeDirection"], step["streetName"], step["bogusName"], step["absoluteDirection"])
             } for step in OTPRoute["steps"]],
+            "emission": OTPRoute["distance"] / 1000 * walkEF
         }
     # fallback to ORS if OTP got nothing
     else:  
@@ -221,6 +232,7 @@ def walkRoute():
             "distance": route["features"][0]["properties"]["segments"][0]["distance"],
             "duration": route["features"][0]["properties"]["segments"][0]["duration"],
             "steps": route["features"][0]["properties"]["segments"][0]["steps"],
+            "emission": route["features"][0]["properties"]["segments"][0]["distance"] / 1000 * walkEF
         }
 
     return jsonify(response)
@@ -234,6 +246,7 @@ def bikeRoute():
         "distance": route["features"][0]["properties"]["segments"][0]["distance"],
         "duration": route["features"][0]["properties"]["segments"][0]["duration"],
         "steps": route["features"][0]["properties"]["segments"][0]["steps"],
+        "emission": route["features"][0]["properties"]["segments"][0]["distance"] / 1000 * walkEF
     }
 
     return jsonify(response)
@@ -247,10 +260,19 @@ def carRoute():
         "distance": route["features"][0]["properties"]["segments"][0]["distance"],
         "duration": route["features"][0]["properties"]["segments"][0]["duration"],
         "steps": route["features"][0]["properties"]["segments"][0]["steps"],
+        "emission": route["features"][0]["properties"]["segments"][0]["distance"] / 1000 * carEF
     }
 
     return jsonify(response)
 
+@app.get("/api/points_calculation")
+def pointsCalculation():
+    base = request.args.get("base")
+    value = request.args.get("value")
+
+    ponits = 0 if int(value) - int(base) < 0 else int(value) - int(base)
+
+    return jsonify({"points": ponits})
 
 @app.get("/api/place_name")
 def place():
