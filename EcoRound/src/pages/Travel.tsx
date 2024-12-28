@@ -189,7 +189,6 @@ export default function Travel({ match }) {
       ...prevState,
       lat: centerCoords.lat,
       lon: centerCoords.lon,
-      label: centerCoords.label,
     }));
 
     functionSetter.current = null;
@@ -243,6 +242,8 @@ export default function Travel({ match }) {
         distance: route.distance,
         duration: route.duration,
         steps: route.steps,
+        emission: route.emission,
+        points: route.points,
       },
     }));
 
@@ -443,7 +444,6 @@ export default function Travel({ match }) {
                                 displayRoute.route.distance,
                                 displayRoute.route.duration,
                                 displayRoute.route.emission,
-                                displayRoute.route.points,
                                 <span className="font-bold">
                                   {displayRoute.route.points}
                                 </span>,
