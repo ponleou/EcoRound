@@ -24,6 +24,7 @@ walkEF = 0.053
 mikrotransEF = 0.0347
 busEF = 0.0385
 
+
 # function to query OTP server for route
 def queryOTPRoute(slat, slon, dlat, dlon, mode):
     graphql_query = {
@@ -41,7 +42,15 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode):
             transportModes: {mode: $mode}
         ) {
             itineraries {
+                start
+                end
                 legs {
+                    start {
+                        scheduledTime
+                    }
+                    end {
+                        scheduledTime
+                    }
                     transitLeg
                     duration
                     distance
@@ -84,17 +93,18 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode):
             "toLat": float(dlat),
             "toLon": float(dlon),
             "mode": mode,
-        }
+        },
     }
 
     headers = {
         "Content-Type": "application/json",
-        "OTPTimeout": "180000"  # Timeout in milliseconds
+        "OTPTimeout": "180000",  # Timeout in milliseconds
     }
 
     response = requests.post(OTP_URL, headers=headers, json=graphql_query).json()
 
     return response
+
 
 # function to fetch route from ORS
 def fetchRoute(slat, slon, dlat, dlon, profile):
@@ -105,24 +115,40 @@ def fetchRoute(slat, slon, dlat, dlon, profile):
 
     return route
 
+
 # function to generate step instruction (from OTP steps response)
 def stepInstruction(direction, street, bogusName, absoluteDirection):
     instruction = ""
 
     if direction.lower() == "depart":
-        instruction = "Head " + absoluteDirection.title().replace("_", " ") + ("" if bogusName else " on " + street)
+        instruction = (
+            "Head "
+            + absoluteDirection.title().replace("_", " ")
+            + ("" if bogusName else " on " + street)
+        )
         return instruction
-
 
     if direction.lower() == "continue":
-        instruction = "Continue straight " + ("to " + absoluteDirection.title().replace("_", " ") if bogusName else "on " + street)
-        return instruction
-    
-    if "uturn" in direction.lower():
-        instruction = direction.title().replace("_", " ") + (" to " + absoluteDirection.title().replace("_", " ") if bogusName else " onto " + street)
+        instruction = "Continue straight " + (
+            "to " + absoluteDirection.title().replace("_", " ")
+            if bogusName
+            else "on " + street
+        )
         return instruction
 
-    instruction = "Turn " + direction.lower().replace("_", " ") + ("" if bogusName else " onto " + street)
+    if "uturn" in direction.lower():
+        instruction = direction.title().replace("_", " ") + (
+            " to " + absoluteDirection.title().replace("_", " ")
+            if bogusName
+            else " onto " + street
+        )
+        return instruction
+
+    instruction = (
+        "Turn "
+        + direction.lower().replace("_", " ")
+        + ("" if bogusName else " onto " + street)
+    )
     return instruction
 
 
@@ -135,11 +161,9 @@ def transitRoute():
 
     routes = queryOTPRoute(slat, slon, dlat, dlon, "TRANSIT")
 
-    response = {
-        "routes": []
-    }
+    response = {"routes": []}
 
-    for route in routes['data']['plan']['itineraries']:
+    for route in routes["data"]["plan"]["itineraries"]:
         totalDistance = 0
         totalDuration = 0
         emission = 0
@@ -147,7 +171,7 @@ def transitRoute():
 
         #  Check if the route is a transit route (which has at least one transit leg)
         isTransitRoute = False
-        for leg in route['legs']:
+        for leg in route["legs"]:
             if leg["transitLeg"]:
                 isTransitRoute = True
                 break
@@ -155,49 +179,94 @@ def transitRoute():
         if not isTransitRoute:
             continue
 
-        for leg in route['legs']:
-            totalDistance += leg['distance']
-            totalDuration += leg['duration']
+        for leg in route["legs"]:
+            totalDistance += leg["distance"]
+            totalDuration += leg["duration"]
 
-            estSpeed = leg['distance'] / leg['duration']
+            estSpeed = leg["distance"] / leg["duration"]
 
-            emission += (leg['distance']/1000 * mikrotransEF if "jak" in leg['trip']['routeShortName'].lower() else leg['distance']/1000 * busEF) if leg['transitLeg'] else leg['distance']/1000 * walkEF
+            emission += (
+                (
+                    leg["distance"] / 1000 * mikrotransEF
+                    if "jak" in leg["trip"]["routeShortName"].lower()
+                    else leg["distance"] / 1000 * busEF
+                )
+                if leg["transitLeg"]
+                else leg["distance"] / 1000 * walkEF
+            )
 
             segment = {
-                "path": decode(leg['legGeometry']['points']),
-                "distance": leg['distance'],
-                "duration": leg['duration'],
-                "mode": leg['mode'],
-                "transitSegment": leg['transitLeg'],
-                "transitNames":{} if not leg['trip'] else {
-                    "headsign": leg['trip']['tripHeadsign'],
-                    "code": leg['trip']['routeShortName']
+                "start": {
+                    "date": leg["start"]["scheduledTime"].split("T")[0],
+                    "time": leg["start"]["scheduledTime"].split("T")[1],
                 },
+                "end": {
+                    "date": leg["end"]["scheduledTime"].split("T")[0],
+                    "time": leg["end"]["scheduledTime"].split("T")[1],
+                },
+                "path": decode(leg["legGeometry"]["points"]),
+                "distance": leg["distance"],
+                "duration": leg["duration"],
+                "mode": leg["mode"],
+                "transitSegment": leg["transitLeg"],
+                "transitNames": (
+                    {}
+                    if not leg["trip"]
+                    else {
+                        "headsign": leg["trip"]["tripHeadsign"],
+                        "code": leg["trip"]["routeShortName"],
+                    }
+                ),
                 "stops": {
-                    "startStop": "" if not leg['from']['stop'] else leg['from']['stop']['name'],
-                    "endStop": "" if not leg['to']['stop'] else leg['to']['stop']['name'],
-                    "middleStops": [stop['name'] for stop in leg['intermediateStops']] if leg['transitLeg'] else [],
+                    "startStop": (
+                        "" if not leg["from"]["stop"] else leg["from"]["stop"]["name"]
+                    ),
+                    "endStop": (
+                        "" if not leg["to"]["stop"] else leg["to"]["stop"]["name"]
+                    ),
+                    "middleStops": (
+                        [stop["name"] for stop in leg["intermediateStops"]]
+                        if leg["transitLeg"]
+                        else []
+                    ),
                 },
-                "steps": [{
-                    "distance": step["distance"],
-                    "duration": round(step["distance"] / estSpeed),
-                    "name": "-" if step["bogusName"] else step["streetName"],
-                    "instruction": stepInstruction(step["relativeDirection"], step["streetName"], step["bogusName"], step["absoluteDirection"])
-                    } for step in leg['steps']],
+                "steps": [
+                    {
+                        "distance": step["distance"],
+                        "duration": round(step["distance"] / estSpeed),
+                        "name": "-" if step["bogusName"] else step["streetName"],
+                        "instruction": stepInstruction(
+                            step["relativeDirection"],
+                            step["streetName"],
+                            step["bogusName"],
+                            step["absoluteDirection"],
+                        ),
+                    }
+                    for step in leg["steps"]
+                ],
             }
 
             segments.append(segment)
 
-        
         # Append route to response
-        response["routes"].append({
-            "distance": round(totalDistance,2),
-            "duration": round(totalDuration),
-            "segments": segments,
-            "emission": emission,
-        })
+        response["routes"].append(
+            {
+                "distance": round(totalDistance, 2),
+                "duration": round(totalDuration),
+                "segments": segments,
+                "emission": emission,
+                "start": {
+                    "date": route["start"].split("T")[0],
+                    "time": route["start"].split("T")[1],
+                },
+                "end": {
+                    "date": route["end"].split("T")[0],
+                    "time": route["end"].split("T")[1],
+                },
+            }
+        )
 
-# TODO: better error handling (put it as a function or route)
+    # TODO: better error handling (put it as a function or route)
     if len(response["routes"]) < 1:
         return jsonify({"message": "No transit routes found"}), 404
 
@@ -206,7 +275,13 @@ def transitRoute():
 
 @app.get("/api/walk-route")
 def walkRoute():
-    OTPRoutes = queryOTPRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "WALK")["data"]["plan"]["itineraries"]
+    OTPRoutes = queryOTPRoute(
+        request.args.get("slat"),
+        request.args.get("slon"),
+        request.args.get("dlat"),
+        request.args.get("dlon"),
+        "WALK",
+    )["data"]["plan"]["itineraries"]
     response = None
 
     # check if OTP returned any routes
@@ -216,61 +291,109 @@ def walkRoute():
             "path": decode(OTPRoute["legGeometry"]["points"]),
             "distance": OTPRoute["distance"],
             "duration": OTPRoute["duration"],
-            "steps": [{
-                "distance": step["distance"],
-                "duration": round(step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])),  
-                "name": "-" if step["bogusName"] else step["streetName"],
-                "instruction": stepInstruction(step["relativeDirection"], step["streetName"], step["bogusName"], step["absoluteDirection"])
-            } for step in OTPRoute["steps"]],
-            "emission": OTPRoute["distance"] / 1000 * walkEF
+            "steps": [
+                {
+                    "distance": step["distance"],
+                    "duration": round(
+                        step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])
+                    ),
+                    "name": "-" if step["bogusName"] else step["streetName"],
+                    "instruction": stepInstruction(
+                        step["relativeDirection"],
+                        step["streetName"],
+                        step["bogusName"],
+                        step["absoluteDirection"],
+                    ),
+                }
+                for step in OTPRoute["steps"]
+            ],
+            "emission": OTPRoute["distance"] / 1000 * walkEF,
         }
     # fallback to ORS if OTP got nothing
-    else:  
-        route = fetchRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "foot-walking")
+    else:
+        route = fetchRoute(
+            request.args.get("slat"),
+            request.args.get("slon"),
+            request.args.get("dlat"),
+            request.args.get("dlon"),
+            "foot-walking",
+        )
         response = {
-            "path": [[coord[1], coord[0]] for coord in route["features"][0]["geometry"]["coordinates"]],
+            "path": [
+                [coord[1], coord[0]]
+                for coord in route["features"][0]["geometry"]["coordinates"]
+            ],
             "distance": route["features"][0]["properties"]["segments"][0]["distance"],
             "duration": route["features"][0]["properties"]["segments"][0]["duration"],
             "steps": route["features"][0]["properties"]["segments"][0]["steps"],
-            "emission": route["features"][0]["properties"]["segments"][0]["distance"] / 1000 * walkEF
+            "emission": route["features"][0]["properties"]["segments"][0]["distance"]
+            / 1000
+            * walkEF,
         }
 
     return jsonify(response)
 
+
 @app.get("/api/bike-route")
 def bikeRoute():
-    route = fetchRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "cycling-regular")
+    route = fetchRoute(
+        request.args.get("slat"),
+        request.args.get("slon"),
+        request.args.get("dlat"),
+        request.args.get("dlon"),
+        "cycling-regular",
+    )
 
     response = {
-        "path": [[coord[1], coord[0]] for coord in route["features"][0]["geometry"]["coordinates"]],
+        "path": [
+            [coord[1], coord[0]]
+            for coord in route["features"][0]["geometry"]["coordinates"]
+        ],
         "distance": route["features"][0]["properties"]["segments"][0]["distance"],
         "duration": route["features"][0]["properties"]["segments"][0]["duration"],
         "steps": route["features"][0]["properties"]["segments"][0]["steps"],
-        "emission": route["features"][0]["properties"]["segments"][0]["distance"] / 1000 * walkEF
+        "emission": route["features"][0]["properties"]["segments"][0]["distance"]
+        / 1000
+        * walkEF,
     }
 
     return jsonify(response)
+
 
 @app.get("/api/car-route")
 def carRoute():
-    route = fetchRoute(request.args.get("slat"), request.args.get("slon"), request.args.get("dlat"), request.args.get("dlon"), "driving-car")
+    route = fetchRoute(
+        request.args.get("slat"),
+        request.args.get("slon"),
+        request.args.get("dlat"),
+        request.args.get("dlon"),
+        "driving-car",
+    )
 
     response = {
-        "path": [[coord[1], coord[0]] for coord in route["features"][0]["geometry"]["coordinates"]],
+        "path": [
+            [coord[1], coord[0]]
+            for coord in route["features"][0]["geometry"]["coordinates"]
+        ],
         "distance": route["features"][0]["properties"]["segments"][0]["distance"],
         "duration": route["features"][0]["properties"]["segments"][0]["duration"],
         "steps": route["features"][0]["properties"]["segments"][0]["steps"],
-        "emission": route["features"][0]["properties"]["segments"][0]["distance"] / 1000 * carEF
+        "emission": route["features"][0]["properties"]["segments"][0]["distance"]
+        / 1000
+        * carEF,
     }
 
     return jsonify(response)
+
 
 @app.get("/api/points_calculation")
 def pointsCalculation():
     base = request.args.get("base")
     value = request.args.get("value")
 
-    points = 0 if float(base) - float(value) < 0 else (float(base) - float(value)) * 1000
+    points = (
+        0 if float(base) - float(value) < 0 else (float(base) - float(value)) * 1000
+    )
 
     return jsonify({"points": points})
 
@@ -317,19 +440,22 @@ def findPlace():
 
     return jsonify(response)
 
+
 # Jakarta bounding box
 JAKARTA_BOUNDING_BOX = {
     "min_lat": -6.379377,
     "max_lat": -6.06743,
     "min_lon": 106.670417,
-    "max_lon": 106.979407
+    "max_lon": 106.979407,
 }
+
 
 def isInJakarta(lat, lng):
     return (
         JAKARTA_BOUNDING_BOX["min_lat"] <= lat <= JAKARTA_BOUNDING_BOX["max_lat"]
         and JAKARTA_BOUNDING_BOX["min_lon"] <= lng <= JAKARTA_BOUNDING_BOX["max_lon"]
     )
+
 
 @app.get("/api/check_valid_coords")
 def checkValidCoords():
@@ -340,6 +466,7 @@ def checkValidCoords():
         return jsonify({"message": "Location is within Jakarta"}), 200
     else:
         return jsonify({"message": "Location is outside Jakarta"}), 403
+
 
 @app.errorhandler(ApiError)
 def orsApiError(error):
