@@ -127,18 +127,18 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode, date=None, time=None, isArrival=
             # Dynamically raise the appropriate exception based on the classification
             if classification:
                 # Try to map the classification to a built-in Python exception
-                try:
-                    # Dynamically raise the exception using globals()
-                    exception_class = globals().get(classification)
-                    if exception_class and issubclass(exception_class, Exception):
-                        raise exception_class(message)
-                    else:
-                        raise Exception(classification + ": " + message)
-                except Exception:
-                    raise Exception(classification + ": " + message)
+                raise Exception(classification + ": " + message)
             else:
                 # If no classification is found, raise a general exception
                 raise Exception(f"Unknown error: {message}")
+
+    # Filter out non-transit routes
+    if mode == "TRANSIT":
+        responseJson["data"]["plan"]["itineraries"] = [
+            itinerary
+            for itinerary in responseJson["data"]["plan"]["itineraries"]
+            if any(leg["transitLeg"] for leg in itinerary["legs"])
+        ]
 
     if len(responseJson["data"]["plan"]["itineraries"]) < 1:
         raise NotFound("No routes found")
@@ -213,16 +213,6 @@ def transitRoute():
         totalDuration = 0
         emission = 0
         segments = []
-
-        #  Check if the route is a transit route (which has at least one transit leg)
-        isTransitRoute = False
-        for leg in route["legs"]:
-            if leg["transitLeg"]:
-                isTransitRoute = True
-                break
-        # Skip if not a transit route
-        if not isTransitRoute:
-            continue
 
         for leg in route["legs"]:
             totalDistance += leg["distance"]
