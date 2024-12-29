@@ -57,6 +57,7 @@ export const getTransitRoute = async (
   datetime,
   isArrival = 0
 ) => {
+  datetime = adjustTimeOutOfRange(datetime);
   const reponse = await CapacitorHttp.request({
     url: `${baseUrl}/transit-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}&datetime=${datetime.replace(
       "+",
@@ -68,6 +69,50 @@ export const getTransitRoute = async (
 
   return handleResponse(reponse);
 };
+
+// FIXME: temp function, remove later
+function adjustTimeOutOfRange(inputTime) {
+  // Parse the input time
+  const [datePart, timezonePart] = inputTime.split("+");
+  const inputDate = new Date(datePart + "Z"); // Treat the input time as UTC
+  const inputTimezone = timezonePart ? parseInt(timezonePart.split(":")[0]) : 0;
+
+  // Convert to UTC+7
+  const utc7Date = new Date(
+    inputDate.getTime() + (7 - inputTimezone) * 60 * 60 * 1000
+  );
+
+  // Check if it's within the specified range
+  const day = utc7Date.getUTCDay();
+  const hours = utc7Date.getUTCHours();
+  const minutes = utc7Date.getUTCMinutes();
+  const seconds = utc7Date.getUTCSeconds();
+
+  const isInRange =
+    (day === 6 && hours >= 21) ||
+    (day === 0 &&
+      (hours < 21 || (hours === 21 && minutes === 0 && seconds === 0)));
+
+  if (isInRange) {
+    // Move the date outside the range by adding a day
+    utc7Date.setUTCDate(utc7Date.getUTCDate() + 1);
+  }
+
+  // Convert back to the original timezone
+  const adjustedDate = new Date(
+    utc7Date.getTime() - (7 - inputTimezone) * 60 * 60 * 1000
+  );
+
+  // Format the result
+  const pad = (num) => num.toString().padStart(2, "0");
+  const formattedDate = `${adjustedDate.getUTCFullYear()}-${pad(
+    adjustedDate.getUTCMonth() + 1
+  )}-${pad(adjustedDate.getUTCDate())}T${pad(adjustedDate.getUTCHours())}:${pad(
+    adjustedDate.getUTCMinutes()
+  )}:${pad(adjustedDate.getUTCSeconds())}+${timezonePart || "00:00"}`;
+
+  return formattedDate;
+}
 
 export const getPlaceList = async (search, lat, lon) => {
   const reponse = await CapacitorHttp.request({
