@@ -112,9 +112,38 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode, date=None, time=None, isArrival=
         "OTPTimeout": "180000",  # Timeout in milliseconds
     }
 
-    response = requests.post(OTP_URL, headers=headers, json=graphql_query).json()
+    response = requests.post(OTP_URL, headers=headers, json=graphql_query)
+    response.raise_for_status()
 
-    return response
+    responseJson = response.json()
+
+    # Check if the response contains any errors
+    if "errors" in responseJson:
+        # Loop through all errors to check their classification
+        for error in responseJson["errors"]:
+            classification = error.get("extensions", {}).get("classification")
+            message = error.get("message")
+
+            # Dynamically raise the appropriate exception based on the classification
+            if classification:
+                # Try to map the classification to a built-in Python exception
+                try:
+                    # Dynamically raise the exception using globals()
+                    exception_class = globals().get(classification)
+                    if exception_class and issubclass(exception_class, Exception):
+                        raise exception_class(message)
+                    else:
+                        raise Exception(classification + ": " + message)
+                except Exception:
+                    raise Exception(classification + ": " + message)
+            else:
+                # If no classification is found, raise a general exception
+                raise Exception(f"Unknown error: {message}")
+
+    if len(responseJson["data"]["plan"]["itineraries"]) < 1:
+        raise NotFound("No routes found")
+
+    return responseJson
 
 
 # function to fetch route from ORS
@@ -282,27 +311,23 @@ def transitRoute():
             }
         )
 
-    # TODO: better error handling (put it as a function or route)
-    if len(response["routes"]) < 1:
-        return jsonify({"message": "No transit routes found"}), 404
-
     return jsonify(response)
 
 
 @app.get("/api/walk-route")
 def walkRoute():
-    OTPRoutes = queryOTPRoute(
-        request.args.get("slat"),
-        request.args.get("slon"),
-        request.args.get("dlat"),
-        request.args.get("dlon"),
-        "WALK",
-    )["data"]["plan"]["itineraries"]
     response = None
 
-    # check if OTP returned any routes
-    if len(OTPRoutes) > 0:
-        OTPRoute = OTPRoutes[0]["legs"][0]
+    try:
+        OTPRoutes = queryOTPRoute(
+            request.args.get("slat"),
+            request.args.get("slon"),
+            request.args.get("dlat"),
+            request.args.get("dlon"),
+            "WALK",
+        )
+
+        OTPRoute = OTPRoutes["data"]["plan"]["itineraries"][0]["legs"][0]
         response = {
             "path": decode(OTPRoute["legGeometry"]["points"]),
             "distance": OTPRoute["distance"],
@@ -325,8 +350,8 @@ def walkRoute():
             ],
             "emission": OTPRoute["distance"] / 1000 * walkEF,
         }
-    # fallback to ORS if OTP got nothing
-    else:
+    except:
+        # fallback to ORS if OTP got nothing
         route = fetchRoute(
             request.args.get("slat"),
             request.args.get("slon"),
@@ -481,7 +506,7 @@ def checkValidCoords():
     if isInJakarta(lat, lon):
         return jsonify({"message": "Location is within Jakarta"}), 200
     else:
-        return jsonify({"message": "Location is outside Jakarta"}), 403
+        raise ValueError("Location/region is not supported")
 
 
 @app.errorhandler(ApiError)
@@ -495,7 +520,7 @@ def notFoundError(error):
         "message": str(error),
     }
 
-    return jsonify(response), error.code
+    return jsonify(response), 404
 
 
 @app.errorhandler(ValueError)
