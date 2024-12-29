@@ -189,7 +189,6 @@ function RouteProvider({ children }) {
         points: Math.round(response.points) + " Points",
         loaded: true,
       }));
-      console.log(response, response.points);
     } catch (error) {
       setRoute((prevState) => ({
         ...prevState,
@@ -199,16 +198,15 @@ function RouteProvider({ children }) {
     }
   };
 
-  const fetchTransitRoutePoints = async (base, routes, setRoute) => {
+  const fetchTransitRoutePoints = async (base, response, setRoute) => {
     const pointsArray = [];
     try {
       // Wait for all points calculations to finish
       await Promise.all(
-        routes.map(async (route, index) => {
+        response.routes.map(async (route, index) => {
           try {
             let response = await pointsCalculation(base, route.emission);
             pointsArray.push(Math.round(response.points));
-            console.log(route.emission, response.points);
           } catch (error) {
             pointsArray[index] = 0; // Default to 0 if error occurs
             setRoute((prevState) => ({
@@ -219,8 +217,6 @@ function RouteProvider({ children }) {
         })
       );
 
-      console.log(pointsArray, pointsArray[0]);
-
       setRoute((prevState) => ({
         ...prevState,
         routes: prevState.routes.map((route, index) => ({
@@ -230,8 +226,19 @@ function RouteProvider({ children }) {
         loaded: true,
       }));
     } catch (error) {
+      setRoute((prevState) => ({
+        ...prevState,
+        loaded: false,
+      }));
       return;
     }
+  };
+
+  const setLoaded = (loaded, setRoute) => {
+    setRoute((prevState) => ({
+      ...prevState,
+      loaded: loaded,
+    }));
   };
 
   useEffect(() => {
@@ -241,6 +248,10 @@ function RouteProvider({ children }) {
       destinationCoords.lat !== undefined &&
       destinationCoords.lon !== undefined
     ) {
+      setLoaded(false, setCarRoute);
+      setLoaded(false, setBikeRoute);
+      setLoaded(false, setWalkRoute);
+      setLoaded(false, setTransitRoutes);
       fetchRoutes(
         startCoords,
         destinationCoords,
@@ -286,7 +297,7 @@ function RouteProvider({ children }) {
         ).then((responses) => {
           fetchTransitRoutePoints(
             carResponse.emission,
-            responses.routes,
+            responses,
             setTransitRoutes
           );
         });
