@@ -88,7 +88,7 @@ function RouteProvider({ children }) {
           distance: formatDistanceString(step.distance),
           duration: formatDurationString(step.duration),
         })),
-        emission: response.emission.toFixed(3) + " CO₂",
+        emission: Math.round(response.emission * 1000) + "g CO₂e",
         loaded: true,
       }));
 
@@ -162,7 +162,7 @@ function RouteProvider({ children }) {
             type: segment.transitSegment ? "primary" : "secondary",
             path: segment.path,
           })),
-          emission: route.emission.toFixed(3) + " CO₂",
+          emission: Math.round(route.emission * 1000) + "g CO₂e",
         })),
         loaded: true,
       });
@@ -180,7 +180,12 @@ function RouteProvider({ children }) {
         ...prevState,
         points: Math.round(response.points) + " Points",
       }));
-    } catch (error) {}
+    } catch (error) {
+      setRoute((prevState) => ({
+        ...prevState,
+        points: "",
+      }));
+    }
   };
 
   const fetchTransitRoutePoints = async (base, value, setRoute, index) => {
@@ -198,7 +203,20 @@ function RouteProvider({ children }) {
           return route;
         }),
       }));
-    } catch (error) {}
+    } catch (error) {
+      setRoute((prevState) => ({
+        ...prevState,
+        routes: prevState.routes.map((route, i) => {
+          if (i === index) {
+            return {
+              ...route,
+              points: "",
+            };
+          }
+          return route;
+        }),
+      }));
+    }
   };
 
   useEffect(() => {
