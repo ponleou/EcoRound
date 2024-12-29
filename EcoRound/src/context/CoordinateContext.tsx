@@ -193,6 +193,16 @@ function CoordinateProvider({ children }) {
     label: "",
   });
 
+  const [debounceStartCoords, setDebounceStartCoords] = useState({
+    lat: undefined,
+    lon: undefined,
+  });
+
+  const [debounceDestinationCoords, setDebounceDestinationCoords] = useState({
+    lat: undefined,
+    lon: undefined,
+  });
+
   // set start coords to current location for the first time when startcoord is undefined
   useEffect(() => {
     if (
@@ -210,26 +220,56 @@ function CoordinateProvider({ children }) {
     }
   }, [currentCoords, startCoords]);
 
-  // fetching place names for start and destination coords is label is not set
   useEffect(() => {
     if (
-      startCoords.label === "" &&
-      startCoords.lat !== undefined &&
-      startCoords.lon !== undefined
+      (startCoords.lat !== undefined || startCoords.lon !== undefined) &&
+      (Math.round(startCoords.lat * 10000) / 10000 !==
+        debounceStartCoords.lat ||
+        Math.round(startCoords.lon * 10000) / 10000 !== debounceStartCoords.lon)
     ) {
-      setPlaceName(startCoords, setStartCoords);
+      setDebounceStartCoords((prevState) => ({
+        ...prevState,
+        lat: Math.round(startCoords.lat * 10000) / 10000,
+        lon: Math.round(startCoords.lon * 10000) / 10000,
+      }));
     }
   }, [startCoords]);
 
+  // fetching place names for start and destination coords is label is not set
   useEffect(() => {
     if (
-      destinationCoords.label === "" &&
-      destinationCoords.lat !== undefined &&
-      destinationCoords.lon !== undefined
+      debounceStartCoords.lat !== undefined &&
+      debounceStartCoords.lon !== undefined
     ) {
-      setPlaceName(destinationCoords, setDestinationCoords);
+      setPlaceName(debounceStartCoords, setStartCoords);
+    }
+  }, [debounceStartCoords]);
+
+  useEffect(() => {
+    if (
+      (destinationCoords.lat !== undefined ||
+        destinationCoords.lon !== undefined) &&
+      (Math.round(destinationCoords.lat * 10000) / 10000 !==
+        debounceDestinationCoords.lat ||
+        Math.round(destinationCoords.lon * 10000) / 10000 !==
+          debounceDestinationCoords.lon)
+    ) {
+      setDebounceDestinationCoords((prevState) => ({
+        ...prevState,
+        lat: Math.round(destinationCoords.lat * 10000) / 10000,
+        lon: Math.round(destinationCoords.lon * 10000) / 10000,
+      }));
     }
   }, [destinationCoords]);
+
+  useEffect(() => {
+    if (
+      debounceDestinationCoords.lat !== undefined &&
+      debounceDestinationCoords.lon !== undefined
+    ) {
+      setPlaceName(debounceDestinationCoords, setDestinationCoords);
+    }
+  }, [debounceDestinationCoords]);
 
   return (
     <CoordinateContext.Provider
