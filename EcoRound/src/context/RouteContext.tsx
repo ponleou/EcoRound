@@ -89,7 +89,6 @@ function RouteProvider({ children }) {
           duration: formatDurationString(step.duration),
         })),
         emission: Math.round(response.emission * 1000) + "g CO₂e",
-        loaded: true,
       }));
 
       return response;
@@ -97,7 +96,6 @@ function RouteProvider({ children }) {
       // set error if route is not found
       setRouteFunction((prevState) => ({
         ...prevState,
-        loaded: false,
       }));
       return error;
     }
@@ -130,10 +128,13 @@ function RouteProvider({ children }) {
         datetime
       );
 
-      setTransitRoutes({
+      setTransitRoutes((prevState) => ({
+        ...prevState,
         routes: response.routes.map((route) => ({
           distance: formatDistanceString(route.distance),
           duration: formatDurationString(route.duration),
+          start: { time: route.start.time, date: route.start.date },
+          end: { time: route.end.time, date: route.end.date },
           segments: route.segments.map((segment) =>
             segment.transitSegment
               ? {
@@ -143,6 +144,8 @@ function RouteProvider({ children }) {
                   mode: segment.mode,
                   stops: segment.stops,
                   transitNames: segment.transitNames,
+                  end: { time: segment.end.time, date: segment.end.date },
+                  start: { time: segment.start.time, date: segment.start.date },
                 }
               : {
                   distance: formatDistanceString(segment.distance),
@@ -156,6 +159,8 @@ function RouteProvider({ children }) {
                     name: step.name,
                   })),
                   stops: segment.stops,
+                  end: { time: segment.end.time, date: segment.end.date },
+                  start: { time: segment.start.time, date: segment.start.date },
                 }
           ),
           paths: route.segments.map((segment) => ({
@@ -164,12 +169,15 @@ function RouteProvider({ children }) {
           })),
           emission: Math.round(route.emission * 1000) + "g CO₂e",
         })),
-        loaded: true,
-      });
+      }));
 
       return response;
     } catch (error) {
-      setTransitRoutes({ routes: [], loaded: false });
+      setTransitRoutes((prevState) => ({
+        ...prevState,
+        routes: [],
+        loaded: false,
+      }));
     }
   };
 
@@ -179,43 +187,50 @@ function RouteProvider({ children }) {
       setRoute((prevState) => ({
         ...prevState,
         points: Math.round(response.points) + " Points",
+        loaded: true,
       }));
+      console.log(response, response.points);
     } catch (error) {
       setRoute((prevState) => ({
         ...prevState,
         points: "",
+        loaded: false,
       }));
     }
   };
 
-  const fetchTransitRoutePoints = async (base, value, setRoute, index) => {
+  const fetchTransitRoutePoints = async (base, routes, setRoute) => {
+    const pointsArray = [];
     try {
-      let response = await pointsCalculation(base, value);
+      // Wait for all points calculations to finish
+      await Promise.all(
+        routes.map(async (route, index) => {
+          try {
+            let response = await pointsCalculation(base, route.emission);
+            pointsArray.push(Math.round(response.points));
+            console.log(route.emission, response.points);
+          } catch (error) {
+            pointsArray[index] = 0; // Default to 0 if error occurs
+            setRoute((prevState) => ({
+              ...prevState,
+              loaded: false,
+            }));
+          }
+        })
+      );
+
+      console.log(pointsArray, pointsArray[0]);
+
       setRoute((prevState) => ({
         ...prevState,
-        routes: prevState.routes.map((route, i) => {
-          if (i === index) {
-            return {
-              ...route,
-              points: Math.round(response.points) + " Points",
-            };
-          }
-          return route;
-        }),
+        routes: prevState.routes.map((route, index) => ({
+          ...route,
+          points: pointsArray[index] + " Points", // Use pointsArray[index] instead of pointsArray[0]
+        })),
+        loaded: true,
       }));
     } catch (error) {
-      setRoute((prevState) => ({
-        ...prevState,
-        routes: prevState.routes.map((route, i) => {
-          if (i === index) {
-            return {
-              ...route,
-              points: "",
-            };
-          }
-          return route;
-        }),
-      }));
+      return;
     }
   };
 
@@ -269,22 +284,15 @@ function RouteProvider({ children }) {
           getTransitRoute,
           setTransitRoutes
         ).then((responses) => {
-          responses.routes.forEach((response, index) => {
-            fetchTransitRoutePoints(
-              carResponse.emission,
-              response.emission,
-              setTransitRoutes,
-              index
-            );
-          });
+          fetchTransitRoutePoints(
+            carResponse.emission,
+            responses.routes,
+            setTransitRoutes
+          );
         });
       });
     }
   }, [startCoords, destinationCoords]);
-
-  useEffect(() => {
-    console.log("carRoute", carRoute);
-  }, [carRoute, bikeRoute, walkRoute, transitRoutes]);
 
   return (
     <RouteContext.Provider
