@@ -39,6 +39,7 @@ import { CoordinateContext } from "../context/CoordinateContext";
 import MapCenterButton from "../components/MapCenterButton";
 import { RouteContext } from "../context/RouteContext";
 import PermissionToast from "../components/PermissionToast";
+import TransitRouteItem from "../components/TransitRouteItem";
 
 export default function Travel({ match }) {
   const {
@@ -89,20 +90,24 @@ export default function Travel({ match }) {
 
   const chooseLocationPath = useRef(`${match.url}/choose-location`);
   const searchLocationPath = useRef(`${match.url}/search-location`);
-  const routePath = useRef(`${match.url}/route`);
+  const routePath = useRef(`${match.url}/routeh`);
+  const transitRoutePath = useRef(`${match.url}/transit-route`);
 
   const [choosingLocation, setChoosingLocation] = useState(false);
   const [searchingLocation, setSearchingLocation] = useState(false);
   const [showingRoute, setShowingRoute] = useState(false);
+  const [showingTransitRoute, setShowingTransitRoute] = useState(false);
 
   const activateSubpage = ({
     chooseLocation = false,
     searchLocation = false,
     showRoute = false,
+    showTransitRoute = false,
   } = {}) => {
     setShowingRoute(showRoute);
     setSearchingLocation(searchLocation);
     setChoosingLocation(chooseLocation);
+    setShowingTransitRoute(showTransitRoute);
   };
 
   // modify pages based on route
@@ -148,10 +153,24 @@ export default function Travel({ match }) {
       activateSubpage({ showRoute: true });
     }
 
+    if (location.pathname === transitRoutePath.current) {
+      setModalSettings({
+        ...defaultModalSetting.current,
+      });
+      reloadModal();
+
+      activateSubpage({ showTransitRoute: true });
+    }
+
     if (location.pathname === match.url) {
       setModalSettings({ ...defaultModalSetting.current });
 
-      if (searchingLocation || choosingLocation || showingRoute) {
+      if (
+        searchingLocation ||
+        choosingLocation ||
+        showingRoute ||
+        showingTransitRoute
+      ) {
         reloadModal();
       }
 
@@ -230,8 +249,6 @@ export default function Travel({ match }) {
 
   // set route to display on page
   const handleRouteItem = (route, icon = null) => {
-    if (!route.loaded) return;
-
     setDisplayRoute((prevState) => ({
       ...prevState,
       icon: icon ? icon : prevState.icon,
@@ -248,6 +265,11 @@ export default function Travel({ match }) {
     }));
 
     navigation.push(routePath.current, "forward");
+  };
+
+  // set transit route to display on page
+  const handleTransitRoute = () => {
+    navigation.push(transitRoutePath.current, "forward");
   };
 
   useEffect(() => {
@@ -347,6 +369,8 @@ export default function Travel({ match }) {
               ? "Search location"
               : showingRoute
               ? "Route"
+              : showingTransitRoute
+              ? "Transit routes"
               : "Travel"
           }
           color="primary"
@@ -551,123 +575,155 @@ export default function Travel({ match }) {
                         </TravelCard>
                         {/* Card 2 */}
                         <TravelCard>
-                          <CardList>
-                            <span
-                              onClick={() => handleRouteItem(walkRoute, walk)}
-                            >
-                              <RouteCardItem
-                                iconText="Transit"
-                                points={
-                                  transitRoutes.loaded
-                                    ? transitRoutes.routes[0].points
-                                    : ""
+                          {showingTransitRoute ? (
+                            <CardList>
+                              {transitRoutes.loaded
+                                ? transitRoutes.routes.map((route, index) => (
+                                    <span key={index}>
+                                      <TransitRouteItem
+                                        startTime={`${route.start.date}T${route.start.time}`}
+                                        endTime={`${route.end.date}T${route.end.time}`}
+                                        points={route.points}
+                                        subTexts={[]}
+                                        path={[
+                                          route.distance,
+                                          route.duration,
+                                          route.emission,
+                                        ]}
+                                      ></TransitRouteItem>
+                                    </span>
+                                  ))
+                                : null}
+                            </CardList>
+                          ) : (
+                            <CardList>
+                              <span
+                                onClick={() =>
+                                  transitRoutes.loaded && handleTransitRoute()
                                 }
-                                icon={train}
-                                isAvailable={transitRoutes.loaded}
-                                routeStepsNames={
-                                  transitRoutes.loaded
-                                    ? transitRoutes.routes[0].segments.map(
-                                        (segment) =>
-                                          segment.transitSegment
-                                            ? segment.transitNames.code
-                                            : "-"
-                                      )
-                                    : []
-                                }
-                                routeDescriptions={
-                                  transitRoutes.loaded
-                                    ? [
-                                        transitRoutes.routes[0].distance,
-                                        transitRoutes.routes[0].duration,
-                                        transitRoutes.routes[0].emission,
-                                      ]
-                                    : []
-                                }
-                              />
-                            </span>
-                            <hr />
+                              >
+                                <RouteCardItem
+                                  iconText="Transit"
+                                  points={
+                                    transitRoutes.loaded
+                                      ? transitRoutes.routes[0].points
+                                      : ""
+                                  }
+                                  icon={train}
+                                  isAvailable={transitRoutes.loaded}
+                                  routeStepsNames={
+                                    transitRoutes.loaded
+                                      ? transitRoutes.routes[0].segments.map(
+                                          (segment) =>
+                                            segment.transitSegment
+                                              ? segment.transitNames.code
+                                              : "-"
+                                        )
+                                      : []
+                                  }
+                                  routeDescriptions={
+                                    transitRoutes.loaded
+                                      ? [
+                                          transitRoutes.routes[0].distance,
+                                          transitRoutes.routes[0].duration,
+                                          transitRoutes.routes[0].emission,
+                                        ]
+                                      : []
+                                  }
+                                />
+                              </span>
+                              <hr />
 
-                            <span
-                              onClick={() => handleRouteItem(walkRoute, walk)}
-                            >
-                              <RouteCardItem
-                                iconText="Walk"
-                                points={
-                                  walkRoute.loaded ? walkRoute.points : ""
+                              <span
+                                onClick={() =>
+                                  walkRoute.loaded &&
+                                  handleRouteItem(walkRoute, walk)
                                 }
-                                icon={walk}
-                                isAvailable={walkRoute.loaded}
-                                routeStepsNames={
-                                  walkRoute.loaded
-                                    ? walkRoute.steps.map((step) => step.name)
-                                    : []
+                              >
+                                <RouteCardItem
+                                  iconText="Walk"
+                                  points={
+                                    walkRoute.loaded ? walkRoute.points : ""
+                                  }
+                                  icon={walk}
+                                  isAvailable={walkRoute.loaded}
+                                  routeStepsNames={
+                                    walkRoute.loaded
+                                      ? walkRoute.steps.map((step) => step.name)
+                                      : []
+                                  }
+                                  routeDescriptions={
+                                    walkRoute.loaded
+                                      ? [
+                                          walkRoute.distance,
+                                          walkRoute.duration,
+                                          walkRoute.emission,
+                                        ]
+                                      : []
+                                  }
+                                />
+                              </span>
+                              <hr />
+                              <span
+                                onClick={() =>
+                                  bikeRoute &&
+                                  handleRouteItem(bikeRoute, bicycle)
                                 }
-                                routeDescriptions={
-                                  walkRoute.loaded
-                                    ? [
-                                        walkRoute.distance,
-                                        walkRoute.duration,
-                                        walkRoute.emission,
-                                      ]
-                                    : []
+                              >
+                                <RouteCardItem
+                                  iconText="Bike"
+                                  points={
+                                    bikeRoute.loaded ? bikeRoute.points : ""
+                                  }
+                                  icon={bicycle}
+                                  isAvailable={bikeRoute.loaded}
+                                  routeStepsNames={
+                                    bikeRoute.loaded
+                                      ? bikeRoute.steps.map((step) => step.name)
+                                      : []
+                                  }
+                                  routeDescriptions={
+                                    bikeRoute.loaded
+                                      ? [
+                                          bikeRoute.distance,
+                                          bikeRoute.duration,
+                                          bikeRoute.emission,
+                                        ]
+                                      : []
+                                  }
+                                />
+                              </span>
+                              <hr />
+                              <span
+                                onClick={() =>
+                                  carRoute && handleRouteItem(carRoute, car)
                                 }
-                              />
-                            </span>
-                            <hr />
-                            <span
-                              onClick={() =>
-                                handleRouteItem(bikeRoute, bicycle)
-                              }
-                            >
-                              <RouteCardItem
-                                iconText="Bike"
-                                points={
-                                  bikeRoute.loaded ? bikeRoute.points : ""
-                                }
-                                icon={bicycle}
-                                isAvailable={bikeRoute.loaded}
-                                routeStepsNames={
-                                  bikeRoute.loaded
-                                    ? bikeRoute.steps.map((step) => step.name)
-                                    : []
-                                }
-                                routeDescriptions={
-                                  bikeRoute.loaded
-                                    ? [
-                                        bikeRoute.distance,
-                                        bikeRoute.duration,
-                                        bikeRoute.emission,
-                                      ]
-                                    : []
-                                }
-                              />
-                            </span>
-                            <hr />
-                            <span
-                              onClick={() => handleRouteItem(carRoute, car)}
-                            >
-                              <RouteCardItem
-                                iconText="Car"
-                                points={carRoute.loaded ? carRoute.points : ""}
-                                icon={car}
-                                isAvailable={carRoute.loaded}
-                                routeStepsNames={
-                                  carRoute.loaded
-                                    ? carRoute.steps.map((step) => step.name)
-                                    : []
-                                }
-                                routeDescriptions={
-                                  carRoute.loaded
-                                    ? [
-                                        carRoute.distance,
-                                        carRoute.duration,
-                                        carRoute.emission,
-                                      ]
-                                    : []
-                                }
-                              />
-                            </span>
-                          </CardList>
+                              >
+                                <RouteCardItem
+                                  iconText="Car"
+                                  points={
+                                    carRoute.loaded ? carRoute.points : ""
+                                  }
+                                  icon={car}
+                                  isAvailable={carRoute.loaded}
+                                  routeStepsNames={
+                                    carRoute.loaded
+                                      ? carRoute.steps.map((step) => step.name)
+                                      : []
+                                  }
+                                  routeDescriptions={
+                                    carRoute.loaded
+                                      ? [
+                                          carRoute.distance,
+                                          carRoute.duration,
+                                          carRoute.emission,
+                                        ]
+                                      : []
+                                  }
+                                />
+                              </span>
+                            </CardList>
+                          )}
                         </TravelCard>
                       </CardList>
                     )}
