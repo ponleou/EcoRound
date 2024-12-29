@@ -50,8 +50,12 @@ export default function RouteCardItem({
                 <IonText>{points ? points : ""}</IonText>
               </p>
             </div>
-            <IonButton fill="clear" color="dark" shape="round">
-              <IonIcon slot="icon-only" icon={chevronForward}></IonIcon>
+            <IonButton fill="clear" color="dark" shape="round" size="small">
+              <IonIcon
+                slot="icon-only"
+                size="small"
+                icon={chevronForward}
+              ></IonIcon>
             </IonButton>
           </div>
         </div>
