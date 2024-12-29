@@ -38,8 +38,65 @@ function DateProvider({ children }) {
     return `${formattedDate}${sign}${offsetHours}:${offsetMinutes}`;
   };
 
+  const toCurrentTimezone = (dateString) => {
+    // Parse the input date string
+    const [datePart, timezonePart] = dateString.split("+");
+    const inputTimezone = parseInt(timezonePart);
+
+    // Create a date object treating the input as if it were UTC
+    const inputDate = new Date(datePart + "Z");
+
+    // Adjust for the actual input timezone
+    const actualUTC = new Date(
+      inputDate.getTime() - inputTimezone * 60 * 60 * 1000
+    );
+
+    // Convert to local time
+    const localDate = new Date(actualUTC);
+
+    // Format the date
+    const pad = (num) => num.toString().padStart(2, "0");
+    const formattedDate = `${localDate.getFullYear()}-${pad(
+      localDate.getMonth() + 1
+    )}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(
+      localDate.getMinutes()
+    )}:${pad(localDate.getSeconds())}`;
+
+    // Get the local timezone offset
+    const offset = -localDate.getTimezoneOffset();
+    const offsetHours = Math.floor(Math.abs(offset) / 60);
+    const offsetMinutes = Math.abs(offset) % 60;
+    const offsetSign = offset >= 0 ? "+" : "-";
+    const formattedOffset = `${offsetSign}${pad(offsetHours)}:${pad(
+      offsetMinutes
+    )}`;
+
+    return `${formattedDate}${formattedOffset}`;
+  };
+
+  const to12HourFormat = (time24) => {
+    // Parse the input time
+    const [hours24, minutes] = time24.split(":").map(Number);
+
+    // Determine AM or PM
+    const period = hours24 >= 12 ? "pm" : "am";
+
+    // Convert hours to 12-hour format
+    let hours12 = hours24 % 12;
+    hours12 = hours12 ? hours12 : 12; // If hours12 is 0, set it to 12
+
+    // Pad single-digit hours and minutes with leading zeros
+    const paddedHours = hours12.toString().padStart(2, "0");
+    const paddedMinutes = minutes.toString().padStart(2, "0");
+
+    // Return the formatted time
+    return `${paddedHours}:${paddedMinutes} ${period}`;
+  };
+
   return (
-    <DateContext.Provider value={{ date, getCurrentTime }}>
+    <DateContext.Provider
+      value={{ date, getCurrentTime, toCurrentTimezone, to12HourFormat }}
+    >
       {children}
     </DateContext.Provider>
   );
