@@ -13,15 +13,18 @@ import { useContext, useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
 import {
   arrowBack,
+  arrowDownCircle,
   arrowForward,
   arrowUp,
   bicycle,
+  bus,
   car,
   ellipsisVertical,
   locate,
   locationSharp,
   pin,
   swapVertical,
+  trailSign,
   train,
   walk,
 } from "ionicons/icons";
@@ -40,6 +43,8 @@ import MapCenterButton from "../components/MapCenterButton";
 import { RouteContext } from "../context/RouteContext";
 import PermissionToast from "../components/PermissionToast";
 import TransitRouteItem from "../components/TransitRouteItem";
+import { DateContext } from "../context/DateContext";
+import IconText from "../components/IconText";
 
 export default function Travel({ match }) {
   const {
@@ -54,6 +59,8 @@ export default function Travel({ match }) {
 
   const { carRoute, bikeRoute, walkRoute, transitRoutes, defaultRoute } =
     useContext(RouteContext) as any;
+
+  const { toCurrentTimezone, to12HourFormat } = useContext(DateContext) as any;
 
   const [focusCurrentCoords, setFocusCurrentCoords] = useState(true);
 
@@ -91,7 +98,7 @@ export default function Travel({ match }) {
   const chooseLocationPath = useRef(`${match.url}/choose-location`);
   const searchLocationPath = useRef(`${match.url}/search-location`);
   const showRoutePath = useRef(`${match.url}/show-route`);
-  const transitRoutePath = useRef(`${match.url}/transit-route`);
+  const chooseTransitRoutePath = useRef(`${match.url}/transit-route`);
   const showTransitRoutePath = useRef(`${match.url}/transit-route/show-route`);
 
   const [choosingLocation, setChoosingLocation] = useState(false);
@@ -104,12 +111,14 @@ export default function Travel({ match }) {
     chooseLocation = false,
     searchLocation = false,
     showRoute = false,
+    chooseTransitRoute = false,
     showTransitRoute = false,
   } = {}) => {
     setShowingRoute(showRoute);
     setSearchingLocation(searchLocation);
     setChoosingLocation(chooseLocation);
-    setChoosingTransitRoutes(showTransitRoute);
+    setChoosingTransitRoutes(chooseTransitRoute);
+    setShowingTransitRoute(showTransitRoute);
   };
 
   // modify pages based on route
@@ -155,13 +164,24 @@ export default function Travel({ match }) {
       activateSubpage({ showRoute: true });
     }
 
-    if (location.pathname === transitRoutePath.current) {
+    if (location.pathname === showTransitRoutePath.current) {
+      setModalSettings({
+        ...defaultModalSetting.current,
+        initialBreakpoint: 0.5,
+        breakpoints: [0.5, 0.75],
+      });
+      reloadModal();
+
+      activateSubpage({ showTransitRoute: true });
+    }
+
+    if (location.pathname === chooseTransitRoutePath.current) {
       setModalSettings({
         ...defaultModalSetting.current,
       });
       reloadModal();
 
-      activateSubpage({ showTransitRoute: true });
+      activateSubpage({ chooseTransitRoute: true });
     }
 
     if (location.pathname === match.url) {
@@ -271,7 +291,7 @@ export default function Travel({ match }) {
 
   // set transit route to display on page
   const handleTransitRoute = () => {
-    navigation.push(transitRoutePath.current, "forward");
+    navigation.push(chooseTransitRoutePath.current, "forward");
   };
 
   useEffect(() => {
@@ -289,10 +309,34 @@ export default function Travel({ match }) {
   ========== DISPLAYING TRANSIT ROUTES ==========
   */
 
-  const [selectedTransitRoute, setSelectedTransitRoute] = useState(null);
+  const [selectedTransitRoute, setSelectedTransitRoute] = useState({
+    icon: locationSharp,
+    destinationLabel: "",
+    route: {
+      coordinates: [],
+      distance: "",
+      duration: "",
+      emission: "",
+      segments: [],
+      points: "",
+    },
+  });
 
   const handleSelectTransitRoute = (route) => {
-    setSelectedTransitRoute(route);
+    setSelectedTransitRoute((prevState) => ({
+      ...prevState,
+      icon: train,
+      destinationLabel: destinationCoords.label,
+      route: {
+        ...prevState.route,
+        coordinates: route.coordinates,
+        distance: route.distance,
+        duration: route.duration,
+        emission: route.emission,
+        segments: route.segments,
+        points: route.points,
+      },
+    }));
 
     navigation.push(showTransitRoutePath.current, "forward");
   };
@@ -301,7 +345,7 @@ export default function Travel({ match }) {
     if (showingTransitRoute) {
       setMapPaths((prevState) => [
         ...prevState,
-        ...selectedTransitRoute.coordinates,
+        ...selectedTransitRoute.route.coordinates,
       ]);
     } else {
       setMapPaths([]);
@@ -392,7 +436,7 @@ export default function Travel({ match }) {
               ? "Choose location"
               : searchingLocation
               ? "Search location"
-              : showingRoute
+              : showingRoute || showingTransitRoute
               ? "Route"
               : choosingTransitRoutes
               ? "Transit routes"
@@ -537,6 +581,161 @@ export default function Travel({ match }) {
                           </CardList>
                         </TravelCard>
                       </div>
+                    ) : showingTransitRoute ? (
+                      <div className="h-3/4 overflow-scroll rounded-lg">
+                        <TravelCard>
+                          <CardList>
+                            <TravelItem
+                              iconText={""}
+                              icon={selectedTransitRoute.icon}
+                              text={selectedTransitRoute.destinationLabel}
+                              subTexts={[
+                                selectedTransitRoute.route.distance,
+                                selectedTransitRoute.route.duration,
+                                selectedTransitRoute.route.emission,
+                                <span className="font-bold">
+                                  {selectedTransitRoute.route.points}
+                                </span>,
+                              ]}
+                              iconSize="large"
+                              ripple={false}
+                            />
+                            <hr />
+                            <CardList>
+                              {selectedTransitRoute.route.segments.map(
+                                (segment, index) =>
+                                  segment.transitSegment ? (
+                                    <div
+                                      key={index}
+                                      className="grid grid-cols-[auto,1fr] gap-x-4 items-center px-2"
+                                    >
+                                      <p className="self-start py-4">
+                                        <IonText>
+                                          {
+                                            to12HourFormat(
+                                              toCurrentTimezone(
+                                                segment.start.date +
+                                                  "T" +
+                                                  segment.start.time
+                                              ).split("T")[1]
+                                            ).split("+")[0]
+                                          }
+                                        </IonText>
+                                      </p>
+                                      <TravelItem
+                                        ripple={false}
+                                        iconText={
+                                          segment.mode[0].toUpperCase() +
+                                          segment.mode.substr(1).toLowerCase()
+                                        }
+                                        icon={
+                                          segment.mode.toLowerCase() === "bus"
+                                            ? bus
+                                            : null
+                                        }
+                                        subTexts={[
+                                          segment.stops.middleStops.length +
+                                            (segment.stops.startStop ? 1 : 0) +
+                                            (segment.stops.endStop ? 1 : 0) +
+                                            " stops",
+                                          segment.duration,
+                                        ]}
+                                        text={
+                                          segment.transitNames.code +
+                                          " - " +
+                                          segment.mode[0].toUpperCase() +
+                                          segment.mode.substr(1).toLowerCase() +
+                                          " to " +
+                                          segment.transitNames.headsign
+                                        }
+                                      ></TravelItem>
+                                      <div></div>
+                                      <div>
+                                        <CardList>
+                                          <p className="text-sm flex flex-col gap-4 grow px-2 pb-4">
+                                            {segment.stops.startStop ? (
+                                              <IconText
+                                                icon={arrowDownCircle}
+                                                col={false}
+                                                text={segment.stops.startStop}
+                                                iconColor="secondary"
+                                                key={index}
+                                                iconSize="small"
+                                              ></IconText>
+                                            ) : null}
+                                            {segment.stops.middleStops.map(
+                                              (stop, index) => (
+                                                <IconText
+                                                  icon={arrowDownCircle}
+                                                  col={false}
+                                                  text={stop}
+                                                  iconColor="secondary"
+                                                  key={index}
+                                                  iconSize="small"
+                                                ></IconText>
+                                              )
+                                            )}
+                                            {segment.stops.endStop ? (
+                                              <IconText
+                                                icon={arrowDownCircle}
+                                                col={false}
+                                                text={segment.stops.endStop}
+                                                iconColor="secondary"
+                                                key={index}
+                                                iconSize="small"
+                                              ></IconText>
+                                            ) : null}
+                                          </p>
+                                        </CardList>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      key={index}
+                                      className="flex gap-4 items-center px-2"
+                                    >
+                                      <p className="self-start py-4">
+                                        <IonText>
+                                          {
+                                            to12HourFormat(
+                                              toCurrentTimezone(
+                                                segment.start.date +
+                                                  "T" +
+                                                  segment.start.time
+                                              ).split("T")[1]
+                                            ).split("+")[0]
+                                          }
+                                        </IonText>
+                                      </p>
+                                      <TravelItem
+                                        ripple={false}
+                                        iconText={
+                                          segment.mode[0].toUpperCase() +
+                                          segment.mode.substr(1).toLowerCase()
+                                        }
+                                        icon={
+                                          segment.mode.toLowerCase() === "walk"
+                                            ? walk
+                                            : null
+                                        }
+                                        subTexts={[
+                                          segment.distance,
+                                          segment.duration,
+                                        ]}
+                                        text={
+                                          "To " +
+                                          (segment.stops.endStop !== ""
+                                            ? segment.stops.endStop
+                                            : "Destination")
+                                        }
+                                      ></TravelItem>
+                                    </div>
+                                  )
+                              )}
+                            </CardList>
+                          </CardList>
+                        </TravelCard>
+                      </div>
                     ) : (
                       // Cards for default travel route
                       <CardList>
@@ -607,14 +806,11 @@ export default function Travel({ match }) {
                                   <span
                                     key={index}
                                     onClick={() => {
-                                      console.log(route, walkRoute);
-                                      setMapPaths((prevState) => [
-                                        ...prevState,
-                                        ...route.coorindates,
-                                      ]);
+                                      handleSelectTransitRoute(route);
                                     }}
                                   >
                                     <TransitRouteItem
+                                      key={index}
                                       startTime={`${route.start.date}T${route.start.time}`}
                                       endTime={`${route.end.date}T${route.end.time}`}
                                       points={route.points}
