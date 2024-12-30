@@ -88,7 +88,7 @@ function RouteProvider({ children }) {
           distance: formatDistanceString(step.distance),
           duration: formatDurationString(step.duration),
         })),
-        emission: Math.round(response.emission * 1000) + "g CO₂e",
+        emission: Math.round(response.emission * 1000) + " gCO₂e",
       }));
 
       return response;
@@ -143,7 +143,10 @@ function RouteProvider({ children }) {
                   transitSegment: segment.transitSegment,
                   mode: segment.mode,
                   stops: segment.stops,
-                  transitNames: segment.transitNames,
+                  transitNames: {
+                    code: segment.transitNames.code,
+                    headsign: segment.transitNames.headsign,
+                  },
                   end: { time: segment.end.time, date: segment.end.date },
                   start: { time: segment.start.time, date: segment.start.date },
                 }
@@ -163,11 +166,11 @@ function RouteProvider({ children }) {
                   start: { time: segment.start.time, date: segment.start.date },
                 }
           ),
-          paths: route.segments.map((segment) => ({
+          coorindates: route.segments.map((segment) => ({
             type: segment.transitSegment ? "primary" : "secondary",
             path: segment.path,
           })),
-          emission: Math.round(route.emission * 1000) + "g CO₂e",
+          emission: Math.round(route.emission * 1000) + " gCO₂e",
         })),
       }));
 
