@@ -23,7 +23,7 @@ export default function SearchItem({
         iconSize={iconSize}
       />
       <p className="flex flex-col grow min-w-1">
-        <IonText className="font-bold truncate w-full">{text}</IonText>
+        <IonText className="font-bold ">{text}</IonText>
         <IonText
           color={"secondary"}
           className="text-xs truncate w-full flex gap-2"

@@ -17,13 +17,15 @@ export default function TransitRouteItem({
 
   useEffect(() => {
     if (startTime && endTime) {
-      dayChanged.current = startTime.split("T")[0] !== endTime.split("T")[0];
+      dayChanged.current =
+        toCurrentTimezone(startTime).split("T")[0] !==
+        toCurrentTimezone(endTime).split("T")[0];
     }
   }, [startTime, endTime]);
 
   const formatTime = (time) => {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const date = new Date(time.split("T")[0]);
+    const date = new Date(time);
     return (
       (dayChanged.current ? days[date.getDay()] + " " : "") +
       to12HourFormat(toCurrentTimezone(time).split("T")[1]).split("+")[0]
@@ -38,13 +40,13 @@ export default function TransitRouteItem({
             {formatTime(startTime) + " - " + formatTime(endTime)}
           </IonText>
         </p>
-        <div className="flex gap-1 items-center grow truncate">
+        <div className="flex gap-x-2 gap-y-0.5 items-center grow flex-wrap">
           {paths.map((path, index) => (
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-2">
               {path.isTransit ? (
                 <p
                   key={index}
-                  className="border-1 px-2 py-1 rounded-full border-2 border-primary"
+                  className="border-1 px-2 py-0.5 rounded-full border-2 border-primary"
                 >
                   <IconText
                     icon={path.mode.toLowerCase() === "bus" ? bus : null}
