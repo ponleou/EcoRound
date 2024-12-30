@@ -10,8 +10,8 @@ export default function IconText({
   return (
     <div
       className={
-        "flex justify-center items-center gap-1 w-fit " +
-        (col ? "flex-col" : "")
+        "flex justify-center items-center  w-fit " +
+        (col ? "flex-col gap-1" : " gap-2")
       }
     >
       <IonIcon color={iconColor} size={iconSize} icon={icon}></IonIcon>
