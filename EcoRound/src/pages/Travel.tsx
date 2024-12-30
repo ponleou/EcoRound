@@ -833,6 +833,8 @@ export default function Travel({ match }) {
                                             }
                                       )}
                                     ></TransitRouteItem>
+                                    {index <
+                                      transitRoutes.routes.length - 1 && <hr />}
                                   </span>
                                 ))
                               ) : (
