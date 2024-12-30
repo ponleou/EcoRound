@@ -90,12 +90,14 @@ export default function Travel({ match }) {
 
   const chooseLocationPath = useRef(`${match.url}/choose-location`);
   const searchLocationPath = useRef(`${match.url}/search-location`);
-  const routePath = useRef(`${match.url}/routeh`);
+  const showRoutePath = useRef(`${match.url}/show-route`);
   const transitRoutePath = useRef(`${match.url}/transit-route`);
+  const showTransitRoutePath = useRef(`${match.url}/transit-route/show-route`);
 
   const [choosingLocation, setChoosingLocation] = useState(false);
   const [searchingLocation, setSearchingLocation] = useState(false);
   const [showingRoute, setShowingRoute] = useState(false);
+  const [choosingTransitRoutes, setChoosingTransitRoutes] = useState(false);
   const [showingTransitRoute, setShowingTransitRoute] = useState(false);
 
   const activateSubpage = ({
@@ -107,7 +109,7 @@ export default function Travel({ match }) {
     setShowingRoute(showRoute);
     setSearchingLocation(searchLocation);
     setChoosingLocation(chooseLocation);
-    setShowingTransitRoute(showTransitRoute);
+    setChoosingTransitRoutes(showTransitRoute);
   };
 
   // modify pages based on route
@@ -142,7 +144,7 @@ export default function Travel({ match }) {
       }
     }
 
-    if (location.pathname === routePath.current) {
+    if (location.pathname === showRoutePath.current) {
       setModalSettings({
         ...defaultModalSetting.current,
         initialBreakpoint: 0.5,
@@ -169,7 +171,7 @@ export default function Travel({ match }) {
         searchingLocation ||
         choosingLocation ||
         showingRoute ||
-        showingTransitRoute
+        choosingTransitRoutes
       ) {
         reloadModal();
       }
@@ -264,7 +266,7 @@ export default function Travel({ match }) {
       },
     }));
 
-    navigation.push(routePath.current, "forward");
+    navigation.push(showRoutePath.current, "forward");
   };
 
   // set transit route to display on page
@@ -282,6 +284,29 @@ export default function Travel({ match }) {
       setMapPaths([]);
     }
   }, [showingRoute]);
+
+  /*
+  ========== DISPLAYING TRANSIT ROUTES ==========
+  */
+
+  const [selectedTransitRoute, setSelectedTransitRoute] = useState(null);
+
+  const handleSelectTransitRoute = (route) => {
+    setSelectedTransitRoute(route);
+
+    navigation.push(showTransitRoutePath.current, "forward");
+  };
+
+  useEffect(() => {
+    if (showingTransitRoute) {
+      setMapPaths((prevState) => [
+        ...prevState,
+        ...selectedTransitRoute.coordinates,
+      ]);
+    } else {
+      setMapPaths([]);
+    }
+  }, [showingTransitRoute]);
 
   /*
   ========== SEARCH ==========
@@ -369,7 +394,7 @@ export default function Travel({ match }) {
               ? "Search location"
               : showingRoute
               ? "Route"
-              : showingTransitRoute
+              : choosingTransitRoutes
               ? "Transit routes"
               : "Travel"
           }
@@ -575,25 +600,48 @@ export default function Travel({ match }) {
                         </TravelCard>
                         {/* Card 2 */}
                         <TravelCard>
-                          {showingTransitRoute ? (
+                          {choosingTransitRoutes ? (
                             <CardList>
-                              {transitRoutes.loaded
-                                ? transitRoutes.routes.map((route, index) => (
-                                    <span key={index}>
-                                      <TransitRouteItem
-                                        startTime={`${route.start.date}T${route.start.time}`}
-                                        endTime={`${route.end.date}T${route.end.time}`}
-                                        points={route.points}
-                                        subTexts={[]}
-                                        path={[
-                                          route.distance,
-                                          route.duration,
-                                          route.emission,
-                                        ]}
-                                      ></TransitRouteItem>
-                                    </span>
-                                  ))
-                                : null}
+                              {transitRoutes.loaded ? (
+                                transitRoutes.routes.map((route, index) => (
+                                  <span
+                                    key={index}
+                                    onClick={() => {
+                                      console.log(route, walkRoute);
+                                      setMapPaths((prevState) => [
+                                        ...prevState,
+                                        ...route.coorindates,
+                                      ]);
+                                    }}
+                                  >
+                                    <TransitRouteItem
+                                      startTime={`${route.start.date}T${route.start.time}`}
+                                      endTime={`${route.end.date}T${route.end.time}`}
+                                      points={route.points}
+                                      subTexts={[
+                                        route.distance,
+                                        route.duration,
+                                        route.emission,
+                                      ]}
+                                      paths={route.segments.map((segment) =>
+                                        segment.transitSegment
+                                          ? {
+                                              isTransit: true,
+                                              mode: segment.mode,
+                                              code: segment.transitNames.code,
+                                            }
+                                          : {
+                                              isTransit: false,
+                                              mode: segment.mode,
+                                              duration: segment.duration,
+                                            }
+                                      )}
+                                    ></TransitRouteItem>
+                                  </span>
+                                ))
+                              ) : (
+                                <IonText>No routes found</IonText>
+                              )}
                             </CardList>
                           ) : (
                             <CardList>
