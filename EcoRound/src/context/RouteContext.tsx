@@ -166,7 +166,7 @@ function RouteProvider({ children }) {
                   start: { time: segment.start.time, date: segment.start.date },
                 }
           ),
-          coorindates: route.segments.map((segment) => ({
+          coordinates: route.segments.map((segment) => ({
             type: segment.transitSegment ? "primary" : "secondary",
             path: segment.path,
           })),
