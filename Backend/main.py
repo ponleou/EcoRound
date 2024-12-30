@@ -367,52 +367,122 @@ def walkRoute():
 
 @app.get("/api/bike-route")
 def bikeRoute():
-    route = fetchRoute(
-        request.args.get("slat"),
-        request.args.get("slon"),
-        request.args.get("dlat"),
-        request.args.get("dlon"),
-        "cycling-regular",
-    )
+    response = None
 
-    response = {
-        "path": [
-            [coord[1], coord[0]]
-            for coord in route["features"][0]["geometry"]["coordinates"]
-        ],
-        "distance": route["features"][0]["properties"]["segments"][0]["distance"],
-        "duration": route["features"][0]["properties"]["segments"][0]["duration"],
-        "steps": route["features"][0]["properties"]["segments"][0]["steps"],
-        "emission": route["features"][0]["properties"]["segments"][0]["distance"]
-        / 1000
-        * walkEF,
-    }
+    try:
+        OTPRoutes = queryOTPRoute(
+            request.args.get("slat"),
+            request.args.get("slon"),
+            request.args.get("dlat"),
+            request.args.get("dlon"),
+            "BICYCLE",
+        )
+
+        OTPRoute = OTPRoutes["data"]["plan"]["itineraries"][0]["legs"][0]
+        response = {
+            "path": decode(OTPRoute["legGeometry"]["points"]),
+            "distance": OTPRoute["distance"],
+            "duration": OTPRoute["duration"],
+            "steps": [
+                {
+                    "distance": step["distance"],
+                    "duration": round(
+                        step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])
+                    ),
+                    "name": "-" if step["bogusName"] else step["streetName"],
+                    "instruction": stepInstruction(
+                        step["relativeDirection"],
+                        step["streetName"],
+                        step["bogusName"],
+                        step["absoluteDirection"],
+                    ),
+                }
+                for step in OTPRoute["steps"]
+            ],
+            "emission": OTPRoute["distance"] / 1000 * walkEF,
+        }
+    except:
+        # fallback to ORS if OTP got nothing
+        route = fetchRoute(
+            request.args.get("slat"),
+            request.args.get("slon"),
+            request.args.get("dlat"),
+            request.args.get("dlon"),
+            "cycling-regular",
+        )
+        response = {
+            "path": [
+                [coord[1], coord[0]]
+                for coord in route["features"][0]["geometry"]["coordinates"]
+            ],
+            "distance": route["features"][0]["properties"]["segments"][0]["distance"],
+            "duration": route["features"][0]["properties"]["segments"][0]["duration"],
+            "steps": route["features"][0]["properties"]["segments"][0]["steps"],
+            "emission": route["features"][0]["properties"]["segments"][0]["distance"]
+            / 1000
+            * walkEF,
+        }
 
     return jsonify(response)
 
 
 @app.get("/api/car-route")
 def carRoute():
-    route = fetchRoute(
-        request.args.get("slat"),
-        request.args.get("slon"),
-        request.args.get("dlat"),
-        request.args.get("dlon"),
-        "driving-car",
-    )
+    response = None
 
-    response = {
-        "path": [
-            [coord[1], coord[0]]
-            for coord in route["features"][0]["geometry"]["coordinates"]
-        ],
-        "distance": route["features"][0]["properties"]["segments"][0]["distance"],
-        "duration": route["features"][0]["properties"]["segments"][0]["duration"],
-        "steps": route["features"][0]["properties"]["segments"][0]["steps"],
-        "emission": route["features"][0]["properties"]["segments"][0]["distance"]
-        / 1000
-        * carEF,
-    }
+    try:
+        OTPRoutes = queryOTPRoute(
+            request.args.get("slat"),
+            request.args.get("slon"),
+            request.args.get("dlat"),
+            request.args.get("dlon"),
+            "CAR",
+        )
+
+        OTPRoute = OTPRoutes["data"]["plan"]["itineraries"][0]["legs"][0]
+        response = {
+            "path": decode(OTPRoute["legGeometry"]["points"]),
+            "distance": OTPRoute["distance"],
+            "duration": OTPRoute["duration"],
+            "steps": [
+                {
+                    "distance": step["distance"],
+                    "duration": round(
+                        step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])
+                    ),
+                    "name": "-" if step["bogusName"] else step["streetName"],
+                    "instruction": stepInstruction(
+                        step["relativeDirection"],
+                        step["streetName"],
+                        step["bogusName"],
+                        step["absoluteDirection"],
+                    ),
+                }
+                for step in OTPRoute["steps"]
+            ],
+            "emission": OTPRoute["distance"] / 1000 * carEF,
+        }
+    except:
+        # fallback to ORS if OTP got nothing
+        route = fetchRoute(
+            request.args.get("slat"),
+            request.args.get("slon"),
+            request.args.get("dlat"),
+            request.args.get("dlon"),
+            "driving-car",
+        )
+        response = {
+            "path": [
+                [coord[1], coord[0]]
+                for coord in route["features"][0]["geometry"]["coordinates"]
+            ],
+            "distance": route["features"][0]["properties"]["segments"][0]["distance"],
+            "duration": route["features"][0]["properties"]["segments"][0]["duration"],
+            "steps": route["features"][0]["properties"]["segments"][0]["steps"],
+            "emission": route["features"][0]["properties"]["segments"][0]["distance"]
+            / 1000
+            * carEF,
+        }
 
     return jsonify(response)
 
