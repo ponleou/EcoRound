@@ -143,20 +143,21 @@ export default function MapPage({
             </Marker>
           )}
           {mapPaths.map((mapPath, index) => (
-            <Polyline
-              key={index}
-              positions={mapPath.path}
-              color={
-                mapPath.type === "primary"
-                  ? getCssVariableValue("--ion-color-secondary").trim()
-                  : mapPath.type === "secondary"
-                  ? getCssVariableValue("--ion-color-primary").trim()
-                  : getCssVariableValue("--ion-color-secondary").trim()
-              }
-              weight={4}
-              opacity={1}
-              dashArray={mapPath.type === "secondary" ? "4, 8" : ""}
-            />
+            <span key={index}>
+              <Polyline
+                positions={mapPath.path}
+                color={
+                  mapPath.type === "primary"
+                    ? getCssVariableValue("--ion-color-secondary").trim()
+                    : mapPath.type === "secondary"
+                    ? getCssVariableValue("--ion-color-primary").trim()
+                    : getCssVariableValue("--ion-color-secondary").trim()
+                }
+                weight={4}
+                opacity={1}
+                dashArray={mapPath.type === "secondary" ? "2, 12" : ""}
+              />
+            </span>
           ))}
         </MapContainer>
       </div>
