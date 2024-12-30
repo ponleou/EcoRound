@@ -19,7 +19,7 @@ export default function RouteCardItem({
           <IonText>No routes found</IonText>
         </p>
       ) : (
-        <div className="flex gap-4 items-center justify-between grow min-w-1">
+        <div className="flex gap-3 items-center justify-between grow min-w-1">
           <div className="flex flex-col justify-between truncate grow">
             <p className="text-xs truncate grow">
               <IonText className="">
@@ -36,7 +36,9 @@ export default function RouteCardItem({
                   key={index}
                   color={"secondary"}
                   className={
-                    routeDescriptions.length - 1 <= index ? "font-bold" : ""
+                    routeDescriptions.length - 1 <= index
+                      ? "font-bold truncate"
+                      : ""
                   }
                 >
                   {description}
@@ -44,19 +46,17 @@ export default function RouteCardItem({
               ))}
             </p>
           </div>
-          <div className="flex items-center w-fit text-nowrap">
+          <div className="flex items-center w-fit text-nowrap gap-2">
             <div className="text-right flex items-center h-full">
               <p className="font-bold">
                 <IonText>{points ? points : ""}</IonText>
               </p>
             </div>
-            <IonButton fill="clear" color="dark" shape="round" size="small">
-              <IonIcon
-                slot="icon-only"
-                size="small"
-                icon={chevronForward}
-              ></IonIcon>
-            </IonButton>
+            <IonIcon
+              slot="icon-only"
+              size="small"
+              icon={chevronForward}
+            ></IonIcon>
           </div>
         </div>
       )}
