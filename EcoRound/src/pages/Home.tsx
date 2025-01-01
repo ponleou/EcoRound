@@ -25,18 +25,40 @@ import {
   ellipsisVertical,
   footsteps,
   ticket,
+  server,
 } from "ionicons/icons";
 import TabBar from "../components/TabBar";
 import { StatusBar, Style } from "@capacitor/status-bar";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import HeaderBar from "../components/HeaderBar";
 import PermissionToast from "../components/PermissionToast";
 import HomeCard from "../components/HomeCard";
 import CardList from "../components/CardList";
 import { Icon } from "leaflet";
 import IconText from "../components/IconText";
+import { verifyUrl } from "../function/api";
 
 export default function Home() {
+  const [carbonFootprint, setCarbonFootprint] = useState(0);
+  const [rewardPoints, setRewardPoints] = useState(0);
+
+  useEffect(() => {
+    setCarbonFootprint(Math.round(Math.random() * 100));
+    setRewardPoints(Math.round(Math.random() * 100));
+  }, []);
+
+  const [inputUrl, setInputUrl] = useState("");
+  const [urlVerified, setUrlVerified] = useState(false);
+
+  const checkUrlVerification = async (url) => {
+    const response = await verifyUrl(url);
+    if (response.verify) {
+      setUrlVerified(true);
+    } else {
+      setUrlVerified(false);
+    }
+  };
+
   return (
     // Header section
     <IonPage>
@@ -74,7 +96,7 @@ export default function Home() {
                 ></IconText>
                 <IonText>
                   <p className=" text-gray-500">
-                    You have saved {Math.round(Math.random() * 100)} gCO
+                    You have saved {carbonFootprint} gCO
                     <sub>2</sub>e of carbon emissions today.
                   </p>
                 </IonText>
@@ -92,12 +114,42 @@ export default function Home() {
                 ></IconText>
                 <IonText>
                   <p className=" text-gray-500">
-                    You have saved up {Math.round(Math.random() * 100)} reward
-                    points!
+                    You have saved up {rewardPoints} reward points!
                   </p>
                 </IonText>
               </div>
             </HomeCard>
+            {!urlVerified ? (
+              <HomeCard>
+                <div className="flex flex-col gap-2">
+                  <IconText
+                    icon={server}
+                    text="Development Option"
+                    col={false}
+                    iconSize="small"
+                    textSize="large"
+                    textBold={true}
+                  ></IconText>
+                  <IonText>
+                    <p className=" text-gray-500">Input backend server:</p>
+                    <input
+                      onChange={(e) => {
+                        setInputUrl(e.target.value);
+                      }}
+                      value={inputUrl}
+                      className="border-2 border-gray-300 rounded-md p-2 bg-white w-full"
+                    />
+                  </IonText>
+                  <IonButton
+                    onClick={() => {
+                      checkUrlVerification(inputUrl);
+                    }}
+                  >
+                    Verify
+                  </IonButton>
+                </div>
+              </HomeCard>
+            ) : null}
           </CardList>
         </div>
       </IonContent>
