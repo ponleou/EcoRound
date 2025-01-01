@@ -17,7 +17,7 @@ function CoordinateProvider({ children }) {
     } catch (error) {
       setCoords((prevState) => ({
         ...prevState,
-        label: error.message,
+        label: "Error fetching name",
       }));
     }
   };

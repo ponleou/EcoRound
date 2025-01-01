@@ -393,14 +393,15 @@ export default function Travel({ match }) {
           subLocation: place.label,
           lat: place.lat,
           lon: place.lon,
-          distance: currentCoords.status
-            ? distance(
-                currentCoords.lat,
-                currentCoords.lon,
-                place.lat,
-                place.lon
-              ).toFixed(1) + " km"
-            : "",
+          distance:
+            currentCoords.status && currentCoords.valid
+              ? distance(
+                  currentCoords.lat,
+                  currentCoords.lon,
+                  place.lat,
+                  place.lon
+                ).toFixed(1) + " km"
+              : "",
         }))
       );
     } catch (error) {
@@ -499,7 +500,7 @@ export default function Travel({ match }) {
                               <TravelItem
                                 text={"Current location"}
                                 subTexts={["Your current location"]}
-                                iconText={"0 km"}
+                                iconText={""}
                                 icon={locate}
                                 iconColor="secondary"
                               ></TravelItem>
@@ -843,11 +844,7 @@ export default function Travel({ match }) {
                             </CardList>
                           ) : (
                             <CardList>
-                              <span
-                                onClick={() =>
-                                  transitRoutes.loaded && handleTransitRoute()
-                                }
-                              >
+                              <span onClick={() => handleTransitRoute()}>
                                 <RouteCardItem
                                   iconText="Transit"
                                   points={
@@ -912,7 +909,7 @@ export default function Travel({ match }) {
                               <hr />
                               <span
                                 onClick={() =>
-                                  bikeRoute &&
+                                  bikeRoute.loaded &&
                                   handleRouteItem(bikeRoute, bicycle)
                                 }
                               >
@@ -942,7 +939,8 @@ export default function Travel({ match }) {
                               <hr />
                               <span
                                 onClick={() =>
-                                  carRoute && handleRouteItem(carRoute, car)
+                                  carRoute.loaded &&
+                                  handleRouteItem(carRoute, car)
                                 }
                               >
                                 <RouteCardItem
