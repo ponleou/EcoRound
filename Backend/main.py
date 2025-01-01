@@ -569,6 +569,12 @@ def checkValidCoords():
         raise ValueError("Location/region is not supported")
 
 
+# For development
+@app.get("/api/verify")
+def verify():
+    return jsonify({"verify": True, "message": "Request completed"}), 200
+
+
 @app.errorhandler(ApiError)
 def orsApiError(error):
     return jsonify(error.args[1]), error.status
