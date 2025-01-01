@@ -4,6 +4,8 @@ export default function IconText({
   icon,
   text,
   iconSize = "large",
+  textSize = "small",
+  textBold = false,
   iconColor = "",
   col = true,
 }) {
@@ -15,7 +17,20 @@ export default function IconText({
       }
     >
       <IonIcon color={iconColor} size={iconSize} icon={icon}></IonIcon>
-      <p className={"text-xs text-center text-nowrap " + (col ? "w-full" : "")}>
+      <p
+        className={
+          " text-center text-nowrap " +
+          (col ? "w-full" : "") +
+          (textSize == "base"
+            ? "text-base"
+            : textSize == "large"
+            ? "text-lg"
+            : textSize == "small"
+            ? "text-sm"
+            : "text-sm") +
+          (textBold ? " font-bold" : "")
+        }
+      >
         <IonText>{text}</IonText>
       </p>
     </div>
