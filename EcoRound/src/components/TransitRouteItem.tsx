@@ -42,34 +42,31 @@ export default function TransitRouteItem({
         </p>
         <div className="flex gap-x-2 gap-y-0.5 items-center grow flex-wrap">
           {paths.map((path, index) => (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2" key={index}>
               {path.isTransit ? (
-                <p
-                  key={index}
-                  className="border-1 px-2 py-0.5 rounded-full border-2 border-primary"
-                >
+                <div className="border-1 px-2 py-0.5 rounded-full border-2 border-primary">
                   <IconText
                     icon={path.mode.toLowerCase() === "bus" ? bus : null}
                     text={path.code}
                     iconSize="small"
                     col={false}
                   />
-                </p>
+                </div>
               ) : (
-                <p key={index}>
+                <div>
                   <IconText
                     icon={path.mode.toLowerCase() === "walk" ? walk : null}
                     text={path.duration}
                     iconSize="small"
                     col={false}
                   />
-                </p>
+                </div>
               )}
               <IonText>{index < paths.length - 1 && ">"}</IonText>
             </span>
           ))}
         </div>
-        <p className="text-xs flex gap-2">
+        <div className="text-xs flex gap-2">
           {subTexts.map((subText, index) => (
             <IonText
               key={index}
@@ -79,13 +76,13 @@ export default function TransitRouteItem({
               {subText}
             </IonText>
           ))}
-        </p>
+        </div>
       </div>
       <div className="flex items-center w-fit text-nowrap gap-2">
         <div className="text-right flex items-center h-full">
-          <p className="font-bold">
+          <div className="font-bold">
             <IonText>{points ? points : ""}</IonText>
-          </p>
+          </div>
         </div>
         <IonIcon slot="icon-only" size="small" icon={chevronForward}></IonIcon>
       </div>
