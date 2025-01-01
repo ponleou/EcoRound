@@ -19,10 +19,15 @@ import {
   bicycle,
   bus,
   car,
+  chevronDown,
+  chevronForward,
+  chevronUp,
   ellipsisVertical,
   locate,
   locationSharp,
   pin,
+  removeCircle,
+  stopCircle,
   swapVertical,
   trailSign,
   train,
@@ -352,6 +357,8 @@ export default function Travel({ match }) {
     }
   }, [showingTransitRoute]);
 
+  const toggleMiddleStopArray = useRef([]);
+
   /*
   ========== SEARCH ==========
   */
@@ -604,9 +611,15 @@ export default function Travel({ match }) {
                             <hr />
                             <CardList>
                               {selectedTransitRoute.route.segments.map(
-                                (segment, index) =>
-                                  segment.transitSegment ? (
+                                (segment, index) => {
+                                  toggleMiddleStopArray.current.push(false);
+                                  return segment.transitSegment ? (
                                     <div
+                                      onClick={() => {
+                                        toggleMiddleStopArray.current[index] =
+                                          !toggleMiddleStopArray.current[index];
+                                        console.log("clicked");
+                                      }}
                                       key={index}
                                       className="grid grid-cols-[auto,1fr] gap-x-4 items-center px-2"
                                     >
@@ -653,40 +666,58 @@ export default function Travel({ match }) {
                                       <div></div>
                                       <div>
                                         <CardList>
-                                          <p className="text-sm flex flex-col gap-4 grow px-2 pb-4">
-                                            {segment.stops.startStop ? (
-                                              <IconText
-                                                icon={arrowDownCircle}
-                                                col={false}
-                                                text={segment.stops.startStop}
-                                                iconColor="secondary"
-                                                key={index}
-                                                iconSize="small"
-                                              ></IconText>
-                                            ) : null}
-                                            {segment.stops.middleStops.map(
-                                              (stop, index) => (
+                                          <div className="flex gap-4">
+                                            <div className="text-sm flex flex-col gap-4 grow px-2 pb-4">
+                                              {segment.stops.startStop ? (
                                                 <IconText
                                                   icon={arrowDownCircle}
                                                   col={false}
-                                                  text={stop}
+                                                  text={segment.stops.startStop}
                                                   iconColor="secondary"
                                                   key={index}
                                                   iconSize="small"
                                                 ></IconText>
-                                              )
-                                            )}
-                                            {segment.stops.endStop ? (
-                                              <IconText
-                                                icon={arrowDownCircle}
-                                                col={false}
-                                                text={segment.stops.endStop}
-                                                iconColor="secondary"
-                                                key={index}
-                                                iconSize="small"
-                                              ></IconText>
-                                            ) : null}
-                                          </p>
+                                              ) : null}
+                                              {toggleMiddleStopArray.current[
+                                                index
+                                              ]
+                                                ? segment.stops.middleStops.map(
+                                                    (stop, index) => (
+                                                      <IconText
+                                                        icon={arrowDownCircle}
+                                                        col={false}
+                                                        text={stop}
+                                                        iconColor="secondary"
+                                                        key={index}
+                                                        iconSize="small"
+                                                      ></IconText>
+                                                    )
+                                                  )
+                                                : null}
+                                              {segment.stops.endStop ? (
+                                                <IconText
+                                                  icon={stopCircle}
+                                                  col={false}
+                                                  text={segment.stops.endStop}
+                                                  iconColor="tertiary"
+                                                  key={index}
+                                                  iconSize="small"
+                                                ></IconText>
+                                              ) : null}
+                                            </div>
+                                            <IonIcon
+                                              className={
+                                                (toggleMiddleStopArray.current[
+                                                  index
+                                                ]
+                                                  ? " rotate-180 "
+                                                  : "") +
+                                                "transform transition-all"
+                                              }
+                                              icon={chevronUp}
+                                              size="small"
+                                            ></IonIcon>
+                                          </div>
                                         </CardList>
                                       </div>
                                     </div>
@@ -731,7 +762,8 @@ export default function Travel({ match }) {
                                         }
                                       ></TravelItem>
                                     </div>
-                                  )
+                                  );
+                                }
                               )}
                             </CardList>
                           </CardList>
@@ -811,7 +843,6 @@ export default function Travel({ match }) {
                                     }}
                                   >
                                     <TransitRouteItem
-                                      key={index}
                                       startTime={`${route.start.date}T${route.start.time}`}
                                       endTime={`${route.end.date}T${route.end.time}`}
                                       points={route.points}
