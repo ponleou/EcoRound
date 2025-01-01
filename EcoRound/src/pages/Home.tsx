@@ -23,12 +23,18 @@ import {
   personCircleOutline,
   locationOutline,
   ellipsisVertical,
+  footsteps,
+  ticket,
 } from "ionicons/icons";
 import TabBar from "../components/TabBar";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useEffect } from "react";
 import HeaderBar from "../components/HeaderBar";
 import PermissionToast from "../components/PermissionToast";
+import HomeCard from "../components/HomeCard";
+import CardList from "../components/CardList";
+import { Icon } from "leaflet";
+import IconText from "../components/IconText";
 
 export default function Home() {
   return (
@@ -54,39 +60,50 @@ export default function Home() {
         </IonHeader>
         <PermissionToast />
 
-        <p>1</p>
-        <p>2</p>
-        <p>3</p>
-        <p>5</p>
-        <p>6</p>
-        <p>7</p>
-        <p>8</p>
-        <p>9</p>
-        <p>h</p>
-        <p>3</p>
-        <p>3</p>
-        <p>4</p>
-        <p>9</p>
-        <p>9</p>
-        <p>9</p>
-        <p>9</p>
-        <p>9</p>
-        <p>9</p>
-        <p>9</p>
-        <p>9 </p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
-        <p>2</p>
+        <div className="p-4">
+          <CardList>
+            <HomeCard>
+              <div className="flex flex-col gap-2">
+                <IconText
+                  icon={footsteps}
+                  text="Carbon Footprint"
+                  col={false}
+                  iconSize="small"
+                  textSize="large"
+                  textBold={true}
+                ></IconText>
+                <IonText>
+                  <p className=" text-gray-500">
+                    You have saved {Math.round(Math.random() * 100)} gCO
+                    <sub>2</sub>e of carbon emissions today.
+                  </p>
+                </IonText>
+              </div>
+            </HomeCard>
+            <HomeCard>
+              <div className="flex flex-col gap-2">
+                <IconText
+                  icon={ticket}
+                  text="Reward Points"
+                  col={false}
+                  iconSize="small"
+                  textSize="large"
+                  textBold={true}
+                ></IconText>
+                <IonText>
+                  <p className=" text-gray-500">
+                    You have saved up {Math.round(Math.random() * 100)} reward
+                    points!
+                  </p>
+                </IonText>
+              </div>
+            </HomeCard>
+          </CardList>
+        </div>
       </IonContent>
-
-      <TabBar />
+      <IonFooter>
+        <TabBar />
+      </IonFooter>
     </IonPage>
   );
 }
