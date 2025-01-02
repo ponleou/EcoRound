@@ -19,15 +19,15 @@ export default function IconText({
       <IonIcon color={iconColor} size={iconSize} icon={icon}></IonIcon>
       <p
         className={
-          " text-center text-nowrap " +
-          (col ? "w-full" : "") +
+          "text-center text-nowrap " +
+          (col ? "w-full " : "") +
           (textSize == "base"
             ? "text-base"
             : textSize == "large"
             ? "text-lg"
             : textSize == "small"
-            ? "text-sm"
-            : "text-sm") +
+            ? "text-xs"
+            : "text-xs") +
           (textBold ? " font-bold" : "")
         }
       >
