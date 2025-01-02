@@ -138,9 +138,13 @@ export default function MapPage({
             </CircleMarker>
           )}
           {destinationCoords.lat && destinationCoords.lon && (
-            <Marker position={[destinationCoords.lat, destinationCoords.lon]}>
-              {/* <Popup>Destination</Popup> */}
-            </Marker>
+            <CircleMarker
+              radius={7}
+              center={[destinationCoords.lat, destinationCoords.lon]}
+              color="white"
+              fillColor={getCssVariableValue("--ion-color-tertiary").trim()}
+              fillOpacity={1}
+            ></CircleMarker>
           )}
           {mapPaths.map((mapPath, index) => (
             <span key={index}>
