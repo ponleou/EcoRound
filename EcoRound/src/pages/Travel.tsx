@@ -726,7 +726,7 @@ export default function Travel({ match }) {
                                       key={index}
                                       className="flex gap-4 items-center px-2"
                                     >
-                                      <p className="self-start py-4">
+                                      <p className="self-start py-4 w-fit text-xs">
                                         <IonText>
                                           {
                                             to12HourFormat(
