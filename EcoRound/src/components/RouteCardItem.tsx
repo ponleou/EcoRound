@@ -12,7 +12,7 @@ export default function RouteCardItem({
 }) {
   return (
     <div className="flex px-2 gap-4 ion-activatable relative overflow-hidden py-4 rounded-md">
-      <IconText icon={icon} text={iconText} />
+      <IconText icon={icon} text={iconText} textSize="small" />
 
       {!isAvailable ? (
         <p className="font-bold items-center justify-end flex grow">

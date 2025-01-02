@@ -21,6 +21,7 @@ export default function SearchItem({
         icon={icon}
         text={iconText}
         iconSize={iconSize}
+        textSize="small"
       />
       <p className="flex flex-col grow min-w-1">
         <IonText className="font-bold ">{text}</IonText>
