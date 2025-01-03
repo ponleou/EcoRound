@@ -45,6 +45,7 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import { CoordinateProvider } from "./context/CoordinateContext";
 import { RouteProvider } from "./context/RouteContext";
 import { DateProvider } from "./context/DateContext";
+import Rewards from "./pages/Rewards";
 
 setupIonicReact();
 
@@ -67,6 +68,7 @@ function Main() {
 
   const homePath = useRef("/home");
   const travelPath = useRef("/travel");
+  const rewardsPath = useRef("/rewards");
 
   // Make the status bar blend with header
   function getCssVariableValue(variableName) {
@@ -82,10 +84,11 @@ function Main() {
   const style = useRef(Style.Light);
 
   useEffect(() => {
-    if (location.pathname === homePath.current) {
+    if ([homePath.current, rewardsPath.current].includes(location.pathname)) {
       hexColor.current = getCssVariableValue("--ion-color-primary-contrast");
       style.current = Style.Light;
     }
+
     if (location.pathname.startsWith(travelPath.current)) {
       hexColor.current = getCssVariableValue("--ion-color-primary");
       style.current = Style.Dark;
@@ -118,6 +121,7 @@ function Main() {
           </RouteProvider>
         )}
       />
+      <Route exact={true} path={rewardsPath.current} component={Rewards} />
     </IonRouterOutlet>
   );
 }
