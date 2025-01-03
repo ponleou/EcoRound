@@ -24,7 +24,7 @@ export default function SearchItem({
         textSize="small"
       />
       <p className="flex flex-col grow min-w-1">
-        <IonText className="font-bold ">{text}</IonText>
+        <IonText className="font-bold leading-tight">{text}</IonText>
         <IonText
           color={"secondary"}
           className="text-xs truncate w-full flex gap-2"
