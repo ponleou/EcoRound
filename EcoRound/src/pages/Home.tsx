@@ -37,6 +37,7 @@ import CardList from "../components/CardList";
 import { Icon } from "leaflet";
 import IconText from "../components/IconText";
 import { verifyUrl } from "../function/api";
+import MainPage from "../components/MainPage";
 
 export default function Home() {
   const [carbonFootprint, setCarbonFootprint] = useState(0);
@@ -61,101 +62,79 @@ export default function Home() {
 
   return (
     // Header section
-    <IonPage>
-      <IonHeader translucent={true} className="shadow-lg">
-        <HeaderBar title="EcoRound" textColor="primary" />
-      </IonHeader>
+    <MainPage title="EcoRound">
+      <PermissionToast />
 
-      <IonContent fullscreen>
-        {/* collapseible header section for iOS */}
-        <IonHeader collapse="condense">
-          <IonToolbar class="ion-justify-content-center">
-            <IonTitle color="primary" size="large">
-              EcoRound
-            </IonTitle>
-            <IonButtons slot="end" class="ion-margin-end">
-              <IonButton size="small" shape="round">
-                <IonIcon icon={ellipsisVertical}></IonIcon>
-              </IonButton>
-            </IonButtons>
-          </IonToolbar>
-        </IonHeader>
-        <PermissionToast />
-
-        <div className="p-4">
-          <CardList>
+      <div className="p-4">
+        <CardList>
+          <HomeCard>
+            <div className="flex flex-col gap-2">
+              <IconText
+                icon={footsteps}
+                text="Carbon Footprint"
+                col={false}
+                iconSize="small"
+                textSize="large"
+                textBold={true}
+              ></IconText>
+              <p>
+                <IonText color={"medium"}>
+                  You have saved {carbonFootprint} gCO
+                  <sub>2</sub>e of carbon emissions today.
+                </IonText>
+              </p>
+            </div>
+          </HomeCard>
+          <HomeCard>
+            <div className="flex flex-col gap-2">
+              <IconText
+                icon={ticket}
+                text="Reward Points"
+                col={false}
+                iconSize="small"
+                textSize="large"
+                textBold={true}
+              ></IconText>
+              <p>
+                <IonText color={"medium"}>
+                  You have saved up {rewardPoints} reward points!
+                </IonText>
+              </p>
+            </div>
+          </HomeCard>
+          {!urlVerified ? (
             <HomeCard>
               <div className="flex flex-col gap-2">
                 <IconText
-                  icon={footsteps}
-                  text="Carbon Footprint"
+                  icon={server}
+                  text="Development Option"
                   col={false}
                   iconSize="small"
                   textSize="large"
                   textBold={true}
                 ></IconText>
-                <IonText>
-                  <p className=" text-gray-500">
-                    You have saved {carbonFootprint} gCO
-                    <sub>2</sub>e of carbon emissions today.
-                  </p>
-                </IonText>
+                <p>
+                  <IonText color={"medium"}>Input backend server:</IonText>
+                </p>
+                <input
+                  onChange={(e) => {
+                    setInputUrl(e.target.value);
+                  }}
+                  value={inputUrl}
+                  className="border-2 border-gray-300 rounded-md p-2 bg-white w-full"
+                />
+                <IonButton
+                  onClick={() => {
+                    checkUrlVerification(inputUrl);
+                  }}
+                >
+                  Verify
+                </IonButton>
               </div>
             </HomeCard>
-            <HomeCard>
-              <div className="flex flex-col gap-2">
-                <IconText
-                  icon={ticket}
-                  text="Reward Points"
-                  col={false}
-                  iconSize="small"
-                  textSize="large"
-                  textBold={true}
-                ></IconText>
-                <IonText>
-                  <p className=" text-gray-500">
-                    You have saved up {rewardPoints} reward points!
-                  </p>
-                </IonText>
-              </div>
-            </HomeCard>
-            {!urlVerified ? (
-              <HomeCard>
-                <div className="flex flex-col gap-2">
-                  <IconText
-                    icon={server}
-                    text="Development Option"
-                    col={false}
-                    iconSize="small"
-                    textSize="large"
-                    textBold={true}
-                  ></IconText>
-                  <IonText>
-                    <p className=" text-gray-500">Input backend server:</p>
-                    <input
-                      onChange={(e) => {
-                        setInputUrl(e.target.value);
-                      }}
-                      value={inputUrl}
-                      className="border-2 border-gray-300 rounded-md p-2 bg-white w-full"
-                    />
-                  </IonText>
-                  <IonButton
-                    onClick={() => {
-                      checkUrlVerification(inputUrl);
-                    }}
-                  >
-                    Verify
-                  </IonButton>
-                </div>
-              </HomeCard>
-            ) : null}
-          </CardList>
-        </div>
-      </IonContent>
-      <IonFooter>
-        <TabBar />
-      </IonFooter>
-    </IonPage>
+          ) : null}
+        </CardList>
+      </div>
+    </MainPage>
   );
 }
