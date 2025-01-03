@@ -623,7 +623,7 @@ export default function Travel({ match }) {
                                       key={index}
                                       className="grid grid-cols-[auto,1fr] gap-x-4 items-center px-2"
                                     >
-                                      <p className="self-start py-4">
+                                      <p className="self-center w-fit text-xs">
                                         <IonText>
                                           {
                                             to12HourFormat(
@@ -674,7 +674,6 @@ export default function Travel({ match }) {
                                                   col={false}
                                                   text={segment.stops.startStop}
                                                   iconColor="secondary"
-                                                  key={index}
                                                   iconSize="small"
                                                 ></IconText>
                                               ) : null}
@@ -700,7 +699,6 @@ export default function Travel({ match }) {
                                                   col={false}
                                                   text={segment.stops.endStop}
                                                   iconColor="tertiary"
-                                                  key={index}
                                                   iconSize="small"
                                                 ></IconText>
                                               ) : null}
@@ -726,7 +724,7 @@ export default function Travel({ match }) {
                                       key={index}
                                       className="flex gap-4 items-center px-2"
                                     >
-                                      <p className="self-start py-4 w-fit text-xs">
+                                      <p className="self-center w-fit text-xs">
                                         <IonText>
                                           {
                                             to12HourFormat(
