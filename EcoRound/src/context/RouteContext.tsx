@@ -88,7 +88,7 @@ function RouteProvider({ children }) {
           distance: formatDistanceString(step.distance),
           duration: formatDurationString(step.duration),
         })),
-        emission: Math.round(response.emission * 1000) + " gCO₂e",
+        emission: Math.round(response.emission * 1000) + " g CO₂e",
       }));
 
       return response;
@@ -170,7 +170,7 @@ function RouteProvider({ children }) {
             type: segment.transitSegment ? "primary" : "secondary",
             path: segment.path,
           })),
-          emission: Math.round(route.emission * 1000) + " gCO₂e",
+          emission: Math.round(route.emission * 1000) + " g CO₂e",
         })),
       }));
 
