@@ -21,7 +21,7 @@ export default function Rewards() {
                 iconSize="small"
               />
               <p>
-                <IonText color={"medium"}>5000 Reward Points</IonText>
+                <IonText color={"medium"}>2000 Reward Points</IonText>
               </p>
               <IonButton color={"secondary"} fill="outline" className="w-full">
                 Redeem
@@ -39,7 +39,7 @@ export default function Rewards() {
                 iconSize="small"
               />
               <p>
-                <IonText color={"medium"}>18000 Reward Points</IonText>
+                <IonText color={"medium"}>3600 Reward Points</IonText>
               </p>
               <IonButton color={"secondary"} fill="outline" className="w-full">
                 Redeem
