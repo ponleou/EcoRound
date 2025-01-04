@@ -17,6 +17,7 @@ import {
   IonTabBar,
   IonTabButton,
   useIonRouter,
+  IonInput,
 } from "@ionic/react";
 import {
   homeOutline,
@@ -121,7 +122,7 @@ export default function Home() {
                     setInputUrl(e.target.value);
                   }}
                   value={inputUrl}
-                  className="border-2 border-gray-300 rounded-md p-2 bg-white w-full"
+                  className="border-2 outline-primary border-gray-300 rounded-md p-2 bg-white w-full"
                 />
                 <IonButton
                   onClick={() => {
