@@ -35,8 +35,8 @@ export default function TransitRouteItem({
   return (
     <div className="flex px-2 gap-4 ion-activatable relative overflow-hidden py-4 rounded-md">
       <div className="flex flex-col justify-between grow min-w-1 gap-2 truncate">
-        <p>
-          <IonText>
+        <p className="flex truncate">
+          <IonText className="truncate">
             {formatTime(startTime) + " - " + formatTime(endTime)}
           </IonText>
         </p>
@@ -71,7 +71,9 @@ export default function TransitRouteItem({
             <IonText
               key={index}
               color={"secondary"}
-              className={subTexts.length - 1 <= index ? "font-bold" : ""}
+              className={
+                subTexts.length - 1 <= index ? "font-bold truncate" : ""
+              }
             >
               {subText}
             </IonText>

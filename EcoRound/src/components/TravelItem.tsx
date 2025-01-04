@@ -30,7 +30,12 @@ export default function SearchItem({
           className="text-xs truncate w-full flex gap-2"
         >
           {subTexts.map((subText, index) => (
-            <span key={index}>{subText}</span>
+            <span
+              key={index}
+              className={subTexts.length - 1 <= index ? "truncate" : ""}
+            >
+              {subText}
+            </span>
           ))}
         </IonText>
       </p>
