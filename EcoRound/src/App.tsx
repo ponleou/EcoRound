@@ -46,6 +46,7 @@ import { CoordinateProvider } from "./context/CoordinateContext";
 import { RouteProvider } from "./context/RouteContext";
 import { DateProvider } from "./context/DateContext";
 import Rewards from "./pages/Rewards";
+import Profile from "./pages/Profile";
 
 setupIonicReact();
 
@@ -69,6 +70,7 @@ function Main() {
   const homePath = useRef("/home");
   const travelPath = useRef("/travel");
   const rewardsPath = useRef("/rewards");
+  const profilePath = useRef("/profile");
 
   // Make the status bar blend with header
   function getCssVariableValue(variableName) {
@@ -84,7 +86,11 @@ function Main() {
   const style = useRef(Style.Light);
 
   useEffect(() => {
-    if ([homePath.current, rewardsPath.current].includes(location.pathname)) {
+    if (
+      [homePath.current, rewardsPath.current, profilePath.current].includes(
+        location.pathname
+      )
+    ) {
       hexColor.current = getCssVariableValue("--ion-color-primary-contrast");
       style.current = Style.Light;
     }
@@ -122,6 +128,7 @@ function Main() {
         )}
       />
       <Route exact={true} path={rewardsPath.current} component={Rewards} />
+      <Route exact={true} path={profilePath.current} component={Profile} />
     </IonRouterOutlet>
   );
 }

@@ -19,7 +19,7 @@ export default function TabBar() {
 
   function handleTabClick(page, replace = false) {
     if (replace) {
-      navigation.push(page, "forward", "replace");
+      navigation.push(page, "none", "replace");
     } else {
       navigation.push(page, "forward");
     }
@@ -51,7 +51,11 @@ export default function TabBar() {
         <IonIcon icon={ticket} />
         <IonText>Rewards</IonText>
       </IonTabButton>
-      <IonTabButton>
+      <IonTabButton
+        tab="profile"
+        href="/profile"
+        onClick={() => handleTabClick("profile", true)}
+      >
         <IonIcon icon={personCircle} />
         <IonText>Profile</IonText>
       </IonTabButton>
