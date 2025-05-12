@@ -1,12 +1,13 @@
 pipeline {
     agent any
     environment {
-        JAVA_HOME = "/usr/lib/jvm/java-21-openjdk"
-        SKIP_JDK_VERSION_CHECK = "true"
-        ANDROID_SDK = "/opt/android-sdk"
+        QT_QPA_PLATFORM='xcb'
+        JAVA_HOME = '/usr/lib/jvm/java-21-openjdk'
+        SKIP_JDK_VERSION_CHECK = 'true'
+        ANDROID_SDK = '/opt/android-sdk'
         ANDROID_SDK_ROOT = "${HOME}/.android/avd"
         ANDROID_HOME = "${HOME}/.android"
-        PATH = "${PATH}:${ANDROID_SDK}/tools:${ANDROID_SDK}/cmdline-tools/latest/bin:${ANDROID_SDK}/tools/qemu/linux-x86_64"
+        PATH = "${PATH}:${ANDROID_SDK}/tools:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = "avd_jenkins"
     }
     stages {
@@ -24,16 +25,15 @@ pipeline {
         }
         stage('Test') {
             steps {
-                // emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
-                // avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel" --force
-                // adb wait-for-device
                 sh '''
-                yes | sdkmanager 'system-images;android-30;google_apis;x86_64'
+                yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
+                avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
+
                 '''
                 script {
                     parallel(
                         launchEmulator: {
-                        sh 'emulator -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window'
+                        sh '(cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio)'
                         },
                         runAndroidTests: {
                             timeout(time: 20, unit: 'SECONDS') {
@@ -69,4 +69,4 @@ pipeline {
     //     }
     // }
     }
-}
+    }
