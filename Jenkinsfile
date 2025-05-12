@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         ANDROID_HOME = "/opt/android-sdk"
-        PATH = "${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin"
+        PATH = "${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin"
         AVD_NAME = "jenkins_avd"
     }
     stages {
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 sh '''
                 avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel"
-                $ANDROID_HOME/emulator/emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
+                emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
                 adb wait-for-device
                 (cd EcoRound/android && ./gradlew assembleDebug)
                 adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
