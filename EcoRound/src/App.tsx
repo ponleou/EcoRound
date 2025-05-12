@@ -3,6 +3,7 @@ import {
   IonApp,
   IonContent,
   IonFooter,
+  IonPage,
   IonRouterOutlet,
   setupIonicReact,
   useIonRouter,
@@ -41,7 +42,7 @@ import "./theme/variables.css";
 import "./input.css";
 import Home from "./pages/Home";
 import Travel from "./pages/Travel";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { App as CApp } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { CoordinateProvider } from "./context/CoordinateContext";
@@ -59,12 +60,7 @@ function App() {
       <DateProvider>
         <CoordinateProvider>
           <IonReactRouter>
-            <IonContent>
-              <Main /> 
-            </IonContent>
-            <IonFooter>
-              <TabBar />
-            </IonFooter>
+            <Main />
           </IonReactRouter>
         </CoordinateProvider>
       </DateProvider>
@@ -80,6 +76,8 @@ function Main() {
   const rewardsPath = useRef("/rewards");
   const profilePath = useRef("/profile");
 
+  const [showFooter, setShowFooter] = useState(true);
+
   // Make the status bar blend with header
   function getCssVariableValue(variableName) {
     return getComputedStyle(document.documentElement).getPropertyValue(
@@ -94,6 +92,8 @@ function Main() {
   const style = useRef(Style.Light);
 
   useEffect(() => {
+    setShowFooter(true);
+
     if (
       [homePath.current, rewardsPath.current, profilePath.current].includes(
         location.pathname
@@ -106,6 +106,7 @@ function Main() {
     if (location.pathname.startsWith(travelPath.current)) {
       hexColor.current = getCssVariableValue("--ion-color-primary");
       style.current = Style.Dark;
+      setShowFooter(false);
     }
 
     StatusBar.setBackgroundColor({ color: hexColor.current });
@@ -122,22 +123,31 @@ function Main() {
   }, [navigation]);
 
   return (
-    <IonRouterOutlet>
-      <Route exact path="/">
-        <Redirect to="/home" />
-      </Route>
-      <Route exact={true} path={homePath.current} component={Home} />
-      <Route
-        path={travelPath.current}
-        render={(props) => (
-          <RouteProvider>
-            <Travel {...props} />
-          </RouteProvider>
-        )}
-      />
-      <Route exact={true} path={rewardsPath.current} component={Rewards} />
-      <Route exact={true} path={profilePath.current} component={Profile} />
-    </IonRouterOutlet>
+    <IonPage>
+      <IonContent>
+        <IonRouterOutlet>
+          <Route exact path="/">
+            <Redirect to="/home" />
+          </Route>
+          <Route exact={true} path={homePath.current} component={Home} />
+          <Route
+            path={travelPath.current}
+            render={(props) => (
+              <RouteProvider>
+                <Travel {...props} />
+              </RouteProvider>
+            )}
+          />
+          <Route exact={true} path={rewardsPath.current} component={Rewards} />
+          <Route exact={true} path={profilePath.current} component={Profile} />
+        </IonRouterOutlet>
+      </IonContent>
+      {showFooter &&
+      <IonFooter>
+        <TabBar />
+      </IonFooter>
+      }
+    </IonPage>
   );
 }
 
