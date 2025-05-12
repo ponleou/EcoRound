@@ -25,15 +25,26 @@ pipeline {
         stage('Test') {
             steps {
                 // emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
+                // avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel" --force
+                // adb wait-for-device
                 sh '''
                 yes | sdkmanager 'system-images;android-30;google_apis;x86_64'
-                avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel" --force
-                qemu-system-x86_64 -prop persist.sys.language=en -prop persist.sys.country=US -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window &
-                adb wait-for-device
-                (cd EcoRound/android && ./gradlew assembleDebug)
-                adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                adb shell am start -n io.ionic.starter/.MainActivity
                 '''
+                parallel(
+                    launchEmulator: {
+                    sh 'qemu-system-x86_64 -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window'
+                    },
+                    runAndroidTests: {
+                        timeout(time: 20, unit: 'SECONDS') {
+                            sh "adb wait-for-device"
+                        }
+                        sh '''
+                        (cd EcoRound/android && ./gradlew assembleDebug)
+                        adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                        adb shell am start -n io.ionic.starter/.MainActivity
+                        '''
+                    }
+                )
             }
         }
     // stage('Code Quality') {
@@ -51,7 +62,6 @@ pipeline {
     // stage('Release') {
     //     steps {
     //     }
-    // }
     // stage('Monitor') {
     //     steps {
     //     }
