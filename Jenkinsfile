@@ -15,32 +15,6 @@ pipeline {
                 echo "test"
             }
         }
-        stage('Test') {
-            steps {
-                sh '''
-
-                '''
-            }
-        }
-        stage('Code Quality') {
-            steps {
-            }
-        }
-        stage('Security Scan') {
-            steps {
-            }
-        }
-        stage('Deploy') {
-            steps {
-            }
-        }
-        stage('Release') {
-            steps {
-            }
-        }
-        stage('Monitor') {
-            steps {
-            }
-        }
+   
     }
 }
