@@ -1,6 +1,7 @@
 pipeline {
     agent any
     environment {
+        JAVA_HOME = "/usr/lib/jvm/java-8-openjdk-amd64"
         ANDROID_HOME = "/opt/android-sdk"
         PATH = "${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin"
         AVD_NAME = "jenkins_avd"
