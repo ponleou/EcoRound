@@ -1,9 +1,8 @@
 pipeline {
     agent any
-    environment {
-        HOME = '/home/ponleou'
-        ANDROID_HOME = '$USER_HOME/Android/Sdk'
-    }
+    // environment {
+    //     ANDROID_HOME = '/home/ponleou/Android/Sdk'
+    // }
     stages {
         stage('Build') {
             steps {
@@ -14,14 +13,23 @@ pipeline {
                 (cd EcoRound && npx ionic build)
                 echo "=========== Building for Android... ==========="
                 (cd EcoRound && npx ionic cap build android --no-open)
-                (cd EcoRound/android && ./gradlew assembleDebug)
                 '''
             }
         }
         stage('Test') {
             steps {
                 sh '''
-                $ANDROID_HOME/emulator/emulator -avd $($ANDROID_HOME/emulator/emulator -list-avds) -no-snapshot-load -no-audio -no-window &
+                androidEmulator(
+                    avdName: 'TempAVD',
+                    osVersion: '15',
+                    screenDensity: 'xhdpi',
+                    screenResolution: '1080x2400',
+                    device: 'medium_phone',
+                    abi: 'x86_64',
+                    additionalOptions: '-no-window -no-audio -no-snapshot'
+                )
+
+                (cd EcoRound/android && ./gradlew assembleDebug)
                 adb wait-for-device
                 adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
                 adb shell am start -n io.ionic.starter/.MainActivity
