@@ -2,6 +2,8 @@ pipeline {
     agent any
     environment {
         ANDROID_HOME = '/home/ponleou/Android/Sdk'
+        ANDROID_SDK_HOME = '/home/ponleou/.android'
+        ANDROID_AVD_HOME = '$ANDROID_SDK_HOME/avd'
     }
     stages {
         stage('Build') {
