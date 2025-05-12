@@ -18,12 +18,12 @@ pipeline {
         }
         stage('Test') {
             steps {
-                androidEmulator avdName: 'test_avd', 
-                                emulatorOptions: '-no-window -gpu off -memory 2048',
-                                startEmulator: true,
-                                forceCreate: true  // Optional, forces creation of the AVD
+                androidEmulator avdName: 'test_avd',
+                                 emulatorTool: 'emulator',  // Use 'emulator' or 'emulator-headless'
+                                 osVersion: '30',            // Optional, specify an OS version if needed
+                                 avdOptions: '-no-window -gpu off -memory 2048'
+                                 
                 sh '''
-
                 // Wait for the emulator to fully boot
                 sh "${ANDROID_HOME}/platform-tools/adb wait-for-device"
 
