@@ -6,7 +6,7 @@ pipeline {
         ANDROID_SDK = "/opt/android-sdk"
         ANDROID_SDK_ROOT = "${HOME}/.android/avd"
         ANDROID_HOME = "${HOME}/.android"
-        PATH = "${PATH}:${ANDROID_SDK}/tools:${ANDROID_SDK}/cmdline-tools/latest/bin"
+        PATH = "${PATH}:${ANDROID_SDK}/tools:${ANDROID_SDK}/cmdline-tools/latest/bin:${ANDROID_SDK}/tools/qemu/linux-x86_64"
         AVD_NAME = "avd_jenkins"
     }
     stages {
@@ -24,10 +24,11 @@ pipeline {
         }
         stage('Test') {
             steps {
+                // emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
                 sh '''
                 yes | sdkmanager 'system-images;android-30;google_apis;x86_64'
                 avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel" --force
-                emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
+                qemu-system-x86_64 -engine classic -prop persist.sys.language=en -prop persist.sys.country=US -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window" &
                 adb wait-for-device
                 (cd EcoRound/android && ./gradlew assembleDebug)
                 adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
