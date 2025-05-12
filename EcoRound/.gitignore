@@ -30,6 +30,5 @@ yarn-error.log*
 # Optional eslint cache
 .eslintcache
 
-# remove ios and android build
+# remove ios build
 ios
-android
