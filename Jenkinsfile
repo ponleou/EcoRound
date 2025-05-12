@@ -33,7 +33,7 @@ pipeline {
                 script {
                     parallel(
                         launchEmulator: {
-                        sh 'qemu-system-x86_64 -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window'
+                        sh 'emulator -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window'
                         },
                         runAndroidTests: {
                             timeout(time: 20, unit: 'SECONDS') {
