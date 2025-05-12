@@ -64,7 +64,7 @@ export default function Home() {
   return (
     // Header section
     <MainPage title="EcoRound">
-      <PermissionToast />
+      {/* <PermissionToast /> */}
 
       <div className="p-4">
         <CardList>

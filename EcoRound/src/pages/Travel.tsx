@@ -476,7 +476,7 @@ export default function Travel({ match }) {
           }
           bottomContent={
             <span>
-              <PermissionToast />
+              {/* <PermissionToast /> */}
               {renderModal.current && (
                 <IonModal
                   className="rounded-t-3l"
