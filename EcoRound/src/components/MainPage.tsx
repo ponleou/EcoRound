@@ -36,9 +36,6 @@ export default function MainPage({ title, children }) {
         </IonHeader>
         {children}
       </IonContent>
-      <IonFooter>
-        <TabBar />
-      </IonFooter>
     </IonPage>
   );
 }

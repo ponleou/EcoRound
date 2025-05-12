@@ -1,6 +1,8 @@
 import { Redirect, Route } from "react-router-dom";
 import {
   IonApp,
+  IonContent,
+  IonFooter,
   IonRouterOutlet,
   setupIonicReact,
   useIonRouter,
@@ -47,6 +49,7 @@ import { RouteProvider } from "./context/RouteContext";
 import { DateProvider } from "./context/DateContext";
 import Rewards from "./pages/Rewards";
 import Profile from "./pages/Profile";
+import TabBar from "./components/TabBar";
 
 setupIonicReact();
 
@@ -56,7 +59,12 @@ function App() {
       <DateProvider>
         <CoordinateProvider>
           <IonReactRouter>
-            <Main />
+            <IonContent>
+              <Main /> 
+            </IonContent>
+            <IonFooter>
+              <TabBar />
+            </IonFooter>
           </IonReactRouter>
         </CoordinateProvider>
       </DateProvider>
