@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        QT_QPA_PLATFORM='xcb'
+        QT_QPA_PLATFORM='minimal'
         JAVA_HOME = '/usr/lib/jvm/java-21-openjdk'
         SKIP_JDK_VERSION_CHECK = 'true'
         ANDROID_SDK = '/opt/android-sdk'
@@ -34,12 +34,11 @@ pipeline {
                     parallel(
                         launchEmulator: {
                             sh '''
-                            export QT_QPA_PLATFORM=minimal
                             (cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio -no-qt)
                             '''
                         },
                         runAndroidTests: {
-                            timeout(time: 20, unit: 'SECONDS') {
+                            timeout(time: 120, unit: 'SECONDS') {
                                 sh 'adb wait-for-device'
                             }
                             sh '''
