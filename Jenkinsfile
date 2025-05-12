@@ -38,6 +38,7 @@ pipeline {
                 adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
                 adb shell am start -n io.ionic.starter/.MainActivity
                 '''
+            }
         }
     // stage('Code Quality') {
     //     steps {
