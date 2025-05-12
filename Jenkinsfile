@@ -25,7 +25,7 @@ pipeline {
             steps {
                 sh '''
                 yes | sdkmanager 'system-images;android-30;google_apis;x86_64'
-                avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel"
+                avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel" --force
                 emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
                 adb wait-for-device
                 (cd EcoRound/android && ./gradlew assembleDebug)
