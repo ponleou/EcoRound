@@ -30,22 +30,24 @@ pipeline {
                 sh '''
                 yes | sdkmanager 'system-images;android-30;google_apis;x86_64'
                 '''
-            }
-            parallel(
-                launchEmulator: {
-                sh 'qemu-system-x86_64 -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window'
-                },
-                runAndroidTests: {
-                    timeout(time: 20, unit: 'SECONDS') {
-                        sh "adb wait-for-device"
-                    }
-                    sh '''
-                    (cd EcoRound/android && ./gradlew assembleDebug)
-                    adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                    adb shell am start -n io.ionic.starter/.MainActivity
-                    '''
+                script {
+                    parallel(
+                        launchEmulator: {
+                        sh 'qemu-system-x86_64 -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window'
+                        },
+                        runAndroidTests: {
+                            timeout(time: 20, unit: 'SECONDS') {
+                                sh 'adb wait-for-device'
+                            }
+                            sh '''
+                            (cd EcoRound/android && ./gradlew assembleDebug)
+                            adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                            adb shell am start -n io.ionic.starter/.MainActivity
+                            '''
+                        }
+                    )
                 }
-            )
+            }
         }
     // stage('Code Quality') {
     //     steps {
