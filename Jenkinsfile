@@ -28,7 +28,7 @@ pipeline {
                 sh '''
                 yes | sdkmanager 'system-images;android-30;google_apis;x86_64'
                 avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel" --force
-                qemu-system-x86_64 -engine classic -prop persist.sys.language=en -prop persist.sys.country=US -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window" &
+                qemu-system-x86_64 -engine classic -prop persist.sys.language=en -prop persist.sys.country=US -avd $AVD_NAME -no-snapshot-load -no-snapshot-save -no-window &
                 adb wait-for-device
                 (cd EcoRound/android && ./gradlew assembleDebug)
                 adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
