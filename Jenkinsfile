@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                def emulator = androidEmulator(
+                androidEmulator(
                     avdName: 'my-avd',       // Name of the AVD
                     target: 'android-30',    // API level
                     abi: 'x86_64',          // ABI type (e.g., x86, x86_64, armeabi-v7a)
