@@ -21,7 +21,6 @@ pipeline {
                 androidEmulator avdName: 'test_avd',
                                  emulatorTool: 'emulator',  // Use 'emulator' or 'emulator-headless'
                                  osVersion: '30',            // Optional, specify an OS version if needed
-                                 avdOptions: '-no-window -gpu off -memory 2048'
                                  
                 sh '''
                 // Wait for the emulator to fully boot
