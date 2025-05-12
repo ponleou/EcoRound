@@ -20,6 +20,7 @@ pipeline {
                 // sh "${ANDROID_HOME}/platform-tools/adb wait-for-device"
                 sh '''
                 avdmanager create avd -n testDevice -k "system-images;android-30;google_apis;x86" || true
+                echo $ANDROID_HOME
                 adb devices
                 android list target
                 '''
