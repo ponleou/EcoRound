@@ -1,7 +1,8 @@
 pipeline {
     agent any
     environment {
-        ANDROID_HOME = '/home/ponleou/Android/Sdk'
+        HOME = '/home/ponleou'
+        ANDROID_HOME = '$USER_HOME/Android/Sdk'
     }
     stages {
         stage('Build') {
@@ -13,7 +14,6 @@ pipeline {
                 (cd EcoRound && npx ionic build)
                 echo "=========== Building for Android... ==========="
                 (cd EcoRound && npx ionic cap build android --no-open)
-                echo $HOME
                 (cd EcoRound/android && ./gradlew assembleDebug)
                 '''
             }
