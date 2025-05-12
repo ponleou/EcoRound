@@ -19,7 +19,8 @@ pipeline {
                 // ${ANDROID_HOME}/tools/emulator -avd test_avd -no-window -gpu off -memory 2048 &
                 // sh "${ANDROID_HOME}/platform-tools/adb wait-for-device"
                 sh '''
-                android help || true
+                avdmanager create avd -n testDevice -k "system-images;android-30;google_apis;x86" || true
+                adb devices
                 android list target
                 '''
 
