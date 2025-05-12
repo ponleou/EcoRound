@@ -18,16 +18,26 @@ pipeline {
         }
         stage('Test') {
             steps {
-                sh '''
-                androidEmulator(
-                    avdName: 'TempAVD',
-                    osVersion: '15',
-                    screenDensity: 'xhdpi',
-                    screenResolution: '1080x2400',
-                    device: 'medium_phone',
-                    abi: 'x86_64',
-                    additionalOptions: '-no-window -no-audio -no-snapshot'
+                def emulator = androidEmulator(
+                    avdName: 'my-avd',       // Name of the AVD
+                    target: 'android-30',    // API level
+                    abi: 'x86_64',          // ABI type (e.g., x86, x86_64, armeabi-v7a)
+                    screenDensity: '240',    // Screen density (dpi)
+                    screenResolution: '1080x1920', // Resolution
+                    sdcardSize: '512M',      // SD card size
+                    deleteAfterBuild: true,   // Delete AVD after build
+                    // Additional options (optional)
+                    commandLineOptions: '-no-snapshot-save -noaudio -no-window',
+                    startupTimeout: '300',    // Timeout in seconds
+                    hardwareProperties: [
+                        'hw.keyboard=yes',
+                        'hw.ramSize=2048'
+                    ]
                 )
+                sh '''
+
+                // Wait for the emulator to fully boot
+                sh "${ANDROID_HOME}/platform-tools/adb wait-for-device"
 
                 (cd EcoRound/android && ./gradlew assembleDebug)
                 adb wait-for-device
