@@ -22,6 +22,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
+                sdkmanager 'system-images;android-30;google_apis;x86_64'
                 avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel"
                 emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
                 adb wait-for-device
