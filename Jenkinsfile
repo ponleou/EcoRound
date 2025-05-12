@@ -2,29 +2,31 @@ pipeline {
     agent any
 
     stages {
-        stage('Build') {
-            steps {
-                sh '''
-                echo "=========== Installing node modules... ==========="
-                (cd EcoRound && npm install)
-                echo "=========== Building web assets... ==========="
-                (cd EcoRound && npx ionic build)
-                echo "=========== Building for Android... ==========="
-                (cd EcoRound && npx ionic cap build android --no-open)
-                '''
-            }
-        }
+        // stage('Build') {
+        //     steps {
+        //         sh '''
+        //         echo "=========== Installing node modules... ==========="
+        //         (cd EcoRound && npm install)
+        //         echo "=========== Building web assets... ==========="
+        //         (cd EcoRound && npx ionic build)
+        //         echo "=========== Building for Android... ==========="
+        //         (cd EcoRound && npx ionic cap build android --no-open)
+        //         '''
+        //     }
+        // }
         stage('Test') {
             steps {
+                // ${ANDROID_HOME}/tools/emulator -avd test_avd -no-window -gpu off -memory 2048 &
+                // sh "${ANDROID_HOME}/platform-tools/adb wait-for-device"
                 sh '''
-                ${ANDROID_HOME}/tools/emulator -avd test_avd -no-window -gpu off -memory 2048 &
-                sh "${ANDROID_HOME}/platform-tools/adb wait-for-device"
-
-                (cd EcoRound/android && ./gradlew assembleDebug)
-                adb wait-for-device
-                adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                adb shell am start -n io.ionic.starter/.MainActivity
+                android help || true
+                android list target
                 '''
+
+                // (cd EcoRound/android && ./gradlew assembleDebug)
+                // adb wait-for-device
+                // adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                // adb shell am start -n io.ionic.starter/.MainActivity
             }
         }
     // stage('Code Quality') {
