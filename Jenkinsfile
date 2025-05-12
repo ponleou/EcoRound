@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        ANDROID_HOME = '$HOME/Android/Sdk'
+    }
     stages {
         stage('Build') {
             steps {
@@ -24,25 +27,25 @@ pipeline {
                 '''
             }
         }
-        // stage('Code Quality') {
-        //     steps {
-        //     }
-        // }
-        // stage('Security Scan') {
-        //     steps {
-        //     }
-        // }
-        // stage('Deploy') {
-        //     steps {
-        //     }
-        // }
-        // stage('Release') {
-        //     steps {
-        //     }
-        // }
-        // stage('Monitor') {
-        //     steps {
-        //     }
-        // }
+    // stage('Code Quality') {
+    //     steps {
+    //     }
+    // }
+    // stage('Security Scan') {
+    //     steps {
+    //     }
+    // }
+    // stage('Deploy') {
+    //     steps {
+    //     }
+    // }
+    // stage('Release') {
+    //     steps {
+    //     }
+    // }
+    // stage('Monitor') {
+    //     steps {
+    //     }
+    // }
     }
 }
