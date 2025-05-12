@@ -33,8 +33,10 @@ pipeline {
                 script {
                     parallel(
                         launchEmulator: {
-                            sh 'export QT_QPA_PLATFORM=xcb'
-                            sh '(cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio)'
+                            sh '''
+                            export QT_QPA_PLATFORM=xcb
+                            (cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio -no-qt)
+                            '''
                         },
                         runAndroidTests: {
                             timeout(time: 20, unit: 'SECONDS') {
