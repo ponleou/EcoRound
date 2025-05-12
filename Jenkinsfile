@@ -18,22 +18,10 @@ pipeline {
         }
         stage('Test') {
             steps {
-                androidEmulator(
-                    avdName: 'my-avd',       // Name of the AVD
-                    target: 'android-30',    // API level
-                    abi: 'x86_64',          // ABI type (e.g., x86, x86_64, armeabi-v7a)
-                    screenDensity: '240',    // Screen density (dpi)
-                    screenResolution: '1080x1920', // Resolution
-                    sdcardSize: '512M',      // SD card size
-                    deleteAfterBuild: true,   // Delete AVD after build
-                    // Additional options (optional)
-                    commandLineOptions: '-no-snapshot-save -noaudio -no-window',
-                    startupTimeout: '300',    // Timeout in seconds
-                    hardwareProperties: [
-                        'hw.keyboard=yes',
-                        'hw.ramSize=2048'
-                    ]
-                )
+                androidEmulator avdName: 'test_avd', 
+                                emulatorOptions: '-no-window -gpu off -memory 2048',
+                                startEmulator: true,
+                                forceCreate: true  // Optional, forces creation of the AVD
                 sh '''
 
                 // Wait for the emulator to fully boot
