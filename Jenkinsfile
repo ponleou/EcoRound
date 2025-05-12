@@ -34,7 +34,7 @@ pipeline {
                     parallel(
                         launchEmulator: {
                             sh '''
-                            export QT_QPA_PLATFORM=xcb
+                            export QT_QPA_PLATFORM=minimal
                             (cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio -no-qt)
                             '''
                         },
