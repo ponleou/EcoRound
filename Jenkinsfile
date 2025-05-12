@@ -8,7 +8,7 @@ pipeline {
         ANDROID_SDK_ROOT = "${HOME}/.android/avd"
         ANDROID_HOME = "${HOME}/.android"
         PATH = "${PATH}:${ANDROID_SDK}/tools:${ANDROID_SDK}/cmdline-tools/latest/bin"
-        AVD_NAME = "avd_jenkins"
+        AVD_NAME = "avd_jenkins2"
     }
     stages {
         stage('Build') {
@@ -33,7 +33,8 @@ pipeline {
                 script {
                     parallel(
                         launchEmulator: {
-                        sh '(cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio)'
+                            sh 'export QT_QPA_PLATFORM=xcb'
+                            sh '(cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio)'
                         },
                         runAndroidTests: {
                             timeout(time: 20, unit: 'SECONDS') {
