@@ -1,8 +1,9 @@
 pipeline {
     agent any
     environment {
-        ANDROID_HOME = '/home/ponleou/Android/Sdk'
-        AVD_NAME = 'medium_phone'
+        ANDROID_HOME = "/opt/android-sdk"
+        PATH = "${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/emulator:${ANDROID_HOME}/cmdline-tools/latest/bin:${PATH}"
+        AVD_NAME = "jenkins_avd"
     }
     stages {
         stage('Build') {
@@ -14,15 +15,16 @@ pipeline {
                 (cd EcoRound && npx ionic build)
                 echo "=========== Building for Android... ==========="
                 (cd EcoRound && npx ionic cap build android --no-open)
-                (cd EcoRound/android && ./gradlew assembleDebug)
                 '''
             }
         }
         stage('Test') {
             steps {
                 sh '''
+                avdmanager create avd -n $AVD_NAME -k "system-images;android-30;google_apis;x86_64" --device "pixel"
                 $ANDROID_HOME/emulator/emulator -avd $AVD_NAME -no-snapshot-load -no-audio -no-window &
                 adb wait-for-device
+                (cd EcoRound/android && ./gradlew assembleDebug)
                 adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
                 adb shell am start -n io.ionic.starter/.MainActivity
                 '''
