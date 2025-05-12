@@ -7,7 +7,7 @@ pipeline {
         ANDROID_SDK_ROOT = "${HOME}/.android/avd"
         ANDROID_HOME = "${HOME}/.android"
         PATH = "${PATH}:${ANDROID_SDK}/tools:${ANDROID_SDK}/cmdline-tools/latest/bin"
-        AVD_NAME = "jenkins_avd"
+        AVD_NAME = "avd_jenkins"
     }
     stages {
         stage('Build') {
