@@ -1,8 +1,6 @@
 pipeline {
     agent any
-    // environment {
-    //     ANDROID_HOME = '/home/ponleou/Android/Sdk'
-    // }
+
     stages {
         stage('Build') {
             steps {
@@ -18,12 +16,8 @@ pipeline {
         }
         stage('Test') {
             steps {
-                androidEmulator avdName: 'test_avd',
-                                 emulatorTool: 'emulator',  // Use 'emulator' or 'emulator-headless'
-                                 osVersion: '30',            // Optional, specify an OS version if needed
-                                 
                 sh '''
-                // Wait for the emulator to fully boot
+                ${ANDROID_HOME}/tools/emulator -avd test_avd -no-window -gpu off -memory 2048 &
                 sh "${ANDROID_HOME}/platform-tools/adb wait-for-device"
 
                 (cd EcoRound/android && ./gradlew assembleDebug)
