@@ -61,11 +61,17 @@ pipeline {
                             java -Xmx2G -jar otp-2.6.0-shaded.jar --loadStreet --save .
                             '''
                         },
-                        BackendBuild: {
+                        PythonVenv: {
                             sh '''
                             cd Backend
 
                             echo "=========== Creating Python venv for backend... ==========="
+                            python -m venv .venv
+                            .venv/bin/python -m pip install -r requirement.txt
+                            '''
+
+                            sh '''
+                            cd Testing
                             python -m venv .venv
                             .venv/bin/python -m pip install -r requirement.txt
                             '''
@@ -83,8 +89,7 @@ pipeline {
                 '''
 
                 sh '''
-                export QT_QPA_PLATFORM=xcb
-                emulator -avd $AVD_NAME -port $AVD_PORT -writable-system -no-snapshot-load -no-audio -wipe-data & 
+                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data & 
                 '''
 
                 sh '''
@@ -145,8 +150,6 @@ pipeline {
 
                 sh '''
                 cd Testing
-                python -m venv .venv
-                .venv/bin/python -m pip install -r requirement.txt
                 .venv/bin/python test.py
                 '''
 
