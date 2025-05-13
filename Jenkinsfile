@@ -96,31 +96,31 @@ pipeline {
                     sh '$adb wait-for-device'
                 }
 
-                retry(10) {
-                    try {
-                        sh '''
-                        $adb shell getprop sys.boot_completed
-                        $adb shell pm path android
-                        $adb shell pm list packages
-                        '''
-                    } catch (err) {
-                        sleep(time: 5, unit: 'SECONDS')
-                        throw err
-                    }
-                }
+                // retry(10) {
+                //     try {
+                //         sh '''
+                //         $adb shell getprop sys.boot_completed
+                //         $adb shell pm path android
+                //         $adb shell pm list packages
+                //         '''
+                //     } catch (err) {
+                //         sleep(time: 5, unit: 'SECONDS')
+                //         throw err
+                //     }
+                // }
 
-                retry(5) {
-                    try {
-                        sh '''
-                        $adb devices
-                        $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                        $adb shell am start -n io.ionic.starter/.MainActivity
-                        '''
-                    } catch (err) {
-                        sleep(time: 5, unit: 'SECONDS')
-                        throw err
-                    }
-                }
+                // retry(5) {
+                //     try {
+                //         sh '''
+                //         $adb devices
+                //         $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                //         $adb shell am start -n io.ionic.starter/.MainActivity
+                //         '''
+                //     } catch (err) {
+                //         sleep(time: 5, unit: 'SECONDS')
+                //         throw err
+                //     }
+                // }
 
                 // retry(5) {
                 //     try {
