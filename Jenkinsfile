@@ -4,8 +4,8 @@ pipeline {
         JAVA_HOME = '/usr/lib/jvm/java-21-openjdk'
         SKIP_JDK_VERSION_CHECK = 'true'
         ANDROID_SDK = '/opt/android-sdk'
-        ANDROID_SDK_ROOT = "${HOME}/.android/avd"
-        ANDROID_HOME = "${HOME}/.android"
+        ANDROID_SDK_ROOT = "${ANDROID_SDK}"
+        ANDROID_HOME = "${ANDROID_SDK}"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = "avd_jenkins2"
         ADB_VENDOR_KEYS="${HOME}/.android/adbkey"
