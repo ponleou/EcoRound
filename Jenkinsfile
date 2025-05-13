@@ -64,7 +64,7 @@ pipeline {
                                     sh '''
                                     adb shell getprop sys.boot_completed
                                     adb shell pm path android
-                                    adb shell pm list android
+                                    adb shell pm list packages
                                     '''
                                 } catch (err) {
                                     sleep(time: 5, unit: 'SECONDS')
