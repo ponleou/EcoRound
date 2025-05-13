@@ -75,8 +75,9 @@ class FunctionCases():
         return self.list
     
     def run_cases(self) -> None:
-        for f in self.list:
-            f()
+        for index, function in enumerate(self.list):
+            print(index)
+            function()
             sleep(1)
 
 
