@@ -96,18 +96,18 @@ pipeline {
                     sh '$adb wait-for-device'
                 }
 
-                // retry(10) {
-                //     try {
-                //         sh '''
-                //         $adb shell getprop sys.boot_completed
-                //         $adb shell pm path android
-                //         $adb shell pm list packages
-                //         '''
-                //     } catch (err) {
-                //         sleep(time: 5, unit: 'SECONDS')
-                //         throw err
-                //     }
-                // }
+                retry(10) {
+                    try {
+                        sh '''
+                        $adb shell getprop sys.boot_completed
+                        $adb shell pm path android
+                        $adb shell pm list packages
+                        '''
+                    } catch (err) {
+                        sleep(time: 5, unit: 'SECONDS')
+                        throw err
+                    }
+                }
 
                 // retry(5) {
                 //     try {
