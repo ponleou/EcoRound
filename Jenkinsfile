@@ -3,6 +3,7 @@ pipeline {
     environment {
         JAVA_HOME = '/usr/lib/jvm/java-21-openjdk'
         SKIP_JDK_VERSION_CHECK = 'true'
+        ANDROID_AVD_PATH = "${HOME}/.android/avd"
         ANDROID_SDK = '/opt/android-sdk'
         ANDROID_SDK_ROOT = "${ANDROID_SDK}"
         ANDROID_HOME = "${ANDROID_SDK}"
@@ -28,7 +29,7 @@ pipeline {
                 sh '''
                 yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
                 avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force --sdcard 512M
-
+                echo "disk.dataPartition.size = 1073741824" >> $ANDROID_AVD_PATH/$AVD_NAME.avd/config.ini
                 '''
                 script {
                     parallel(
@@ -74,4 +75,9 @@ pipeline {
     //     }
     // }
     }
+    post {
+        always {
+            sh 'avdmanager delete avd -n $AVD_NAME'
+        }
     }
+}
