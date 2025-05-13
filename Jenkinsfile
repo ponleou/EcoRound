@@ -48,11 +48,12 @@ pipeline {
                 (cd Backend/otp && java -Xmx2G -jar otp-2.6.0-shaded.jar --loadStreet --save .)
 
                 echo "=========== Creating Python venv for backend... ==========="
-                (cd Backend && python -m venv .venv)
-                (cd Backend && source .venv/bin/activate)
-                (cd Backend && pip install -r pip install -r requirement.txt)
-                deactivate
-
+                bash -c "
+                    (cd Backend && python -m venv .venv) &&
+                    (cd Backend && source .venv/bin/activate) &&
+                    (cd Backend && pip install -r pip install -r requirement.txt) &&
+                    deactivate
+                "
                 '''
             }
         }
@@ -76,8 +77,10 @@ pipeline {
                         },
                         runBackend: {
                             sh '''
-                            (cd Backend && source .venv/bin/activate)
-                            (cd Backend && python -m flask --app main run)
+                            bash -c "
+                                (cd Backend && source .venv/bin/activate) &&
+                                (cd Backend && python -m flask --app main run)
+                            "
                             '''
                         },
                         runAndroidTests: {
