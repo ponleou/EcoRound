@@ -9,6 +9,8 @@ pipeline {
         ANDROID_HOME = "${ANDROID_SDK}"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = 'avd_jenkins2'
+        ORS_API_KEY = credentials('ORS_API_KEY')
+        DEVELOPMENT_SERVER = 'http://127.0.0.1:5000'
         adb = '/usr/bin/adb'
     }
     stages {
@@ -22,15 +24,35 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
+                export APP_BACKEND_URL=$DEVELOPMENT_SERVER/api
+
                 echo "=========== Installing node modules... ==========="
                 (cd EcoRound && npm install)
+
                 echo "=========== Building web assets... ==========="
                 (cd EcoRound && npx ionic build)
+
                 echo "=========== Building for Android... ==========="
                 (cd EcoRound && npx ionic cap build android --no-open)
+
+                echo "=========== Building Android APK... ==========="
                 (cd EcoRound/android && ./gradlew clean)
                 (cd EcoRound/android && ./gradlew --refresh-dependencies)
                 (cd EcoRound/android && ./gradlew assembleDebug)
+
+                echo "=========== Downloading OTP... ==========="
+                (cd Backend/otp && wget https://repo1.maven.org/maven2/org/opentripplanner/otp/2.6.0/otp-2.6.0-shaded.jar)
+
+                echo "=========== Building OTP Server... ==========="
+                (cd Backend/otp && java -Xmx2G -jar otp-2.6.0-shaded.jar --buildStreet .)
+                (cd Backend/otp && java -Xmx2G -jar otp-2.6.0-shaded.jar --loadStreet --save .)
+
+                echo "=========== Creating Python venv for backend... ==========="
+                (cd Backend && python -m venv .venv)
+                (cd Backend && source ./venv/bin/activate)
+                (cd Backend && pip install -r pip install -r requirement.txt)
+                deactivate
+
                 '''
             }
         }
@@ -47,16 +69,21 @@ pipeline {
                             emulator -avd $AVD_NAME -writable-system -no-window -no-snapshot-load -no-audio -no-qt -wipe-data
                             '''
                         },
+                        launchOTP: {
+                            sh '''
+                            (cd Backend/otp && java -Xmx2G -jar otp-2.6.0-shaded.jar --load .)
+                            '''
+                        },
+                        runBackend: {
+                            sh '''
+                            (cd Backend && source ./venv/bin/activate)
+                            (cd Backend && python -m flask --app main run)
+                            '''
+                        },
                         runAndroidTests: {
                             timeout(time: 120, unit: 'SECONDS') {
                                 sh '$adb wait-for-device'
                             }
-
-                            // sh '''
-                            // (cd EcoRound/android && ./gradlew clean)
-                            // (cd EcoRound/android && ./gradlew --refresh-dependencies)
-                            // (cd EcoRound/android && ./gradlew assembleDebug)
-                            // '''
 
                             retry(10) {
                                 try {
