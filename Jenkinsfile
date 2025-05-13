@@ -25,7 +25,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
-                export REACT_APP_BACKEND_URL=$DEVELOPMENT_SERVER/api
+                export VITE_BACKEND_URL=$DEVELOPMENT_SERVER/api
                 cd EcoRound
 
                 echo "=========== Installing node modules... ==========="

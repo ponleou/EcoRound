@@ -1,7 +1,9 @@
 import { CapacitorHttp } from "@capacitor/core";
 
 // const baseUrl = "http://10.141.55.82:5000/api";
-let baseUrl = process.env.REACT_APP_BACKEND_URL;
+let baseUrl = import.meta.env.VITE_BACKEND_URL;
+
+console.log(baseUrl);
 
 const header = {
   "Content-Type": "application/json",
