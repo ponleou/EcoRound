@@ -25,35 +25,42 @@ pipeline {
             steps {
                 sh '''
                 export APP_BACKEND_URL=$DEVELOPMENT_SERVER/api
+                cd EcoRound
 
                 echo "=========== Installing node modules... ==========="
-                (cd EcoRound && npm install)
+                npm install
 
                 echo "=========== Building web assets... ==========="
-                (cd EcoRound && npx ionic build)
+                npx ionic build
 
                 echo "=========== Building for Android... ==========="
-                (cd EcoRound && npx ionic cap build android --no-open)
+                npx ionic cap build android --no-open
+                '''
+
+                sh '''
+                cd EcoRound/android
 
                 echo "=========== Building Android APK... ==========="
-                (cd EcoRound/android && ./gradlew clean)
-                (cd EcoRound/android && ./gradlew --refresh-dependencies)
-                (cd EcoRound/android && ./gradlew assembleDebug)
+                ./gradlew assembleDebug
+                '''
+
+                sh '''
+                cd Backend/otp
 
                 echo "=========== Downloading OTP... ==========="
-                (cd Backend/otp && wget https://repo1.maven.org/maven2/org/opentripplanner/otp/2.6.0/otp-2.6.0-shaded.jar)
+                wget https://repo1.maven.org/maven2/org/opentripplanner/otp/2.6.0/otp-2.6.0-shaded.jar
 
                 echo "=========== Building OTP Server... ==========="
-                (cd Backend/otp && java -Xmx2G -jar otp-2.6.0-shaded.jar --buildStreet .)
-                (cd Backend/otp && java -Xmx2G -jar otp-2.6.0-shaded.jar --loadStreet --save .)
+                java -Xmx2G -jar otp-2.6.0-shaded.jar --buildStreet .
+                java -Xmx2G -jar otp-2.6.0-shaded.jar --loadStreet --save .
+                '''
+
+                sh '''
+                cd Backend
 
                 echo "=========== Creating Python venv for backend... ==========="
-                bash -c "
-                    (cd Backend && python -m venv .venv) &&
-                    (cd Backend && source .venv/bin/activate) &&
-                    (cd Backend && pip install -r pip install -r requirement.txt) &&
-                    deactivate
-                "
+                python -m venv .venv
+                .venv/bin/python -m pip install -r requirement.txt
                 '''
             }
         }
@@ -72,15 +79,14 @@ pipeline {
                         },
                         launchOTP: {
                             sh '''
-                            (cd Backend/otp && java -Xmx2G -jar otp-2.6.0-shaded.jar --load .)
+                            cd Backend/otp
+                            java -Xmx2G -jar otp-2.6.0-shaded.jar --load .
                             '''
                         },
                         runBackend: {
                             sh '''
-                            bash -c "
-                                (cd Backend && source .venv/bin/activate) &&
-                                (cd Backend && python -m flask --app main run)
-                            "
+                            cd Backend 
+                            .venv/bin/python -m flask --app main run
                             '''
                         },
                         runAndroidTests: {
@@ -91,9 +97,9 @@ pipeline {
                             retry(10) {
                                 try {
                                     sh '''
-                                    adb shell getprop sys.boot_completed
-                                    adb shell pm path android
-                                    adb shell pm list packages
+                                    $adb shell getprop sys.boot_completed
+                                    $adb shell pm path android
+                                    $adb shell pm list packages
                                     '''
                                 } catch (err) {
                                     sleep(time: 5, unit: 'SECONDS')
