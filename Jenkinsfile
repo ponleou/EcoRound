@@ -8,7 +8,7 @@ pipeline {
         ANDROID_HOME = "${ANDROID_SDK}"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = "avd_jenkins2"
-        ADB_VENDOR_KEYS="${HOME}/.android/adbkey"
+        adb = '/usr/bin/adb'
     }
     stages {
         stage('Build') {
@@ -39,25 +39,13 @@ pipeline {
                         },
                         runAndroidTests: {
                             timeout(time: 120, unit: 'SECONDS') {
-                                sh 'adb wait-for-device'
-                            }
-
-                            sh '''
-                            adb root
-                            adb remount
-                            adb shell "echo $(cat ~/.android/adbkey.pub) >> /data/misc/adb/adb_keys"
-                            adb shell chmod 644 /data/misc/adb/adb_keys
-                            adb shell chown shell:shell /data/misc/adb/adb_keys
-                            '''
-
-                            timeout(time: 120, unit: 'SECONDS') {
-                                sh 'adb wait-for-device'
+                                sh '$adb wait-for-device'
                             }
 
                             sh '''
                             (cd EcoRound/android && ./gradlew assembleDebug)
-                            adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                            adb shell am start -n io.ionic.starter/.MainActivity
+                            $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                            $adb shell am start -n io.ionic.starter/.MainActivity
                             '''
                         }
                     )
