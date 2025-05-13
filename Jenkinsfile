@@ -66,85 +66,85 @@ pipeline {
                 '''
             }
         }
-        // stage('Test') {
-        //     steps {
-        //         sh '''
-        //         yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
-        //         avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
-        //         '''
+        stage('Test') {
+            steps {
+                sh '''
+                yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
+                avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
+                '''
 
-        //         sh '''
-        //         emulator -avd $AVD_NAME -port $AVD_PORT -writable-system -no-window -no-snapshot-load -no-audio -no-qt -wipe-data & 
-        //         '''
+                sh '''
+                emulator -avd $AVD_NAME -port $AVD_PORT -writable-system -no-window -no-snapshot-load -no-audio -no-qt -wipe-data & 
+                '''
 
-        //         sh '''
-        //         cd Backend/otp
-        //         java -Xmx2G -jar otp-2.6.0-shaded.jar --load . &
-        //         '''
+                sh '''
+                cd Backend/otp
+                java -Xmx2G -jar otp-2.6.0-shaded.jar --load . &
+                '''
 
-        //         sh '''
-        //         cd Backend 
-        //         .venv/bin/python -m flask --app main run &
-        //         '''
+                sh '''
+                cd Backend 
+                .venv/bin/python -m flask --app main run &
+                '''
 
-        //         sh '''
-        //         cd EcoRound
-        //         npx appium &
-        //         '''
+                sh '''
+                cd EcoRound
+                npx appium &
+                '''
 
-        //         timeout(time: 120, unit: 'SECONDS') {
-        //             sh '$adb wait-for-device'
-        //         }
+                // timeout(time: 120, unit: 'SECONDS') {
+                //     sh '$adb wait-for-device'
+                // }
 
-        //         retry(10) {
-        //             try {
-        //                 sh '''
-        //                 $adb shell getprop sys.boot_completed
-        //                 $adb shell pm path android
-        //                 $adb shell pm list packages
-        //                 '''
-        //             } catch (err) {
-        //                 sleep(time: 5, unit: 'SECONDS')
-        //                 throw err
-        //             }
-        //         }
+                // retry(10) {
+                //     try {
+                //         sh '''
+                //         $adb shell getprop sys.boot_completed
+                //         $adb shell pm path android
+                //         $adb shell pm list packages
+                //         '''
+                //     } catch (err) {
+                //         sleep(time: 5, unit: 'SECONDS')
+                //         throw err
+                //     }
+                // }
 
-        //         retry(5) {
-        //             try {
-        //                 sh '''
-        //                 $adb devices
-        //                 $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-        //                 $adb shell am start -n io.ionic.starter/.MainActivity
-        //                 '''
-        //             } catch (err) {
-        //                 sleep(time: 5, unit: 'SECONDS')
-        //                 throw err
-        //             }
-        //         }
+                // retry(5) {
+                //     try {
+                //         sh '''
+                //         $adb devices
+                //         $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                //         $adb shell am start -n io.ionic.starter/.MainActivity
+                //         '''
+                //     } catch (err) {
+                //         sleep(time: 5, unit: 'SECONDS')
+                //         throw err
+                //     }
+                // }
 
-        //         retry(5) {
-        //             try {
-        //                 sh '''
-        //                 curl --silent http://127.0.0.1:4723/status | grep -q '"ready":true'
-        //                 '''
-        //             } catch (err) {
-        //                 sleep(time: 5, unit: 'SECONDS')
-        //                 throw err
-        //             }
-        //         }
+                // retry(5) {
+                //     try {
+                //         sh '''
+                //         curl --silent http://127.0.0.1:4723/status | grep -q '"ready":true'
+                //         '''
+                //     } catch (err) {
+                //         sleep(time: 5, unit: 'SECONDS')
+                //         throw err
+                //     }
+                // }
 
-        //         sh '''
-        //         cd Testing
-        //         python -m venv .venv
-        //         .venv/bin/python -m pip install -r requirement.txt
-        //         .venv/bin/python test.py
-        //         '''
+                // sh '''
+                // cd Testing
+                // python -m venv .venv
+                // .venv/bin/python -m pip install -r requirement.txt
+                // .venv/bin/python test.py
+                // '''
 
-        //         sh '''
-        //         kill $(jobs -p) || true
-        //         '''
-        //     }
-        // }
+                // sh '''
+                // kill $(jobs -p) || true
+                // '''
+            }
+        }
     // stage('Code Quality') {
     //     steps {
     //     }
