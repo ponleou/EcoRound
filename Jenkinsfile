@@ -1,13 +1,12 @@
 pipeline {
     agent any
     environment {
-        QT_QPA_PLATFORM='xcb'
         JAVA_HOME = '/usr/lib/jvm/java-21-openjdk'
         SKIP_JDK_VERSION_CHECK = 'true'
         ANDROID_SDK = '/opt/android-sdk'
         ANDROID_SDK_ROOT = "${HOME}/.android/avd"
         ANDROID_HOME = "${HOME}/.android"
-        PATH = "${PATH}:${ANDROID_SDK}/tools:${ANDROID_SDK}/cmdline-tools/latest/bin"
+        PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = "avd_jenkins2"
     }
     stages {
@@ -34,7 +33,7 @@ pipeline {
                     parallel(
                         launchEmulator: {
                             sh '''
-                            (cd $ANDROID_SDK/emulator && emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim)
+                            emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim
                             '''
                         },
                         runAndroidTests: {
