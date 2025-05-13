@@ -42,11 +42,13 @@ pipeline {
                                 sh '$adb wait-for-device'
                             }
 
-                            sh '''
-                            (cd EcoRound/android && ./gradlew assembleDebug)
-                            $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                            $adb shell am start -n io.ionic.starter/.MainActivity
-                            '''
+                            sh '(cd EcoRound/android && ./gradlew assembleDebug)'
+
+                            retry(3) {
+                                sh '$adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk'
+                            }
+
+                            sh '$adb shell am start -n io.ionic.starter/.MainActivity'
                         }
                     )
                 }
