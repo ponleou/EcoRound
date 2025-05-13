@@ -1,4 +1,6 @@
 .pyenv
 .env
-otp
+otp/graph.obj
+otp/streetGraph.obj
+otp/otp-2.6.0-shaded.jar
 .venv
