@@ -8,7 +8,7 @@ pipeline {
         ANDROID_SDK_ROOT = "${ANDROID_SDK}"
         ANDROID_HOME = "${ANDROID_SDK}"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
-        AVD_NAME = "avd_jenkins2"
+        AVD_NAME = 'avd_jenkins2'
         adb = '/usr/bin/adb'
     }
     stages {
@@ -54,8 +54,15 @@ pipeline {
                             // '''
 
                             retry(3) {
-                                sh '$adb devices'
-                                sh '$adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk'
+                                try {
+                                    sh '''
+                                    $adb devices
+                                    $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                                    '''
+                                } catch (err) {
+                                    sleep(time: 5, unit: 'SECONDS')
+                                    throw err
+                                }
                             }
 
                             sh '$adb shell am start -n io.ionic.starter/.MainActivity'
@@ -92,4 +99,4 @@ pipeline {
             '''
         }
     }
-}
+    }
