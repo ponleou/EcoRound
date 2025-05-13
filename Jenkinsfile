@@ -36,7 +36,7 @@ pipeline {
                     parallel(
                         launchEmulator: {
                             sh '''
-                            emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim
+                            emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim
                             '''
                         },
                         runAndroidTests: {
@@ -45,8 +45,8 @@ pipeline {
                             }
                             sh '''
                             (cd EcoRound/android && ./gradlew assembleDebug)
-                            adb -s emulator-$AVD_PORT install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                            adb -s emulator-$AVD_PORT shell am start -n io.ionic.starter/.MainActivity
+                            adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                            adb shell am start -n io.ionic.starter/.MainActivity
                             '''
                         }
                     )
