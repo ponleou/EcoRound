@@ -21,6 +21,9 @@ pipeline {
                 (cd EcoRound && npx ionic build)
                 echo "=========== Building for Android... ==========="
                 (cd EcoRound && npx ionic cap build android --no-open)
+                (cd EcoRound/android && ./gradlew clean)
+                (cd EcoRound/android && ./gradlew --refresh-dependencies)
+                (cd EcoRound/android && ./gradlew assembleDebug)
                 '''
             }
         }
@@ -44,11 +47,11 @@ pipeline {
                                 sh '$adb wait-for-device'
                             }
 
-                            sh '''
-                            (cd EcoRound/android && ./gradlew clean)
-                            (cd EcoRound/android && ./gradlew --refresh-dependencies)
-                            (cd EcoRound/android && ./gradlew assembleDebug)
-                            '''
+                            // sh '''
+                            // (cd EcoRound/android && ./gradlew clean)
+                            // (cd EcoRound/android && ./gradlew --refresh-dependencies)
+                            // (cd EcoRound/android && ./gradlew assembleDebug)
+                            // '''
 
                             retry(3) {
                                 sh '$adb devices'
