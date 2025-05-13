@@ -9,9 +9,10 @@ pipeline {
         ANDROID_HOME = "${ANDROID_SDK}"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = 'avd_jenkins2'
+        adb = '/usr/bin/adb'
+
         ORS_API_KEY = credentials('ORS_API_KEY')
         DEVELOPMENT_SERVER = 'http://127.0.0.1:5000'
-        adb = '/usr/bin/adb'
     }
     stages {
         stage('Initialise') {
@@ -24,7 +25,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
-                export APP_BACKEND_URL=$DEVELOPMENT_SERVER/api
+                export REACT_APP_BACKEND_URL=$DEVELOPMENT_SERVER/api
                 cd EcoRound
 
                 echo "=========== Installing node modules... ==========="
