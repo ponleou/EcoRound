@@ -16,7 +16,6 @@ pipeline {
             steps {
                 sh '''
                 adb kill-server
-                adb start-server
                 '''
             }
         }
@@ -45,7 +44,7 @@ pipeline {
                     parallel(
                         launchEmulator: {
                             sh '''
-                            emulator -avd $AVD_NAME -writable-system -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim -wipe-data
+                            emulator -avd $AVD_NAME -writable-system -no-window -no-snapshot-load -no-audio -no-qt -wipe-data
                             '''
                         },
                         runAndroidTests: {
@@ -65,7 +64,6 @@ pipeline {
                                     adb shell getprop sys.boot_completed
                                     adb shell pm path android
                                     adb shell pm list packages
-                                    sleep 15
                                     '''
                                 } catch (err) {
                                     sleep(time: 5, unit: 'SECONDS')
@@ -73,11 +71,19 @@ pipeline {
                                 }
                             }
 
-                            sh '''
-                            $adb devices
-                            $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                            $adb shell am start -n io.ionic.starter/.MainActivity
-                            '''
+                            retry(6) {
+                                try {
+                                    sh '''
+                                    $adb devices
+                                    $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                                    $adb shell am start -n io.ionic.starter/.MainActivity
+                                    '''
+                                } catch (err) {
+                                    sleep(time: 5, unit: 'SECONDS')
+                                    throw err
+                                }
+                            }
+
                         }
                     )
                 }
