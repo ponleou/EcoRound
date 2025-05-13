@@ -8,6 +8,7 @@ pipeline {
         ANDROID_HOME = "${HOME}/.android"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = "avd_jenkins2"
+        ADB_VENDOR_KEYS="${HOME}/.android/adbkey"
     }
     stages {
         stage('Build') {
