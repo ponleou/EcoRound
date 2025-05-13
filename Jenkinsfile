@@ -48,7 +48,7 @@ pipeline {
                             echo "=========== Building Android APK... ==========="
                             ./gradlew assembleDebug
                             '''
-                        }
+                        },
                         OTPBuild: {
                             sh '''
                             cd Backend/otp
@@ -60,7 +60,7 @@ pipeline {
                             java -Xmx2G -jar otp-2.6.0-shaded.jar --buildStreet .
                             java -Xmx2G -jar otp-2.6.0-shaded.jar --loadStreet --save .
                             '''
-                        }
+                        },
                         BackendBuild: {
                             sh '''
                             cd Backend
@@ -70,7 +70,6 @@ pipeline {
                             .venv/bin/python -m pip install -r requirement.txt
                             '''
                         }
-
                     )
                 }
             }
