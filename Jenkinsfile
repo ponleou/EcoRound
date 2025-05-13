@@ -12,7 +12,7 @@ pipeline {
         adb = '/usr/bin/adb'
 
         ORS_API_KEY = credentials('ORS_API_KEY')
-        DEVELOPMENT_SERVER = 'http://127.0.0.1:5000'
+        DEVELOPMENT_SERVER = 'http://10.0.2.2:5000'
     }
     stages {
         stage('Initialise') {
