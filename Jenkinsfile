@@ -49,7 +49,7 @@ pipeline {
 
                 echo "=========== Creating Python venv for backend... ==========="
                 (cd Backend && python -m venv .venv)
-                (cd Backend && source ./venv/bin/activate)
+                (cd Backend && source .venv/bin/activate)
                 (cd Backend && pip install -r pip install -r requirement.txt)
                 deactivate
 
@@ -76,7 +76,7 @@ pipeline {
                         },
                         runBackend: {
                             sh '''
-                            (cd Backend && source ./venv/bin/activate)
+                            (cd Backend && source .venv/bin/activate)
                             (cd Backend && python -m flask --app main run)
                             '''
                         },
