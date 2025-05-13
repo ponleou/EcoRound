@@ -9,8 +9,6 @@ pipeline {
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
         AVD_NAME = "avd_jenkins2"
         ADB_VENDOR_KEYS="${HOME}/.android/adbkey"
-
-        AVD_PORT="8090"
     }
     stages {
         stage('Build') {
@@ -36,13 +34,26 @@ pipeline {
                     parallel(
                         launchEmulator: {
                             sh '''
-                            emulator -avd $AVD_NAME -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim
+                            emulator -avd $AVD_NAME -writable-system -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim
                             '''
                         },
                         runAndroidTests: {
                             timeout(time: 120, unit: 'SECONDS') {
                                 sh 'adb wait-for-device'
                             }
+
+                            sh '''
+                            adb root
+                            adb remount
+                            adb shell "echo $(cat ~/.android/adbkey.pub) >> /data/misc/adb/adb_keys"
+                            adb shell chmod 644 /data/misc/adb/adb_keys
+                            adb shell chown shell:shell /data/misc/adb/adb_keys
+                            '''
+
+                            timeout(time: 120, unit: 'SECONDS') {
+                                sh 'adb wait-for-device'
+                            }
+
                             sh '''
                             (cd EcoRound/android && ./gradlew assembleDebug)
                             adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
