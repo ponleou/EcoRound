@@ -28,8 +28,7 @@ pipeline {
             steps {
                 sh '''
                 yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
-                avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force --sdcard 512M
-                echo "disk.dataPartition.size = 1073741824" >> $ANDROID_AVD_PATH/$AVD_NAME.avd/config.ini
+                avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
                 '''
                 script {
                     parallel(
@@ -46,6 +45,7 @@ pipeline {
                             sh '(cd EcoRound/android && ./gradlew assembleDebug)'
 
                             retry(3) {
+                                sh '$adb devices'
                                 sh '$adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk'
                             }
 
