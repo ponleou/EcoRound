@@ -34,7 +34,7 @@ pipeline {
                     parallel(
                         launchEmulator: {
                             sh '''
-                            emulator -avd $AVD_NAME -writable-system -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim
+                            emulator -avd $AVD_NAME -writable-system -no-window -no-snapshot-load -no-audio -no-qt -no-boot-anim -wipe-data
                             '''
                         },
                         runAndroidTests: {
