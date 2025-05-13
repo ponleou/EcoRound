@@ -29,6 +29,9 @@ pipeline {
                 (cd EcoRound && npx ionic build)
                 echo "=========== Building for Android... ==========="
                 (cd EcoRound && npx ionic cap build android --no-open)
+                (cd EcoRound/android && ./gradlew clean)
+                (cd EcoRound/android && ./gradlew --refresh-dependencies)
+                (cd EcoRound/android && ./gradlew assembleDebug)
                 '''
             }
         }
@@ -50,17 +53,17 @@ pipeline {
                                 sh '$adb wait-for-device'
                             }
 
-                            sh '''
-                            (cd EcoRound/android && ./gradlew clean)
-                            (cd EcoRound/android && ./gradlew --refresh-dependencies)
-                            (cd EcoRound/android && ./gradlew assembleDebug)
-                            '''
+                            // sh '''
+                            // (cd EcoRound/android && ./gradlew clean)
+                            // (cd EcoRound/android && ./gradlew --refresh-dependencies)
+                            // (cd EcoRound/android && ./gradlew assembleDebug)
+                            // '''
 
-                            retry(3) {
+                            retry(10) {
                                 try {
                                     sh '''
-                                    $adb devices
-                                    $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                                    adb shell getprop sys.boot_completed
+                                    adb shell pm path android
                                     '''
                                 } catch (err) {
                                     sleep(time: 5, unit: 'SECONDS')
@@ -68,7 +71,11 @@ pipeline {
                                 }
                             }
 
-                            sh '$adb shell am start -n io.ionic.starter/.MainActivity'
+                            sh '''
+                            $adb devices
+                            $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                            $adb shell am start -n io.ionic.starter/.MainActivity
+                            '''
                         }
                     )
                 }
