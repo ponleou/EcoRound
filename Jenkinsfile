@@ -12,6 +12,14 @@ pipeline {
         adb = '/usr/bin/adb'
     }
     stages {
+        stage('Initialise') {
+            steps {
+                sh '''
+                adb kill-server
+                adb start-server
+                '''
+            }
+        }
         stage('Build') {
             steps {
                 sh '''
@@ -30,8 +38,6 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                adb kill-server
-                adb start-server
                 yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
                 avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
                 '''
