@@ -3,8 +3,6 @@ import { CapacitorHttp } from "@capacitor/core";
 // const baseUrl = "http://10.141.55.82:5000/api";
 let baseUrl = import.meta.env.VITE_BACKEND_URL;
 
-console.log(baseUrl);
-
 const header = {
   "Content-Type": "application/json",
   skip_zrok_interstitial: "true", // for using zrok to host backend
@@ -18,8 +16,8 @@ function handleResponse(response) {
   return response.data;
 }
 
-export const verifyUrl = async (url) => {
-  baseUrl = url + "/api";
+export const verifyUrl = async (url=baseUrl) => {
+  baseUrl = url;
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/verify`,
     headers: header,

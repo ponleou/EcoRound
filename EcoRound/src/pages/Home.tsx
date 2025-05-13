@@ -47,13 +47,18 @@ export default function Home() {
   useEffect(() => {
     setCarbonFootprint(Math.round(Math.random() * 100));
     setRewardPoints(Math.round(Math.random() * 100));
+
+    checkUrlVerification
   }, []);
 
   const [inputUrl, setInputUrl] = useState("");
   const [urlVerified, setUrlVerified] = useState(false);
 
-  const checkUrlVerification = async (url) => {
-    const response = await verifyUrl(url);
+  const checkUrlVerification = async (url="") => {
+    let response;
+    if (url == "") response = await verifyUrl();
+    else response = await verifyUrl(url)
+
     if (response.verify) {
       setUrlVerified(true);
     } else {
