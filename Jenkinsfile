@@ -8,8 +8,8 @@ pipeline {
         ANDROID_SDK_ROOT = "${ANDROID_SDK}"
         ANDROID_HOME = "${ANDROID_SDK}"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
-        AVD_NAME = 'avd_jenkins2'
-        AVD_PORT = '5558'
+        AVD_NAME = 'tester_avd4'
+        AVD_PORT = '5554'
         adb = '/usr/bin/adb'
         SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
 
@@ -85,14 +85,14 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                sh '''
-                yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
-                avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
-                '''
+                // sh '''
+                // yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
+                // avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
+                // '''
 
-                sh '''
-                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data & 
-                '''
+                // sh '''
+                // emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data & 
+                // '''
 
                 sh '''
                 cd otp
