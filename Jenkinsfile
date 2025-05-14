@@ -11,7 +11,6 @@ pipeline {
         AVD_NAME = 'jenkins_avd'
         AVD_PORT = '5558'
         adb = '/usr/bin/adb'
-
         SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
         SNYK_TOKEN = credentials('SNYK_TOKEN')
 
