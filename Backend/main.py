@@ -28,7 +28,7 @@ busEF = 0.0385
 
 
 # function to query OTP server for route
-def queryOTPRoute(slat, slon, dlat, dlon, mode, date=None, time=None, isArrival=False):
+def query_otp_route(slat, slon, dlat, dlon, mode, date=None, time=None, is_arrival=False):
     graphql_query = {
         "query": """
         query plan(
@@ -101,7 +101,7 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode, date=None, time=None, isArrival=
             "toLat": float(dlat),
             "toLon": float(dlon),
             "mode": mode,
-            "arriveBy": isArrival,
+            "arriveBy": is_arrival,
             "date": date,
             "time": time,
         },
@@ -115,39 +115,33 @@ def queryOTPRoute(slat, slon, dlat, dlon, mode, date=None, time=None, isArrival=
     response = requests.post(OTP_URL, headers=headers, json=graphql_query)
     response.raise_for_status()
 
-    responseJson = response.json()
+    response_json = response.json()
 
     # Check if the response contains any errors
-    if "errors" in responseJson:
+    if "errors" in response_json:
         # Loop through all errors to check their classification
-        for error in responseJson["errors"]:
+        for error in response_json["errors"]:
             classification = error.get("extensions", {}).get("classification")
             message = error.get("message")
 
-            # Dynamically raise the appropriate exception based on the classification
-            if classification:
-                # Try to map the classification to a built-in Python exception
-                raise Exception(classification + ": " + message)
-            else:
-                # If no classification is found, raise a general exception
-                raise Exception(f"Unknown error: {message}")
+            raise ValueError(classification + ": " + message)
 
     # Filter out non-transit routes
     if mode == "TRANSIT":
-        responseJson["data"]["plan"]["itineraries"] = [
+        response_json["data"]["plan"]["itineraries"] = [
             itinerary
-            for itinerary in responseJson["data"]["plan"]["itineraries"]
+            for itinerary in response_json["data"]["plan"]["itineraries"]
             if any(leg["transitLeg"] for leg in itinerary["legs"])
         ]
 
-    if len(responseJson["data"]["plan"]["itineraries"]) < 1:
+    if len(response_json["data"]["plan"]["itineraries"]) < 1:
         raise NotFound("No routes found")
 
-    return responseJson
+    return response_json
 
 
 # function to fetch route from ORS
-def fetchRoute(slat, slon, dlat, dlon, profile):
+def fetch_route(slat, slon, dlat, dlon, profile):
     coordinates = [[float(slon), float(slat)], [float(dlon), float(dlat)]]
     route = CLIENT.directions(
         coordinates=coordinates, profile=profile, format="geojson"
@@ -157,29 +151,29 @@ def fetchRoute(slat, slon, dlat, dlon, profile):
 
 
 # function to generate step instruction (from OTP steps response)
-def stepInstruction(direction, street, bogusName, absoluteDirection):
+def step_instruction(direction, street, bogus_name, absolute_direction):
     instruction = ""
 
     if direction.lower() == "depart":
         instruction = (
             "Head "
-            + absoluteDirection.title().replace("_", " ")
-            + ("" if bogusName else " on " + street)
+            + absolute_direction.title().replace("_", " ")
+            + ("" if bogus_name else " on " + street)
         )
         return instruction
 
     if direction.lower() == "continue":
         instruction = "Continue straight " + (
-            "to " + absoluteDirection.title().replace("_", " ")
-            if bogusName
+            "to " + absolute_direction.title().replace("_", " ")
+            if bogus_name
             else "on " + street
         )
         return instruction
 
     if "uturn" in direction.lower():
         instruction = direction.title().replace("_", " ") + (
-            " to " + absoluteDirection.title().replace("_", " ")
-            if bogusName
+            " to " + absolute_direction.title().replace("_", " ")
+            if bogus_name
             else " onto " + street
         )
         return instruction
@@ -187,48 +181,55 @@ def stepInstruction(direction, street, bogusName, absoluteDirection):
     instruction = (
         "Turn "
         + direction.lower().replace("_", " ")
-        + ("" if bogusName else " onto " + street)
+        + ("" if bogus_name else " onto " + street)
     )
     return instruction
 
 
 @app.get("/api/transit-route")
-def transitRoute():
+def transit_route():
     slat = request.args.get("slat")
     slon = request.args.get("slon")
     dlat = request.args.get("dlat")
     dlon = request.args.get("dlon")
     datetime = request.args.get("datetime")
-    isArrival = True if request.args.get("isarrival") == "1" else False
+
+    is_arrival = False
+    if request.args.get("isarrival") == "1":
+        is_arrival = True
 
     date = datetime.split("T")[0]
     time = datetime.split("T")[1]
 
-    routes = queryOTPRoute(slat, slon, dlat, dlon, "TRANSIT", date, time, isArrival)
+    routes = query_otp_route(slat, slon, dlat, dlon, "TRANSIT", date, time, is_arrival)
 
     response = {"routes": []}
 
-    for route in routes["data"]["plan"]["itineraries"]:
-        totalDistance = 0
-        totalDuration = 0
+    route_itineraries = routes["data"]["plan"]["itineraries"]
+    for route in route_itineraries:
+        total_distance = 0
+        total_duration = 0
         emission = 0
         segments = []
 
         for leg in route["legs"]:
-            totalDistance += leg["distance"]
-            totalDuration += leg["duration"]
+            total_distance += leg["distance"]
+            total_duration += leg["duration"]
 
-            estSpeed = leg["distance"] / leg["duration"]
+            estimate_speed = leg["distance"] / leg["duration"]
 
-            emission += (
-                (
-                    leg["distance"] / 1000 * mikrotransEF
-                    if "jak" in leg["trip"]["routeShortName"].lower()
-                    else leg["distance"] / 1000 * busEF
-                )
-                if leg["transitLeg"]
-                else leg["distance"] / 1000 * walkEF
-            )
+            # Calculate emission factor based on transit type
+            if leg["transitLeg"]:
+                # Determine if it's a mikrolet or bus
+                if leg["trip"] and "jak" in leg["trip"]["routeShortName"].lower():
+                    leg_emission = leg["distance"] / 1000 * mikrotransEF
+                else:
+                    leg_emission = leg["distance"] / 1000 * busEF
+            else:
+                leg_emission = leg["distance"] / 1000 * walkEF
+            
+            # Add to total emission
+            emission += leg_emission
 
             segment = {
                 "start": {
@@ -268,9 +269,9 @@ def transitRoute():
                 "steps": [
                     {
                         "distance": step["distance"],
-                        "duration": round(step["distance"] / estSpeed),
+                        "duration": round(step["distance"] / estimate_speed),
                         "name": "-" if step["bogusName"] else step["streetName"],
-                        "instruction": stepInstruction(
+                        "instruction": step_instruction(
                             step["relativeDirection"],
                             step["streetName"],
                             step["bogusName"],
@@ -286,8 +287,8 @@ def transitRoute():
         # Append route to response
         response["routes"].append(
             {
-                "distance": round(totalDistance, 2),
-                "duration": round(totalDuration),
+                "distance": round(total_distance, 2),
+                "duration": round(total_duration),
                 "segments": segments,
                 "emission": emission,
                 "start": {
@@ -305,11 +306,11 @@ def transitRoute():
 
 
 @app.get("/api/walk-route")
-def walkRoute():
+def walk_route():
     response = None
 
     try:
-        OTPRoutes = queryOTPRoute(
+        otp_routes = query_otp_route(
             request.args.get("slat"),
             request.args.get("slon"),
             request.args.get("dlat"),
@@ -317,32 +318,32 @@ def walkRoute():
             "WALK",
         )
 
-        OTPRoute = OTPRoutes["data"]["plan"]["itineraries"][0]["legs"][0]
+        otp_route = otp_routes["data"]["plan"]["itineraries"][0]["legs"][0]
         response = {
-            "path": decode(OTPRoute["legGeometry"]["points"]),
-            "distance": OTPRoute["distance"],
-            "duration": OTPRoute["duration"],
+            "path": decode(otp_route["legGeometry"]["points"]),
+            "distance": otp_route["distance"],
+            "duration": otp_route["duration"],
             "steps": [
                 {
                     "distance": step["distance"],
                     "duration": round(
-                        step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])
+                        step["distance"] / (otp_route["duration"] / otp_route["distance"])
                     ),
                     "name": "-" if step["bogusName"] else step["streetName"],
-                    "instruction": stepInstruction(
+                    "instruction": step_instruction(
                         step["relativeDirection"],
                         step["streetName"],
                         step["bogusName"],
                         step["absoluteDirection"],
                     ),
                 }
-                for step in OTPRoute["steps"]
+                for step in otp_route["steps"]
             ],
-            "emission": OTPRoute["distance"] / 1000 * walkEF,
+            "emission": otp_route["distance"] / 1000 * walkEF,
         }
-    except:
+    except Exception:
         # fallback to ORS if OTP got nothing
-        route = fetchRoute(
+        route = fetch_route(
             request.args.get("slat"),
             request.args.get("slon"),
             request.args.get("dlat"),
@@ -366,11 +367,11 @@ def walkRoute():
 
 
 @app.get("/api/bike-route")
-def bikeRoute():
+def bike_route():
     response = None
 
     try:
-        OTPRoutes = queryOTPRoute(
+        otp_routes = query_otp_route(
             request.args.get("slat"),
             request.args.get("slon"),
             request.args.get("dlat"),
@@ -378,32 +379,32 @@ def bikeRoute():
             "BICYCLE",
         )
 
-        OTPRoute = OTPRoutes["data"]["plan"]["itineraries"][0]["legs"][0]
+        otp_route = otp_routes["data"]["plan"]["itineraries"][0]["legs"][0]
         response = {
-            "path": decode(OTPRoute["legGeometry"]["points"]),
-            "distance": OTPRoute["distance"],
-            "duration": OTPRoute["duration"],
+            "path": decode(otp_route["legGeometry"]["points"]),
+            "distance": otp_route["distance"],
+            "duration": otp_route["duration"],
             "steps": [
                 {
                     "distance": step["distance"],
                     "duration": round(
-                        step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])
+                        step["distance"] / (otp_route["duration"] / otp_route["distance"])
                     ),
                     "name": "-" if step["bogusName"] else step["streetName"],
-                    "instruction": stepInstruction(
+                    "instruction": step_instruction(
                         step["relativeDirection"],
                         step["streetName"],
                         step["bogusName"],
                         step["absoluteDirection"],
                     ),
                 }
-                for step in OTPRoute["steps"]
+                for step in otp_route["steps"]
             ],
-            "emission": OTPRoute["distance"] / 1000 * walkEF,
+            "emission": otp_route["distance"] / 1000 * walkEF,
         }
-    except:
+    except Exception:
         # fallback to ORS if OTP got nothing
-        route = fetchRoute(
+        route = fetch_route(
             request.args.get("slat"),
             request.args.get("slon"),
             request.args.get("dlat"),
@@ -427,11 +428,11 @@ def bikeRoute():
 
 
 @app.get("/api/car-route")
-def carRoute():
+def car_route():
     response = None
 
     try:
-        OTPRoutes = queryOTPRoute(
+        otp_routes = query_otp_route(
             request.args.get("slat"),
             request.args.get("slon"),
             request.args.get("dlat"),
@@ -439,32 +440,32 @@ def carRoute():
             "CAR",
         )
 
-        OTPRoute = OTPRoutes["data"]["plan"]["itineraries"][0]["legs"][0]
+        otp_route = otp_routes["data"]["plan"]["itineraries"][0]["legs"][0]
         response = {
-            "path": decode(OTPRoute["legGeometry"]["points"]),
-            "distance": OTPRoute["distance"],
-            "duration": OTPRoute["duration"],
+            "path": decode(otp_route["legGeometry"]["points"]),
+            "distance": otp_route["distance"],
+            "duration": otp_route["duration"],
             "steps": [
                 {
                     "distance": step["distance"],
                     "duration": round(
-                        step["distance"] / (OTPRoute["duration"] / OTPRoute["distance"])
+                        step["distance"] / (otp_route["duration"] / otp_route["distance"])
                     ),
                     "name": "-" if step["bogusName"] else step["streetName"],
-                    "instruction": stepInstruction(
+                    "instruction": step_instruction(
                         step["relativeDirection"],
                         step["streetName"],
                         step["bogusName"],
                         step["absoluteDirection"],
                     ),
                 }
-                for step in OTPRoute["steps"]
+                for step in otp_route["steps"]
             ],
-            "emission": OTPRoute["distance"] / 1000 * carEF,
+            "emission": otp_route["distance"] / 1000 * carEF,
         }
-    except:
+    except Exception:
         # fallback to ORS if OTP got nothing
-        route = fetchRoute(
+        route = fetch_route(
             request.args.get("slat"),
             request.args.get("slon"),
             request.args.get("dlat"),
@@ -488,7 +489,7 @@ def carRoute():
 
 
 @app.get("/api/points_calculation")
-def pointsCalculation():
+def points_calculation():
     base = request.args.get("base")
     value = request.args.get("value")
 
@@ -513,7 +514,7 @@ def place():
 
 
 @app.get("/api/find_place")
-def findPlace():
+def find_place():
     search = request.args.get("search")
     lat = request.args.get("lat")
     lon = request.args.get("lon")
@@ -551,7 +552,7 @@ JAKARTA_BOUNDING_BOX = {
 }
 
 
-def isInJakarta(lat, lng):
+def is_in_jakarta(lat, lng):
     return (
         JAKARTA_BOUNDING_BOX["min_lat"] <= lat <= JAKARTA_BOUNDING_BOX["max_lat"]
         and JAKARTA_BOUNDING_BOX["min_lon"] <= lng <= JAKARTA_BOUNDING_BOX["max_lon"]
@@ -559,11 +560,11 @@ def isInJakarta(lat, lng):
 
 
 @app.get("/api/check_valid_coords")
-def checkValidCoords():
+def check_valid_coords():
     lat = request.args.get("lat")
     lon = request.args.get("lon")
 
-    if isInJakarta(lat, lon):
+    if is_in_jakarta(lat, lon):
         return jsonify({"message": "Location is within Jakarta"}), 200
     else:
         raise ValueError("Location/region is not supported")
@@ -576,12 +577,12 @@ def verify():
 
 
 @app.errorhandler(ApiError)
-def orsApiError(error):
+def ors_api_error(error):
     return jsonify(error.args[1]), error.status
 
 
 @app.errorhandler(NotFound)
-def notFoundError(error):
+def not_found_error(error):
     response = {
         "message": str(error),
     }
@@ -590,7 +591,7 @@ def notFoundError(error):
 
 
 @app.errorhandler(ValueError)
-def valueError(error):
+def value_error(error):
     response = {
         "message": str(error),
     }
@@ -599,7 +600,7 @@ def valueError(error):
 
 
 @app.errorhandler(Exception)
-def exceptionError(error):
+def exception_error(error):
     response = {
         "message": str(error),
     }
