@@ -50,6 +50,12 @@ import PermissionToast from "../components/PermissionToast";
 import TransitRouteItem from "../components/TransitRouteItem";
 import { DateContext } from "../context/DateContext";
 import IconText from "../components/IconText";
+import TravelSelectedBusPath from "../components/TravelSelectedTransitPath";
+import TravelSelectedNonBusPath from "../components/TravelSelectedNonTransitPath";
+import ModalSelectedRouteCard from "../components/ModalSelectedRouteCard";
+import ModalLocationSelectorCard from "../components/ModalLocationSelectorCard";
+import ModalSelectedTransitCard from "../components/ModalSelectedTransitCard";
+import TravelDefaultCards from "../components/TravelDefaultCards";
 
 export default function Travel({ match }) {
   const {
@@ -513,9 +519,9 @@ export default function Travel({ match }) {
                               ></TravelItem>
                             </span>
                             <hr />
-                            {searchResults.map((result, index) => (
+                            {searchResults.map((result) => (
                               <span
-                                key={index}
+                                key={result.id}
                                 onClick={() =>
                                   handleSelectResult(result.lat, result.lon)
                                 }
@@ -533,309 +539,35 @@ export default function Travel({ match }) {
                         </TravelCard>
                       </div>
                     ) : showingRoute ? (
-                      // Cards for showing a chosen route
-                      <div className="h-3/4 overflow-scroll rounded-lg">
-                        <TravelCard>
-                          <CardList>
-                            <TravelItem
-                              iconText={""}
-                              icon={displayRoute.icon}
-                              text={displayRoute.destinationLabel}
-                              subTexts={[
-                                displayRoute.route.distance,
-                                displayRoute.route.duration,
-                                displayRoute.route.emission,
-                                <span className="font-bold">
-                                  {displayRoute.route.points}
-                                </span>,
-                              ]}
-                              iconSize="large"
-                              ripple={false}
-                            />
-                            <hr />
-                            <CardList>
-                              {displayRoute.route.steps.map((step, index) => (
-                                <TravelItem
-                                  key={index}
-                                  text={step.instruction}
-                                  icon={
-                                    step.instruction
-                                      .toLowerCase()
-                                      .includes("turn")
-                                      ? step.instruction
-                                          .toLowerCase()
-                                          .includes("right")
-                                        ? arrowForward
-                                        : arrowBack
-                                      : arrowUp
-                                  }
-                                  iconText={step.distance}
-                                  subTexts={[step.duration]}
-                                  ripple={false}
-                                  iconColor={"secondary"}
-                                />
-                              ))}
-                              <TravelItem
-                                text={
-                                  "Arrive at " + displayRoute.destinationLabel
-                                }
-                                icon={locationSharp}
-                                iconText={""}
-                                subTexts={[""]}
-                                ripple={false}
-                                iconColor={"tertiary"}
-                              />
-                            </CardList>
-                          </CardList>
-                        </TravelCard>
-                      </div>
+                      // Cards for showing a chosen route (walk, car and bike)
+                      <ModalSelectedRouteCard route={displayRoute} />
                     ) : showingTransitRoute ? (
-                      <div className="h-3/4 overflow-scroll rounded-lg">
-                        <TravelCard>
-                          <CardList>
-                            <TravelItem
-                              iconText={""}
-                              icon={selectedTransitRoute.icon}
-                              text={selectedTransitRoute.destinationLabel}
-                              subTexts={[
-                                selectedTransitRoute.route.distance,
-                                selectedTransitRoute.route.duration,
-                                selectedTransitRoute.route.emission,
-                                <span className="font-bold">
-                                  {selectedTransitRoute.route.points}
-                                </span>,
-                              ]}
-                              iconSize="large"
-                              ripple={false}
-                            />
-                            <hr />
-                            <CardList>
-                              {selectedTransitRoute.route.segments.map(
-                                (segment, index) => {
-                                  toggleMiddleStopArray.current.push(false);
-                                  return segment.transitSegment ? (
-                                    <div
-                                      onClick={() => {
-                                        toggleMiddleStopArray.current[index] =
-                                          !toggleMiddleStopArray.current[index];
-                                        console.log("clicked");
-                                      }}
-                                      key={index}
-                                      className="grid grid-cols-[auto,1fr] gap-x-4 items-center px-2"
-                                    >
-                                      <p className="self-center w-fit text-xs">
-                                        <IonText>
-                                          {
-                                            to12HourFormat(
-                                              toCurrentTimezone(
-                                                segment.start.date +
-                                                  "T" +
-                                                  segment.start.time
-                                              ).split("T")[1]
-                                            ).split("+")[0]
-                                          }
-                                        </IonText>
-                                      </p>
-                                      <TravelItem
-                                        ripple={false}
-                                        iconText={
-                                          segment.mode[0].toUpperCase() +
-                                          segment.mode.substr(1).toLowerCase()
-                                        }
-                                        icon={
-                                          segment.mode.toLowerCase() === "bus"
-                                            ? bus
-                                            : null
-                                        }
-                                        subTexts={[
-                                          segment.stops.middleStops.length +
-                                            (segment.stops.startStop ? 1 : 0) +
-                                            (segment.stops.endStop ? 1 : 0) +
-                                            " stops",
-                                          segment.duration,
-                                        ]}
-                                        text={
-                                          segment.transitNames.code +
-                                          " - " +
-                                          segment.mode[0].toUpperCase() +
-                                          segment.mode.substr(1).toLowerCase() +
-                                          " to " +
-                                          segment.transitNames.headsign
-                                        }
-                                      ></TravelItem>
-                                      <div></div>
-                                      <div>
-                                        <CardList>
-                                          <div className="flex gap-4">
-                                            <div className="text-sm flex flex-col gap-4 grow px-2 pb-4">
-                                              {segment.stops.startStop ? (
-                                                <IconText
-                                                  icon={arrowDownCircle}
-                                                  col={false}
-                                                  text={segment.stops.startStop}
-                                                  iconColor="secondary"
-                                                  iconSize="small"
-                                                ></IconText>
-                                              ) : null}
-                                              {toggleMiddleStopArray.current[
-                                                index
-                                              ]
-                                                ? segment.stops.middleStops.map(
-                                                    (stop, index) => (
-                                                      <IconText
-                                                        icon={arrowDownCircle}
-                                                        col={false}
-                                                        text={stop}
-                                                        iconColor="secondary"
-                                                        key={index}
-                                                        iconSize="small"
-                                                      ></IconText>
-                                                    )
-                                                  )
-                                                : null}
-                                              {segment.stops.endStop ? (
-                                                <IconText
-                                                  icon={stopCircle}
-                                                  col={false}
-                                                  text={segment.stops.endStop}
-                                                  iconColor="tertiary"
-                                                  iconSize="small"
-                                                ></IconText>
-                                              ) : null}
-                                            </div>
-                                            <IonIcon
-                                              className={
-                                                (toggleMiddleStopArray.current[
-                                                  index
-                                                ]
-                                                  ? " rotate-180 "
-                                                  : "") +
-                                                "transform transition-all"
-                                              }
-                                              icon={chevronUp}
-                                              size="small"
-                                            ></IonIcon>
-                                          </div>
-                                        </CardList>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div
-                                      key={index}
-                                      className="flex gap-4 items-center px-2"
-                                    >
-                                      <p className="self-center w-fit text-xs">
-                                        <IonText>
-                                          {
-                                            to12HourFormat(
-                                              toCurrentTimezone(
-                                                segment.start.date +
-                                                  "T" +
-                                                  segment.start.time
-                                              ).split("T")[1]
-                                            ).split("+")[0]
-                                          }
-                                        </IonText>
-                                      </p>
-                                      <TravelItem
-                                        ripple={false}
-                                        iconText={
-                                          segment.mode[0].toUpperCase() +
-                                          segment.mode.substr(1).toLowerCase()
-                                        }
-                                        icon={
-                                          segment.mode.toLowerCase() === "walk"
-                                            ? walk
-                                            : null
-                                        }
-                                        subTexts={[
-                                          segment.distance,
-                                          segment.duration,
-                                        ]}
-                                        text={
-                                          "To " +
-                                          (segment.stops.endStop !== ""
-                                            ? segment.stops.endStop
-                                            : "Destination")
-                                        }
-                                      ></TravelItem>
-                                    </div>
-                                  );
-                                }
-                              )}
-                            </CardList>
-                          </CardList>
-                        </TravelCard>
-                      </div>
+                      // cards for a selected transit route
+                      <ModalSelectedTransitCard
+                        transitRoute={selectedTransitRoute}
+                        showMiddleStop={toggleMiddleStopArray}
+                      />
                     ) : (
                       // Cards for default travel route
                       <CardList>
-                        {/* Card 1 */}
-                        <TravelCard>
-                          <div className="grid grid-cols-[auto_1fr_auto] grid-rows-3 gap-x-4 items-center">
-                            {" "}
-                            <IonIcon color="secondary" icon={locate}></IonIcon>
-                            <p
-                              className="truncate w-full"
-                              onClick={() =>
-                                handleChooseLocation(setStartCoords)
-                              }
-                            >
-                              <IonText class="ion-padding-horizontal">
-                                {startCoords.lat === undefined ||
-                                startCoords.lon === undefined
-                                  ? "Starting location"
-                                  : startCoords.label !== ""
-                                  ? startCoords.label
-                                  : startCoords.lat + ", " + startCoords.lon}
-                              </IonText>
-                            </p>
-                            <IonButton
-                              size="small"
-                              fill="clear"
-                              color="dark"
-                              className="row-span-3"
-                              shape="round"
-                              onClick={() => handleCoordSwap()}
-                            >
-                              <IonIcon
-                                slot="icon-only"
-                                icon={swapVertical}
-                              ></IonIcon>
-                            </IonButton>
-                            <IonIcon icon={ellipsisVertical}></IonIcon>
-                            <hr />
-                            <IonIcon
-                              color="tertiary"
-                              icon={locationSharp}
-                            ></IonIcon>
-                            <p
-                              className="truncate w-full"
-                              onClick={() =>
-                                handleChooseLocation(setDestinationCoords)
-                              }
-                            >
-                              <IonText class="ion-padding-horizontal">
-                                {destinationCoords.lat === undefined ||
-                                destinationCoords.lon === undefined
-                                  ? "Set destination"
-                                  : destinationCoords.label !== ""
-                                  ? destinationCoords.label
-                                  : destinationCoords.lat +
-                                    ", " +
-                                    destinationCoords.lon}
-                              </IonText>
-                            </p>
-                          </div>
-                        </TravelCard>
+                        {/* Card 1, the location selector bar */}
+                        <ModalLocationSelectorCard
+                          handleChooseLocation={handleChooseLocation}
+                          setStartCoords={setStartCoords}
+                          startCoords={startCoords}
+                          destinationCoords={destinationCoords}
+                          setDestinationCoords={setDestinationCoords}
+                          handleCoordSwap={handleCoordSwap}
+                        />
                         {/* Card 2 */}
                         <TravelCard>
                           {choosingTransitRoutes ? (
                             <CardList>
+                              {/* listing all transit cards, shows after trasnit is selected from default */}
                               {transitRoutes.loaded ? (
                                 transitRoutes.routes.map((route, index) => (
                                   <span
-                                    key={index}
+                                    key={route.id}
                                     onClick={() => {
                                       handleSelectTransitRoute(route);
                                     }}
@@ -872,130 +604,15 @@ export default function Travel({ match }) {
                               )}
                             </CardList>
                           ) : (
-                            <CardList>
-                              <span onClick={() => handleTransitRoute()}>
-                                <RouteCardItem
-                                  iconText="Transit"
-                                  points={
-                                    transitRoutes.loaded
-                                      ? transitRoutes.routes[0].points
-                                      : ""
-                                  }
-                                  icon={train}
-                                  isAvailable={transitRoutes.loaded}
-                                  routeStepsNames={
-                                    transitRoutes.loaded
-                                      ? transitRoutes.routes[0].segments.map(
-                                          (segment) =>
-                                            segment.transitSegment
-                                              ? segment.transitNames.code
-                                              : "-"
-                                        )
-                                      : []
-                                  }
-                                  routeDescriptions={
-                                    transitRoutes.loaded
-                                      ? [
-                                          transitRoutes.routes[0].distance,
-                                          transitRoutes.routes[0].duration,
-                                          transitRoutes.routes[0].emission,
-                                        ]
-                                      : []
-                                  }
-                                />
-                              </span>
-                              <hr />
-
-                              <span
-                                onClick={() =>
-                                  walkRoute.loaded &&
-                                  handleRouteItem(walkRoute, walk)
-                                }
-                              >
-                                <RouteCardItem
-                                  iconText="Walk"
-                                  points={
-                                    walkRoute.loaded ? walkRoute.points : ""
-                                  }
-                                  icon={walk}
-                                  isAvailable={walkRoute.loaded}
-                                  routeStepsNames={
-                                    walkRoute.loaded
-                                      ? walkRoute.steps.map((step) => step.name)
-                                      : []
-                                  }
-                                  routeDescriptions={
-                                    walkRoute.loaded
-                                      ? [
-                                          walkRoute.distance,
-                                          walkRoute.duration,
-                                          walkRoute.emission,
-                                        ]
-                                      : []
-                                  }
-                                />
-                              </span>
-                              <hr />
-                              <span
-                                onClick={() =>
-                                  bikeRoute.loaded &&
-                                  handleRouteItem(bikeRoute, bicycle)
-                                }
-                              >
-                                <RouteCardItem
-                                  iconText="Bike"
-                                  points={
-                                    bikeRoute.loaded ? bikeRoute.points : ""
-                                  }
-                                  icon={bicycle}
-                                  isAvailable={bikeRoute.loaded}
-                                  routeStepsNames={
-                                    bikeRoute.loaded
-                                      ? bikeRoute.steps.map((step) => step.name)
-                                      : []
-                                  }
-                                  routeDescriptions={
-                                    bikeRoute.loaded
-                                      ? [
-                                          bikeRoute.distance,
-                                          bikeRoute.duration,
-                                          bikeRoute.emission,
-                                        ]
-                                      : []
-                                  }
-                                />
-                              </span>
-                              <hr />
-                              <span
-                                onClick={() =>
-                                  carRoute.loaded &&
-                                  handleRouteItem(carRoute, car)
-                                }
-                              >
-                                <RouteCardItem
-                                  iconText="Car"
-                                  points={
-                                    carRoute.loaded ? carRoute.points : ""
-                                  }
-                                  icon={car}
-                                  isAvailable={carRoute.loaded}
-                                  routeStepsNames={
-                                    carRoute.loaded
-                                      ? carRoute.steps.map((step) => step.name)
-                                      : []
-                                  }
-                                  routeDescriptions={
-                                    carRoute.loaded
-                                      ? [
-                                          carRoute.distance,
-                                          carRoute.duration,
-                                          carRoute.emission,
-                                        ]
-                                      : []
-                                  }
-                                />
-                              </span>
-                            </CardList>
+                            // shows walk, bike, car, and transit cards for selection
+                            <TravelDefaultCards
+                              transitRoutes={transitRoutes}
+                              walkRoute={walkRoute}
+                              bikeRoute={bikeRoute}
+                              carRoute={carRoute}
+                              handleRouteItem={handleRouteItem}
+                              handleTransitRoute={handleTransitRoute}
+                            />
                           )}
                         </TravelCard>
                       </CardList>
