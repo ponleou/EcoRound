@@ -69,13 +69,13 @@ pipeline {
 
                             echo "=========== Creating Python venv for backend... ==========="
                             python -m venv .venv
-                            .venv/bin/python -m pip install -r requirement.txt
+                            .venv/bin/python -m pip install -r requirements.txt
                             '''
 
                             sh '''
                             cd Testing
                             python -m venv .venv
-                            .venv/bin/python -m pip install -r requirement.txt
+                            .venv/bin/python -m pip install -r requirements.txt
                             '''
                         }
                     )
@@ -166,10 +166,27 @@ pipeline {
             sh './sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner -Dsonar.host.url="http://${LOCAL_SERVER}:9000"'
         }
     }
-    // stage('Security Scan') {
-    //     steps {
-    //     }
-    // }
+    stage('Security Scan') {
+        steps {
+            script {
+                parallel(
+                    IonicReactApp: {
+                        sh '''
+                        cd EcoRound
+                        npx snyk test
+                        npm audit
+                        '''
+                    },
+                    FlaskBackend: {
+                        sh '''
+                        cd Backend
+                        npx snyk test --all-projects
+                        '''
+                    }
+                )
+            }
+        }
+    }
     // stage('Deploy') {
     //     steps {
     //     }
