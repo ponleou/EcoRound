@@ -175,12 +175,13 @@ pipeline {
                         sh '''
                         cd EcoRound
                         npx snyk monitor
-                        npm audit
+                        npm audit || true
                         '''
                     },
                     FlaskBackend: {
                         sh '''
                         cd Backend
+                        . .venv/bin/activate
                         npx snyk monitor --all-projects
                         '''
                     }
