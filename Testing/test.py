@@ -1,7 +1,9 @@
-from typing import List, Literal, Callable
+from typing import List, Callable
 from appium import webdriver
 from appium.webdriver.common.appiumby import AppiumBy
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.actions import interaction
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
@@ -37,6 +39,10 @@ class WebElementCase():
         self.element_value = element_value
 
     def get_element(self) -> WebElement:
+        WebDriverWait(self.driver, 30).until(
+            EC.visibility_of_element_located((self.element_id, self.element_value))
+        )
+
         return self.driver.find_element(by=self.element_id, value=self.element_value)
 
     def get_function(self) -> Callable[[], None]:
