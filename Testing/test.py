@@ -6,8 +6,10 @@ from selenium.webdriver.common.actions import interaction
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import WebDriverException
 from appium.options.android import UiAutomator2Options
 import os
+import sys
 from dotenv import load_dotenv  # type: ignore
 from time import sleep
 
@@ -38,7 +40,9 @@ class WebElementCase():
         return self.driver.find_element(by=self.element_id, value=self.element_value)
 
     def get_function(self) -> Callable[[], None]:
-        return lambda: self.get_element().click()
+        log_string = f"click {self.element_value}"
+
+        return lambda: (print(log_string, end=""), self.get_element().click())
     
 
 class TouchChainsCase():
@@ -56,13 +60,20 @@ class TouchChainsCase():
         self.action.w3c_actions.pointer_action.pointer_down()
         self.action.w3c_actions.pointer_action.pause(0.5)
 
+        log_string = ""
+
         if self.end_x != -1 or self.end_y != -1:
             self.action.w3c_actions.pointer_action.move_to_location(self.end_x, self.end_x)
             self.action.w3c_actions.pointer_action.pause(0.5)
-            
+            log_string =f"drag ({self.start_x}, {self.start_y}) to ({self.end_x}, {self.end_y})"
+
+        else:
+            log_string = f"touch ({self.start_x}, {self.start_y})"
+        
+
         self.action.w3c_actions.pointer_action.release()
 
-        return lambda: self.action.perform()
+        return lambda: (print(log_string, end=""), self.action.perform())
 
 class FunctionCases():
     def __init__(self):
@@ -74,12 +85,30 @@ class FunctionCases():
     def get_list(self) -> List[Callable[[], None]]:
         return self.list
     
-    def run_cases(self) -> None:
-        for index, function in enumerate(self.list):
-            print(index)
-            function()
-            sleep(1)
+    def run_cases(self, delay=1) -> bool:
+        print("Running test cases: ")
+        success = 0
 
+        for index, function in enumerate(self.list):
+            print(f"{index + 1}. ", end="")
+            try:
+                function()
+                print("...Done\n", end="")
+                success = success + 1
+            except WebDriverException as e:
+                print("...Fail\n", end="")
+                print(f"{type(e).__name__}: {e.msg}")
+            finally:
+                sleep(delay)
+        
+        print(f"Test cases complete: {success}/{len(self.list)}")
+        if success == len(self.list):
+            return True
+        else:
+            return False
+
+def back_button_function(driver: webdriver.Remote) -> Callable[[], None]:
+    return lambda: (print("back button", end=""), driver.execute_script('mobile: pressKey', {"keycode": 4}))
 
 def main():
     url = 'http://localhost:4723'
@@ -128,12 +157,17 @@ def main():
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(11)").get_function())
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(12)").get_function())
     
-    case_list.add_function(lambda: driver.execute_script('mobile: pressKey', {"keycode": 4}))
-    case_list.add_function(lambda: driver.execute_script('mobile: pressKey', {"keycode": 4}))
+    case_list.add_function(back_button_function(driver))
+    case_list.add_function(back_button_function(driver))
 
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.widget.Button\").instance(1)").get_function())
 
-    case_list.run_cases()
+    case_list.add_function(back_button_function(driver))
+
+    if case_list.run_cases(5):
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
