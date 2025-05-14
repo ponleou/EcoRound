@@ -8,8 +8,8 @@ pipeline {
         ANDROID_SDK_ROOT = "${ANDROID_SDK}"
         ANDROID_HOME = "${ANDROID_SDK}"
         PATH = "${PATH}:${ANDROID_SDK}/emulator:${ANDROID_SDK}/cmdline-tools/latest/bin"
-        AVD_NAME = 'tester_avd4'
-        AVD_PORT = '5554'
+        AVD_NAME = 'jenkins_avd'
+        AVD_PORT = '5558'
         adb = '/usr/bin/adb'
         SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
 
@@ -85,14 +85,14 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                // sh '''
-                // yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
-                // avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
-                // '''
+                sh '''
+                yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
+                avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
+                '''
 
-                // sh '''
-                // emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data & 
-                // '''
+                sh '''
+                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data & 
+                '''
 
                 sh '''
                 cd otp
@@ -161,11 +161,9 @@ pipeline {
         }
     stage('Code Quality') {
         steps {
-            sh'''
-            wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -' // pipe to bsdtar to unzip and avoid saving zip copies
-            chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/' // essential binary files are all inside the folder without execution bits
-            ./sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner'
-            '''
+            sh 'wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -' // pipe to bsdtar to unzip and avoid saving zip copies
+            sh 'chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/' // essential binary files are all inside the folder without execution bits
+            sh './sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner'
         }
     }
     // stage('Security Scan') {
