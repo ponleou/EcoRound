@@ -153,8 +153,6 @@ pipeline {
                 }
 
                 sh '''
-                sleep 15
-                
                 cd Testing
                 .venv/bin/python test.py
                 '''

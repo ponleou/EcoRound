@@ -25,8 +25,6 @@ export default function IconText({
             ? "text-base"
             : textSize == "large"
             ? "text-lg"
-            : textSize == "small"
-            ? "text-xs"
             : "text-xs") +
           (textBold ? " font-bold" : "")
         }
