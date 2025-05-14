@@ -11,7 +11,10 @@ pipeline {
         AVD_NAME = 'jenkins_avd'
         AVD_PORT = '5558'
         adb = '/usr/bin/adb'
+
         SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
+        SNYK_TOKEN = credentials('SNYK_TOKEN')
+        SNYK_ORG_API = credentials('SNYK_ORG_API')
 
         ORS_API_KEY = credentials('ORS_API_KEY')
         DEVELOPMENT_SERVER = 'http://10.0.2.2:5000'
@@ -173,14 +176,14 @@ pipeline {
                     IonicReactApp: {
                         sh '''
                         cd EcoRound
-                        npx snyk test
+                        npx snyk monitor
                         npm audit
                         '''
                     },
                     FlaskBackend: {
                         sh '''
                         cd Backend
-                        npx snyk test --all-projects
+                        npx snyk monitor --all-projects
                         '''
                     }
                 )
