@@ -11,9 +11,11 @@ pipeline {
         AVD_NAME = 'avd_jenkins2'
         AVD_PORT = '5558'
         adb = '/usr/bin/adb'
+        SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
 
         ORS_API_KEY = credentials('ORS_API_KEY')
         DEVELOPMENT_SERVER = 'http://10.0.2.2:5000'
+        LOCAL_SERVER = '10.141.51.16'
     }
     stages {
         stage('Initialise') {
@@ -51,7 +53,7 @@ pipeline {
                         },
                         OTPBuild: {
                             sh '''
-                            cd Backend/otp
+                            cd otp
 
                             echo "=========== Downloading OTP... ==========="
                             wget https://repo1.maven.org/maven2/org/opentripplanner/otp/2.6.0/otp-2.6.0-shaded.jar
@@ -93,7 +95,7 @@ pipeline {
                 '''
 
                 sh '''
-                cd Backend/otp
+                cd otp
                 java -Xmx2G -jar otp-2.6.0-shaded.jar --load . &
                 '''
 
@@ -152,15 +154,16 @@ pipeline {
                 cd Testing
                 .venv/bin/python test.py
                 '''
-
-                sh '''
-                kill $(jobs -p) || true
-                '''
                 }
             }
         }
     // stage('Code Quality') {
     //     steps {
+    //         sh'''
+    //         wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -' // pipe to bsdtar to unzip and avoid saving zip copies
+    //         chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/' // essential binary files are all inside the folder without execution bits
+    //         ./sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner'
+    //         '''
     //     }
     // }
     // stage('Security Scan') {
