@@ -14,7 +14,6 @@ pipeline {
 
         SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
         SNYK_TOKEN = credentials('SNYK_TOKEN')
-        SNYK_ORG_API = credentials('SNYK_ORG_API')
 
         ORS_API_KEY = credentials('ORS_API_KEY')
         DEVELOPMENT_SERVER = 'http://10.0.2.2:5000'
