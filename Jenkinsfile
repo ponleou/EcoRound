@@ -157,15 +157,15 @@ pipeline {
                 }
             }
         }
-    // stage('Code Quality') {
-    //     steps {
-    //         sh'''
-    //         wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -' // pipe to bsdtar to unzip and avoid saving zip copies
-    //         chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/' // essential binary files are all inside the folder without execution bits
-    //         ./sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner'
-    //         '''
-    //     }
-    // }
+    stage('Code Quality') {
+        steps {
+            sh'''
+            wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -' // pipe to bsdtar to unzip and avoid saving zip copies
+            chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/' // essential binary files are all inside the folder without execution bits
+            ./sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner'
+            '''
+        }
+    }
     // stage('Security Scan') {
     //     steps {
     //     }
