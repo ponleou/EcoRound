@@ -118,6 +118,8 @@ def main():
         deviceName=os.getenv("AVD_NAME"),
         platformVersion='35',
         udid=f'emulator-{os.getenv("AVD_PORT")}',
+        appPackage='io.ionic.starter',
+        appActivity='.MainActivity'
         )
 
     appium = Appium(url, device)

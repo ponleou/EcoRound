@@ -91,7 +91,7 @@ pipeline {
                 '''
 
                 sh '''
-                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data & 
+                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data -gpu swiftshader_indirect -qemu -m 2048 & 
                 '''
 
                 sh '''
@@ -131,7 +131,9 @@ pipeline {
                         sh '''
                         $adb devices
                         $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                        $adb shell am start -n io.ionic.starter/.MainActivity
+                        $adb shell settings put global window_animation_scale 0
+                        $adb shell settings put global transition_animation_scale 0
+                        $adb shell settings put global animator_duration_scale 0
                         '''
                     } catch (err) {
                         sleep(time: 5, unit: 'SECONDS')
