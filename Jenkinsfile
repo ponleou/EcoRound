@@ -210,32 +210,36 @@ pipeline {
                     sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
                 }
 
-                sh '''
-                cd otp
-                du -sh *
-                du -sh .*
-                docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
-                docker push $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
-                docker rmi -f $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
-                '''
+                parallel(
+                    DockerOTP: {
+                        sh '''
+                        cd otp
+                        docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
+                        docker push $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
+                        docker rmi -f $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
+                        '''
+                    },
+                    DockerFlask: {
+                        sh '''
+                        cd Backend
+                        docker build -t $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER .
+                        docker push $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                        docker rmi -f $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                        '''
+                    }
+                )
 
                 sshagent(credentials: ['MACBOOK_SSH']) {
-                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop ecoroundotp || true"'
-                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER"'
-                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name ecoroundotp -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER"'
-                }
-
-                sh '''
-                cd Backend
-                docker build -t $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER .
-                docker push $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
-                docker rmi -f $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
-                '''
-
-                sshagent(credentials: ['MACBOOK_SSH']) {
-                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop ecoroundflask || true"'
-                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER"'
-                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name ecoroundflask -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=$OTP_IP:8081 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER"'
+                   sh '''
+                    ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
+                    docker stop ecoroundotp || true &&
+                    docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
+                    docker run -d --name ecoroundotp -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
+                    docker stop ecoroundflask || true &&
+                    docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER &&
+                    docker run -d --name ecoroundflask -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=$OTP_IP:8081 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                    '"
+                    '''
                 }
 
                 sh '''
