@@ -169,7 +169,7 @@ pipeline {
 
                 sh '''
                 cd Testing
-                .venv/bin/python test.py || true
+                .venv/bin/python test.py
                 '''
                 }
             }
