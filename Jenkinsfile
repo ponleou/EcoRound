@@ -11,7 +11,7 @@ pipeline {
         AVD_NAME = 'jenkins_avd'
         AVD_PORT = '5558'
         adb = '/usr/bin/adb'
-        AVD_LOCAL_SERVER = '10.0.2.2'
+        AVD_LOCALHOST = '10.0.2.2'
 
         APP_VERSION = '1.0'
 
@@ -27,7 +27,7 @@ pipeline {
         DOCKER_USERNAME = 'ponleou'
 
         ORS_API_KEY = credentials('ORS_API_KEY')
-        LOCAL_SERVER = '10.141.51.16'
+        LOCAL_SERVER = '10.141.35.235'
         LOCAL_SERVER_SSH = '10-141-35-235.wifi-m.deakin.edu.au'
     }
     stages {
@@ -44,7 +44,7 @@ pipeline {
                     parallel (
                         AppBuild: {
                             sh '''
-                            export VITE_BACKEND_URL=http://$AVD_LOCAL_SERVER:$FLASK_PORT/api
+                            export VITE_BACKEND_URL=http://$AVD_LOCALHOST:$FLASK_PORT/api
                             cd EcoRound
 
                             echo "=========== Installing node modules... ==========="
