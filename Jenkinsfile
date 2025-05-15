@@ -268,6 +268,7 @@ pipeline {
             sh '''
             avdmanager delete avd -n $AVD_NAME
             adb kill-server
+            cleanWs()
             '''
         }
     }
