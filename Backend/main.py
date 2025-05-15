@@ -13,9 +13,10 @@ from tzlocal import get_localzone  # To get the server's local timezone
 load_dotenv()
 
 API_KEY = os.getenv("ORS_API_KEY")
+OTP_SERVER = os.getenv("OTP_SERVER")
 CLIENT = ors.Client(API_KEY)
 
-OTP_URL = "http://localhost:8080/otp/gtfs/v1"
+OTP_URL = f"http://{OTP_SERVER}/otp/gtfs/v1"
 
 app = Flask(__name__)
 CORS(app)
