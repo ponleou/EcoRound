@@ -112,7 +112,7 @@ class FunctionCases():
             finally:
                 sleep(delay)
 
-            if fail > max_fail:
+            if fail >= max_fail:
                 break
         
         print(f"Test cases complete: {success}/{len(self.list)}")
