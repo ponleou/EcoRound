@@ -96,7 +96,7 @@ class FunctionCases():
         success = 0
         fail = 0
 
-        if max_fail >= 0:
+        if max_fail <= 0:
             max_fail = len(self.list)
 
         for index, function in enumerate(self.list):
