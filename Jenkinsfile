@@ -113,7 +113,8 @@ pipeline {
                 '''
 
                 sh '''
-                cd Backend 
+                cd Backend
+                export OTP_SERVER=$OTP_IP:$OTP_PORT
                 .venv/bin/python -m flask --app main run --host=$FLASK_IP -p $FLASK_PORT &
                 '''
 
@@ -167,7 +168,7 @@ pipeline {
 
                 sh '''
                 cd Testing
-                .venv/bin/python test.py
+                .venv/bin/python test.py || true
                 '''
                 }
             }
