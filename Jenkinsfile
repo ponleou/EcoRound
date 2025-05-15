@@ -25,6 +25,7 @@ pipeline {
         FLASK_PORT = '5000'
 
         DOCKER_USERNAME = 'ponleou'
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
 
         ORS_API_KEY = credentials('ORS_API_KEY')
         LOCAL_SERVER = '10.141.35.235'
