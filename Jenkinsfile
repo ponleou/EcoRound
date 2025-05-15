@@ -11,12 +11,24 @@ pipeline {
         AVD_NAME = 'jenkins_avd'
         AVD_PORT = '5558'
         adb = '/usr/bin/adb'
+        AVD_LOCAL_SERVER = '10.0.2.2'
+
+        APP_VERSION = '1.0'
+
         SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
         SNYK_TOKEN = credentials('SNYK_TOKEN')
 
+        OTP_IP = '127.0.0.1'
+        OTP_PORT = '8080'
+
+        FLASK_IP = '127.0.0.1'
+        FLASK_PORT = '5000'
+
+        DOCKER_USERNAME = 'ponleou'
+
         ORS_API_KEY = credentials('ORS_API_KEY')
-        DEVELOPMENT_SERVER = 'http://10.0.2.2:5000'
         LOCAL_SERVER = '10.141.51.16'
+        LOCAL_SERVER_SSH = '10-141-35-235.wifi-m.deakin.edu.au'
     }
     stages {
         stage('Initialise') {
@@ -32,7 +44,7 @@ pipeline {
                     parallel (
                         AppBuild: {
                             sh '''
-                            export VITE_BACKEND_URL=$DEVELOPMENT_SERVER/api
+                            export VITE_BACKEND_URL=http://$AVD_LOCAL_SERVER:$FLASK_PORT/api
                             cd EcoRound
 
                             echo "=========== Installing node modules... ==========="
@@ -49,7 +61,7 @@ pipeline {
                             cd EcoRound/android
 
                             echo "=========== Building Android APK... ==========="
-                            ./gradlew assembleDebug
+                            ./gradlew clean assembleDebug
                             '''
                         },
                         OTPBuild: {
@@ -97,12 +109,12 @@ pipeline {
 
                 sh '''
                 cd otp
-                java -Xmx2G -jar otp-2.6.0-shaded.jar --load . &
+                java -Xmx2G -jar otp-2.6.0-shaded.jar --bindAddress $OTP_IP --port $OTP_PORT --load . &
                 '''
 
                 sh '''
                 cd Backend 
-                .venv/bin/python -m flask --app main run &
+                .venv/bin/python -m flask --app main run --host=$FLASK_IP -p $FLASK_PORT &
                 '''
 
                 sh '''
@@ -189,10 +201,50 @@ pipeline {
             }
         }
     }
-    // stage('Deploy') {
-    //     steps {
-    //     }
-    // }
+    stage('Deploy') {
+        steps {
+            sh '''
+            cd otp
+            docker build -t $DOCKER_USERNAME/EcoRoundOTP:v$APP_VERSION.$BUILD_NUMBER
+            docker push $DOCKER_USERNAME/EcoRoundOTP:v$APP_VERSION.$BUILD_NUMBER
+            docker rmi -f $DOCKER_USERNAME/EcoRoundOTP:v$APP_VERSION.$BUILD_NUMBER
+
+            sshagent(credentials: ['MACBOOK_SSH']) {
+                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop EcoRoundOTP || true"'
+                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/EcoRoundOTP:v$APP_VERSION.$BUILD_NUMBER"'
+                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name EcoRoundOTP -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/EcoRoundOTP:v$APP_VERSION.$BUILD_NUMBER"'
+            }
+            '''
+
+            sh '''
+            cd Backend
+            docker build -t $DOCKER_USERNAME/EcoRoundFlask:v$APP_VERSION.$BUILD_NUMBER
+            docker push $DOCKER_USERNAME/EcoRoundFlask:v$APP_VERSION.$BUILD_NUMBER
+            docker rmi -f $DOCKER_USERNAME/EcoRoundFlask:v$APP_VERSION.$BUILD_NUMBER
+
+            sshagent(credentials: ['MACBOOK_SSH']) {
+                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop EcoRoundFlask || true"'
+                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/EcoRoundFlask:v$APP_VERSION.$BUILD_NUMBER"'
+                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name EcoRoundFlask -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=$OTP_IP:8081 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/EcoRoundFlask:v$APP_VERSION.$BUILD_NUMBER"'
+            }
+            '''
+
+            sh '''
+            export VITE_BACKEND_URL=http://$LOCAL_SERVER:5001/api
+            cd EcoRound
+            npx ionic build
+            npx ionic cap build android --no-open
+
+            cd android
+            ./gradlew clean assembleDebug
+
+            cd app/build/outputs/apk/debug/
+            mv app-debug.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
+            '''
+
+            archiveArtifacts artifacts: 'EcoRound/android/app/build/outputs/apk/debug/EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk', fingerprint: true
+        }
+    }
     // stage('Release') {
     //     steps {
     //     }
