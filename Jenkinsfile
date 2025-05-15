@@ -204,50 +204,52 @@ pipeline {
     }
     stage('Deploy') {
         steps {
-            withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+            script {
+                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+                }
+
+                sh '''
+                cd otp
+                docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
+                docker push $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
+                docker rmi -f $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
+                '''
+
+                sshagent(credentials: ['MACBOOK_SSH']) {
+                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop ecoroundotp || true"'
+                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER"'
+                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name ecoroundotp -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER"'
+                }
+
+                sh '''
+                cd Backend
+                docker build -t $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER .
+                docker push $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                docker rmi -f $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                '''
+
+                sshagent(credentials: ['MACBOOK_SSH']) {
+                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop ecoroundflask || true"'
+                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER"'
+                    sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name ecoroundflask -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=$OTP_IP:8081 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER"'
+                }
+
+                sh '''
+                export VITE_BACKEND_URL=http://$LOCAL_SERVER:5001/api
+                cd EcoRound
+                npx ionic build
+                npx ionic cap build android --no-open
+
+                cd android
+                ./gradlew clean assembleDebug
+
+                cd app/build/outputs/apk/debug/
+                mv app-debug.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
+                '''
+
+                archiveArtifacts artifacts: 'EcoRound/android/app/build/outputs/apk/debug/EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk', fingerprint: true
             }
-
-            sh '''
-            cd otp
-            docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
-            docker push $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
-            docker rmi -f $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
-
-            sshagent(credentials: ['MACBOOK_SSH']) {
-                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop ecoroundotp || true"'
-                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER"'
-                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name ecoroundotp -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER"'
-            }
-            '''
-
-            sh '''
-            cd Backend
-            docker build -t $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER .
-            docker push $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
-            docker rmi -f $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
-
-            sshagent(credentials: ['MACBOOK_SSH']) {
-                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker stop ecoroundflask || true"'
-                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER"'
-                sh 'ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "docker run -d --name ecoroundflask -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=$OTP_IP:8081 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER"'
-            }
-            '''
-
-            sh '''
-            export VITE_BACKEND_URL=http://$LOCAL_SERVER:5001/api
-            cd EcoRound
-            npx ionic build
-            npx ionic cap build android --no-open
-
-            cd android
-            ./gradlew clean assembleDebug
-
-            cd app/build/outputs/apk/debug/
-            mv app-debug.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
-            '''
-
-            archiveArtifacts artifacts: 'EcoRound/android/app/build/outputs/apk/debug/EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk', fingerprint: true
         }
     }
     // stage('Release') {
