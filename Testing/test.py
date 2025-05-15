@@ -180,7 +180,7 @@ def main():
 
     case_list.add_function(back_button_function(driver))
 
-    if case_list.run_cases(1, 1):
+    if case_list.run_cases(5, 1):
         sys.exit(0)
     else:
         sys.exit(1)

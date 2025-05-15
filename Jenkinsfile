@@ -105,7 +105,7 @@ pipeline {
                 '''
 
                 sh '''
-                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data -gpu swiftshader_indirect & 
+                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -writable-system -no-snapshot-load -no-audio -wipe-data & 
                 '''
 
                 sh '''
