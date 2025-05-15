@@ -1,0 +1,12 @@
+services:
+  ecoroundotp:
+    image: ponleou/ecoroundotp:latest
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+
+  ecoroundflask:
+    image: ponleou/ecoroundflask:latest
+    ports:
+      - "0.0.0.0:5000:5000"
+    restart: unless-stopped
