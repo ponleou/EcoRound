@@ -104,7 +104,7 @@ pipeline {
                 '''
 
                 sh '''
-                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data -gpu swiftshader_indirect -qemu -m 2048 & 
+                emulator -avd $AVD_NAME -port $AVD_PORT -no-window -no-qt -writable-system -no-snapshot-load -no-audio -wipe-data -gpu swiftshader_indirect & 
                 '''
 
                 sh '''
@@ -204,6 +204,10 @@ pipeline {
     }
     stage('Deploy') {
         steps {
+            withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+            }
+
             sh '''
             cd otp
             docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
