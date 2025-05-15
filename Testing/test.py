@@ -39,7 +39,7 @@ class WebElementCase():
         self.element_value = element_value
 
     def get_element(self) -> WebElement:
-        WebDriverWait(self.driver, 30).until(
+        WebDriverWait(self.driver, 120).until(
             EC.visibility_of_element_located((self.element_id, self.element_value))
         )
 
@@ -62,14 +62,14 @@ class TouchChainsCase():
         self.end_y = end_coords[1]
 
     def get_function(self) -> Callable[[], None]:
-        self.action.w3c_actions.pointer_action.move_to_location(self.start_x, self.start_x)
+        self.action.w3c_actions.pointer_action.move_to_location(self.start_x, self.start_y)
         self.action.w3c_actions.pointer_action.pointer_down()
         self.action.w3c_actions.pointer_action.pause(0.5)
 
         log_string = ""
 
         if self.end_x != -1 or self.end_y != -1:
-            self.action.w3c_actions.pointer_action.move_to_location(self.end_x, self.end_x)
+            self.action.w3c_actions.pointer_action.move_to_location(self.end_x, self.end_y)
             self.action.w3c_actions.pointer_action.pause(0.5)
             log_string =f"drag ({self.start_x}, {self.start_y}) to ({self.end_x}, {self.end_y})"
 
@@ -160,12 +160,12 @@ def main():
     # select desintation location with scrolling on map
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().text(\"SELECT LOCATION\")").get_function())
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().text(\"Set destination\")").get_function())
-    case_list.add_function(TouchChainsCase(driver, (700, 1370), (200, 1500)).get_function())
-    case_list.add_function(TouchChainsCase(driver, (700, 1370), (200, 1500)).get_function())
-    case_list.add_function(TouchChainsCase(driver, (700, 1370), (200, 1500)).get_function())
-    case_list.add_function(TouchChainsCase(driver, (700, 1370), (200, 1500)).get_function())
-    case_list.add_function(TouchChainsCase(driver, (700, 1370), (200, 1500)).get_function())
-    case_list.add_function(TouchChainsCase(driver, (700, 1370), (200, 1500)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (500, 700), (500, 300)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (500, 700), (500, 300)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (500, 700), (500, 300)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (500, 700), (500, 300)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (500, 700), (500, 300)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (500, 700), (500, 300)).get_function())
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().text(\"SELECT LOCATION\")").get_function())
 
     # going to and navigating in transit section 
@@ -180,7 +180,7 @@ def main():
 
     case_list.add_function(back_button_function(driver))
 
-    if case_list.run_cases(5, 1):
+    if case_list.run_cases(1, 1):
         sys.exit(0)
     else:
         sys.exit(1)

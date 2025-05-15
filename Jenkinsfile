@@ -230,16 +230,19 @@ pipeline {
                 )
 
                 sshagent(credentials: ['MACBOOK_SSH']) {
-                   sh '''
+                    sh '''
                     ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
+                    docker network create ecoround-network || true &&
+
                     docker stop ecoroundotp || true &&
                     docker rm -f ecoroundotp || true &&
                     docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
-                    docker run -d --name ecoroundotp -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
+                    docker run -d --name ecoroundotp --network ecoround-network -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
+
                     docker stop ecoroundflask || true &&
                     docker rm -f ecoroundflask || true &&
                     docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER &&
-                    docker run -d --name ecoroundflask -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=$OTP_IP:8081 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                    docker run -d --name ecoroundflask --network ecoround-network -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=ecoroundotp:8080 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
                     '"
                     '''
                 }
