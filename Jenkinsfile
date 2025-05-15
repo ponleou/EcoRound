@@ -255,7 +255,7 @@ pipeline {
                 mv app-debug.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
                 '''
 
-                archiveArtifacts artifacts: 'EcoRound/android/app/build/outputs/apk/debug/EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk', fingerprint: true
+                archiveArtifacts artifacts: "EcoRound/android/app/build/outputs/apk/debug/EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk", fingerprint: true
             }
         }
     }
