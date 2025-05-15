@@ -91,9 +91,13 @@ class FunctionCases():
     def get_list(self) -> List[Callable[[], None]]:
         return self.list
     
-    def run_cases(self, delay=1) -> bool:
+    def run_cases(self, delay=1, max_fail=0) -> bool:
         print("Running test cases: ")
         success = 0
+        fail = 0
+
+        if max_fail >= 0:
+            max_fail = len(self.list)
 
         for index, function in enumerate(self.list):
             print(f"{index + 1}. ", end="")
@@ -104,8 +108,12 @@ class FunctionCases():
             except WebDriverException as e:
                 print("...Fail\n", end="")
                 print(f"{type(e).__name__}: {e.msg}")
+                fail = fail + 1
             finally:
                 sleep(delay)
+
+            if fail > max_fail:
+                break
         
         print(f"Test cases complete: {success}/{len(self.list)}")
         if success == len(self.list):
@@ -172,7 +180,7 @@ def main():
 
     case_list.add_function(back_button_function(driver))
 
-    if case_list.run_cases(5):
+    if case_list.run_cases(5, 1):
         sys.exit(0)
     else:
         sys.exit(1)
