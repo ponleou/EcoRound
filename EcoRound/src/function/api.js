@@ -1,6 +1,6 @@
 import { CapacitorHttp } from "@capacitor/core";
 
-// const baseUrl = "http://10.141.55.82:5000/api";
+// const baseUrl = "http://127.0.0.1:5000/api";
 let baseUrl = import.meta.env.VITE_BACKEND_URL;
 
 const headers = {

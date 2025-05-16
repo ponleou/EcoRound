@@ -245,12 +245,12 @@ pipeline {
                     docker stop ecoroundotpstage || true &&
                     docker rm -f ecoroundotpstage || true &&
                     docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
-                    docker run -d --name ecoroundotpstage --network ecoroundstage-network -p 127.0.0.1:8081:8080 $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
+                    docker run -d --name ecoroundotpstage --network ecoroundstage-network $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
 
                     docker stop ecoroundflaskstage || true &&
                     docker rm -f ecoroundflaskstage || true &&
                     docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER &&
-                    docker run -d --name ecoroundflaskstage --network ecoroundstage-network -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=ecoroundotp:8080 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                    docker run -d --name ecoroundflaskstage --network ecoroundstage-network -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=ecoroundotpstage:8080 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
                     '"
                     '''
                 }
