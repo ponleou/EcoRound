@@ -323,7 +323,6 @@ pipeline {
                     cd app/build/outputs/apk/release/
                     mv app-release.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
 
-                    echo "$GITHUB_TOKEN" | gh auth login --with-token
                     gh release create "v${APP_VERSION}.${BUILD_NUMBER}" "EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk" --prerelease --title "v${APP_VERSION}.${BUILD_NUMBER}"
                     '''
                 }
