@@ -307,6 +307,7 @@ pipeline {
                     export ORS_API_KEY=$ORS_API_KEY
                     export PROD_SUBDOMAIN=$PROD_SUBDOMAIN
                     mkdir -p logs
+                    chmod -R 777 logs
                     docker-compose down
                     docker-compose pull
                     docker-compose up -d
@@ -333,10 +334,14 @@ pipeline {
             }
         }
     }
-    // stage('Monitor') {
-    //     steps {
-    //     }
-    // }
+    stage('Monitor') {
+        steps {
+            sh '''
+            curl -s -o /dev/null https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify
+            curl -s -o /dev/null http://10.141.39.58:19999/api/v1/info
+            '''
+        }
+    }
     }
     post {
         always {
