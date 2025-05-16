@@ -310,7 +310,7 @@ pipeline {
                     '''
                 }
 
-                withCredentials([file(credentialsId: 'android-keystore', variable: 'KEYSTORE_PATH')]) {
+                withCredentials([file(credentialsId: 'androidkey', variable: 'KEYSTORE_PATH')]) {
                     sh '''
                     export VITE_BACKEND_URL=http://$LOCAL_SERVER:$FLASK_PORT/api
                     cd EcoRound
@@ -327,7 +327,6 @@ pipeline {
                     gh release create "v${APP_VERSION}.${BUILD_NUMBER}" "EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk" --prerelease --title "v${APP_VERSION}.${BUILD_NUMBER}"
                     '''
                 }
-
             }
         }
     }
