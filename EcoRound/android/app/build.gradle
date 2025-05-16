@@ -20,10 +20,13 @@ android {
         debug {
         }
         release {
-            keyAlias System.getenv("KEY_ALIAS") ?: ""
-            keyPassword System.getenv("KEY_PASSWORD") ?: ""
-            storeFile file(System.getenv("KEYSTORE_PATH") ?: "")
-            storePassword System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+            def keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath != null && !keystorePath.isEmpty()) {
+                storeFile file(keystorePath)
+            }
+            storePassword System.getenv("KEYSTORE_PASSWORD")
         }
     }
     buildTypes {
