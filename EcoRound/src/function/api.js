@@ -3,9 +3,10 @@ import { CapacitorHttp } from "@capacitor/core";
 // const baseUrl = "http://10.141.55.82:5000/api";
 let baseUrl = import.meta.env.VITE_BACKEND_URL;
 
-const header = {
+const headers = {
   "Content-Type": "application/json",
   skip_zrok_interstitial: "true", // for using zrok to host backend
+  "bypass-tunnel-reminder": "true", // for localtunnel
 };
 
 function handleResponse(response) {
@@ -20,7 +21,7 @@ export const verifyUrl = async (url=baseUrl) => {
   baseUrl = url;
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/verify`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -30,7 +31,7 @@ export const verifyUrl = async (url=baseUrl) => {
 export const getPlaceName = async (lat, lon) => {
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/place_name?lat=${lat}&lon=${lon}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -40,7 +41,7 @@ export const getPlaceName = async (lat, lon) => {
 export const getCarRoute = async (slat, slon, dlat, dlon) => {
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/car-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -50,7 +51,7 @@ export const getCarRoute = async (slat, slon, dlat, dlon) => {
 export const getWalkRoute = async (slat, slon, dlat, dlon) => {
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/walk-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -60,7 +61,7 @@ export const getWalkRoute = async (slat, slon, dlat, dlon) => {
 export const getBikeRoute = async (slat, slon, dlat, dlon) => {
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/bike-route?slat=${slat}&slon=${slon}&dlat=${dlat}&dlon=${dlon}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -81,7 +82,7 @@ export const getTransitRoute = async (
       "+",
       "%2B"
     )}&isarrival=${isArrival}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -135,7 +136,7 @@ function adjustTimeOutOfRange(inputTime) {
 export const getPlaceList = async (search, lat, lon) => {
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/find_place?search=${search}&lat=${lat}&lon=${lon}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -145,7 +146,7 @@ export const getPlaceList = async (search, lat, lon) => {
 export const checkValidCoords = async (lat, lon) => {
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/check_valid_coords?lat=${lat}&lon=${lon}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
@@ -155,7 +156,7 @@ export const checkValidCoords = async (lat, lon) => {
 export const pointsCalculation = async (base, value) => {
   const response = await CapacitorHttp.request({
     url: `${baseUrl}/points_calculation?base=${base}&value=${value}`,
-    headers: header,
+    headers: headers,
     method: "GET",
   });
 
