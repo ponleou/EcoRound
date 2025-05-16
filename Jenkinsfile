@@ -29,7 +29,7 @@ pipeline {
 
         ORS_API_KEY = credentials('ORS_API_KEY')
         LOCAL_SERVER = '10.141.39.58'
-        LOCAL_SERVER_SSH = '${LOCAL_SERVER.replace('.', '-')}.wifi-m.deakin.edu.au'
+        LOCAL_SERVER_SSH = '10-141-39-58.wifi-m.deakin.edu.au'
         PROD_SUBDOMAIN = "ecoround-flask-tunnel"
         LOCALTUNNEL_DOMAIN = 'loca.lt'
 
