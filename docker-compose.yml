@@ -22,7 +22,7 @@ services:
       - OTP_SERVER=ecoroundotp:8080
 
   ecoroundtunnel:
-    image: node:23-alpine
+    image: node:23
     container_name: ecoroundtunnel
     networks:
       - ecoround-network
