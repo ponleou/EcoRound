@@ -20,3 +20,13 @@ services:
     environment:
       - ORS_API_KEY=${ORS_API_KEY}
       - OTP_SERVER=ecoroundotp:8080
+
+  ecoroundtunnel:
+    image: node:23-alpine
+    container_name: ecoroundtunnel
+    networks:
+      - ecoround-network
+    environment:
+      - APP_SUBDOMAIN=${PROD_SUBDOMAIN}
+    command: sh -c 'npm install -g localtunnel && localtunnel --port 5000 --subdomain "$APP_SUBDOMAIN"'
+    restart: unless-stopped

@@ -29,7 +29,9 @@ pipeline {
 
         ORS_API_KEY = credentials('ORS_API_KEY')
         LOCAL_SERVER = '10.141.39.58'
-        LOCAL_SERVER_SSH = '10-141-39-58.wifi-m.deakin.edu.au'
+        LOCAL_SERVER_SSH = '${LOCAL_SERVER.replace('.', '-')}.wifi-m.deakin.edu.au'
+        PROD_SUBDOMAIN = "ecoround-flask-tunnel"
+        LOCALTUNNEL_DOMAIN = 'loca.lt'
 
         KEY_ALIAS = 'androidkey'
         KEY_PASSWORD = credentials('KEY_PASSWORD')
@@ -303,6 +305,7 @@ pipeline {
                     ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
                     cd .jenkins/EcoRound
                     export ORS_API_KEY=$ORS_API_KEY
+                    export PROD_SUBDOMAIN=$PROD_SUBDOMAIN
                     docker-compose down
                     docker-compose pull
                     docker-compose up -d
@@ -312,7 +315,7 @@ pipeline {
 
                 withCredentials([file(credentialsId: 'androidkey', variable: 'KEYSTORE_PATH')]) {
                     sh '''
-                    export VITE_BACKEND_URL=http://$LOCAL_SERVER:$FLASK_PORT/api
+                    export VITE_BACKEND_URL=https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api
                     cd EcoRound
                     npx ionic build --prod
                     npx ionic cap build android --no-open --prod
