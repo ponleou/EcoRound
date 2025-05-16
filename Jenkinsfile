@@ -28,8 +28,14 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
 
         ORS_API_KEY = credentials('ORS_API_KEY')
-        LOCAL_SERVER = '10.141.35.235'
-        LOCAL_SERVER_SSH = '10-141-35-235.wifi-m.deakin.edu.au'
+        LOCAL_SERVER = '10.141.39.58'
+        LOCAL_SERVER_SSH = '10-141-39-58.wifi-m.deakin.edu.au'
+
+        KEY_ALIAS = 'androidkey'
+        KEY_PASSWORD = credentials('KEY_PASSWORD')
+        KEYSTORE_PASSWORD = credentials('KEYSTORE_PASSWORD')
+
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
     }
     stages {
         stage('Initialise') {
@@ -264,9 +270,67 @@ pipeline {
             }
         }
     }
-    // stage('Release') {
-    //     steps {
-    //     }
+    stage('Release') {
+        steps {
+            script {
+                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+                }
+
+                parallel(
+                    DockerOTP: {
+                        sh '''
+                        cd otp
+                        docker build -t $DOCKER_USERNAME/ecoroundotp:latest .
+                        docker push $DOCKER_USERNAME/ecoroundotp:latest
+                        docker rmi -f $DOCKER_USERNAME/ecoroundotp:latest
+                        '''
+                    },
+                    DockerFlask: {
+                        sh '''
+                        cd Backend
+                        docker build -t $DOCKER_USERNAME/ecoroundflask:latest .
+                        docker push $DOCKER_USERNAME/ecoroundflask:latest
+                        docker rmi -f $DOCKER_USERNAME/ecoroundflask:latest
+                        '''
+                    }
+                )
+
+                sshagent(credentials: ['MACBOOK_SSH']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc 'mkdir -p .jenkins/EcoRound'"
+                    scp -o StrictHostKeyChecking=no docker-compose.yml ssh-user@$LOCAL_SERVER_SSH:.jenkins/EcoRound
+                    ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
+                    cd .jenkins/EcoRound
+                    export ORS_API_KEY=$ORS_API_KEY
+                    docker compose down
+                    docker compose pull
+                    docker compose up -d
+                    '"
+                    '''
+                }
+
+                withCredentials([file(credentialsId: 'android-keystore', variable: 'KEYSTORE_PATH')]) {
+                    sh '''
+                    export VITE_BACKEND_URL=http://$LOCAL_SERVER:$FLASK_PORT/api
+                    cd EcoRound
+                    npx ionic build --prod
+                    npx ionic cap build android --no-open --prod
+
+                    cd android
+                    ./gradlew clean assembleRelease -Pandroid.injected.signing.store.file=$KEYSTORE_PATH -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+
+                    cd app/build/outputs/apk/release/
+                    mv app-release.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
+
+                    echo "$GITHUB_TOKEN" | gh auth login --with-token
+                    gh release create "v${APP_VERSION}.${BUILD_NUMBER}" "EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk" --prerelease --title "v${APP_VERSION}.${BUILD_NUMBER}"
+                    '''
+                }
+
+            }
+        }
+    }
     // stage('Monitor') {
     //     steps {
     //     }

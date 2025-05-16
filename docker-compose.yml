@@ -1,12 +1,22 @@
+networks:
+  ecoround-network:
+
 services:
   ecoroundotp:
     image: ponleou/ecoroundotp:latest
+    container_name: ecoroundotp
+    networks:
+      - ecoround-network
     ports:
       - "127.0.0.1:8080:8080"
-    restart: unless-stopped
 
   ecoroundflask:
     image: ponleou/ecoroundflask:latest
+    container_name: ecoroundflask
+    networks:
+      - ecoround-network
     ports:
       - "0.0.0.0:5000:5000"
-    restart: unless-stopped
+    environment:
+      - ORS_API_KEY=${ORS_API_KEY}
+      - OTP_SERVER=ecoroundotp:8080
