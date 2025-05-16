@@ -306,6 +306,7 @@ pipeline {
                     cd .jenkins/EcoRound
                     export ORS_API_KEY=$ORS_API_KEY
                     export PROD_SUBDOMAIN=$PROD_SUBDOMAIN
+                    mkdir -p logs
                     docker-compose down
                     docker-compose pull
                     docker-compose up -d

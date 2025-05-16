@@ -16,6 +16,8 @@ services:
     environment:
       - ORS_API_KEY=${ORS_API_KEY}
       - OTP_SERVER=ecoroundotp:8080
+    volumes:
+      -./logs:/app/logs
 
   ecoroundtunnel:
     image: node:23
