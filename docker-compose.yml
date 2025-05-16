@@ -27,6 +27,6 @@ services:
     networks:
       - ecoround-network
     environment:
-      - APP_SUBDOMAIN=${PROD_SUBDOMAIN}
-    command: sh -c "npm install -g localtunnel && localtunnel --port 5000 --subdomain $APP_SUBDOMAIN"
+      - PROD_SUBDOMAIN=${PROD_SUBDOMAIN}
+    command: sh -c "npm install -g localtunnel && localtunnel --port 5000 --subdomain $PROD_SUBDOMAIN"
     restart: unless-stopped
