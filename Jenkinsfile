@@ -11,23 +11,23 @@ pipeline {
         AVD_NAME = 'jenkins_avd'
         AVD_PORT = '5558'
         adb = '/usr/bin/adb'
+
         AVD_LOCALHOST = '10.0.2.2'
+        LOCAL_HOST = '127.0.0.1'
+        OTP_PORT = '8080'
+        FLASK_PORT = '5000'
 
         APP_VERSION = '1.0'
 
         SONAR_TOKEN = credentials('LOCAL_SONAR_TOKEN')
         SNYK_TOKEN = credentials('SNYK_TOKEN')
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        ORS_API_KEY = credentials('ORS_API_KEY')
 
-        OTP_IP = '127.0.0.1'
-        OTP_PORT = '8080'
-
-        FLASK_IP = '127.0.0.1'
-        FLASK_PORT = '5000'
 
         DOCKER_USERNAME = 'ponleou'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
 
-        ORS_API_KEY = credentials('ORS_API_KEY')
         LOCAL_SERVER = '10.141.39.58'
         LOCAL_SERVER_SSH = '10-141-39-58.wifi-m.deakin.edu.au'
         PROD_SUBDOMAIN = "ecoround-flask-tunnel"
@@ -36,8 +36,6 @@ pipeline {
         KEY_ALIAS = 'androidkey'
         KEY_PASSWORD = credentials('KEY_PASSWORD')
         KEYSTORE_PASSWORD = credentials('KEYSTORE_PASSWORD')
-
-        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
     }
     stages {
         stage('Initialise') {
@@ -53,23 +51,17 @@ pipeline {
                     parallel (
                         AppBuild: {
                             sh '''
+                            echo "Building Ionic React web app..."
                             export VITE_BACKEND_URL=http://$AVD_LOCALHOST:$FLASK_PORT/api
                             cd EcoRound
-
-                            echo "=========== Installing node modules... ==========="
                             npm install
-
-                            echo "=========== Building web assets... ==========="
                             npx ionic build
-
-                            echo "=========== Building for Android... ==========="
                             npx ionic cap build android --no-open
                             '''
 
                             sh '''
+                            echo "Building Android APK..."
                             cd EcoRound/android
-
-                            echo "=========== Building Android APK... ==========="
                             ./gradlew clean assembleDebug
                             '''
                         },
@@ -77,19 +69,18 @@ pipeline {
                             sh '''
                             cd otp
 
-                            echo "=========== Downloading OTP... ==========="
+                            echo "Downloading OpenTripPlanner Java server..."
                             wget https://repo1.maven.org/maven2/org/opentripplanner/otp/2.6.0/otp-2.6.0-shaded.jar
 
-                            echo "=========== Building OTP Server... ==========="
+                            echo "Building OTP Server..."
                             java -Xmx2G -jar otp-2.6.0-shaded.jar --buildStreet .
                             java -Xmx2G -jar otp-2.6.0-shaded.jar --loadStreet --save .
                             '''
                         },
                         PythonVenv: {
                             sh '''
+                            echo "Creating Python venv for backend..."
                             cd Backend
-
-                            echo "=========== Creating Python venv for backend... ==========="
                             python -m venv .venv
                             .venv/bin/python -m pip install -r requirements.txt
                             '''
@@ -107,27 +98,33 @@ pipeline {
         stage('Test') {
             steps {
                 script {
+
                 sh '''
+                echo "Installing images to create AVD..."
                 yes | sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis_playstore;x86_64"
                 avdmanager create avd -n $AVD_NAME -k "system-images;android-35;google_apis_playstore;x86_64" --device "pixel" --force
                 '''
 
                 sh '''
+                echo "Starting AVD emulator..."
                 emulator -avd $AVD_NAME -port $AVD_PORT -no-window -writable-system -no-snapshot-load -no-audio -wipe-data & 
                 '''
 
                 sh '''
+                echo "Running OpenTripPlanner server at $OTP_PORT..."
                 cd otp
-                java -Xmx2G -jar otp-2.6.0-shaded.jar --bindAddress $OTP_IP --port $OTP_PORT --load . &
+                java -Xmx2G -jar otp-2.6.0-shaded.jar --bindAddress $LOCAL_HOST --port $OTP_PORT --load . &
                 '''
 
                 sh '''
+                echo "Running Flask server at $FLASK_PORT..."
                 cd Backend
-                export OTP_SERVER=$OTP_IP:$OTP_PORT
-                .venv/bin/python -m flask --app main run --host=$FLASK_IP -p $FLASK_PORT &
+                export OTP_SERVER=$LOCAL_HOST:$OTP_PORT
+                .venv/bin/python -m flask --app main run --host=$LOCAL_HOST -p $FLASK_PORT &
                 '''
 
                 sh '''
+                echo "Starting Appium for testing..."
                 cd EcoRound
                 npx appium &
                 '''
@@ -139,6 +136,7 @@ pipeline {
                 retry(10) {
                     try {
                         sh '''
+                        echo "Attempting to connect to device..."
                         $adb shell getprop sys.boot_completed
                         $adb shell pm path android
                         $adb shell pm list packages
@@ -152,11 +150,8 @@ pipeline {
                 retry(5) {
                     try {
                         sh '''
-                        $adb devices
+                        echo "Attempting to install APK..."
                         $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                        $adb shell settings put global window_animation_scale 0
-                        $adb shell settings put global transition_animation_scale 0
-                        $adb shell settings put global animator_duration_scale 0
                         '''
                     } catch (err) {
                         sleep(time: 5, unit: 'SECONDS')
@@ -164,9 +159,17 @@ pipeline {
                     }
                 }
 
+                sh '''
+                echo "Changing AVD settings for performance..."
+                $adb shell settings put global window_animation_scale 0
+                $adb shell settings put global transition_animation_scale 0
+                $adb shell settings put global animator_duration_scale 0
+                '''
+
                 retry(5) {
                     try {
                         sh '''
+                        echo "Checking if Appium is online..."
                         curl --silent http://127.0.0.1:4723/status | grep -q '"ready":true'
                         '''
                     } catch (err) {
@@ -184,9 +187,16 @@ pipeline {
         }
     stage('Code Quality') {
         steps {
-            sh 'wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -' // pipe to bsdtar to unzip and avoid saving zip copies
-            sh 'chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/' // essential binary files are all inside the folder without execution bits
-            sh './sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner -Dsonar.host.url="http://${LOCAL_SERVER}:9000"'
+            sh '''
+            echo "Installing SonarQube CLI..."
+            wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -
+            chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/
+            '''
+
+            sh '''
+            echo "Running SonarQube Scanner..."
+            ./sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner -Dsonar.host.url="http://${LOCAL_SERVER}:9000"
+            '''
         }
     }
     stage('Security Scan') {
@@ -195,6 +205,7 @@ pipeline {
                 parallel(
                     IonicReactApp: {
                         sh '''
+                        echo "Dependency checking for Ionic React..."
                         cd EcoRound
                         npx snyk monitor
                         npm audit || true
@@ -202,6 +213,7 @@ pipeline {
                     },
                     FlaskBackend: {
                         sh '''
+                        echo "Dependency checking for Python Flask..."
                         cd Backend
                         . .venv/bin/activate
                         npx snyk monitor --all-projects
@@ -221,6 +233,7 @@ pipeline {
                 parallel(
                     DockerOTP: {
                         sh '''
+                        echo "Setting up Docker for OpenTripPlanner staging..."
                         cd otp
                         docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
                         docker push $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
@@ -229,6 +242,7 @@ pipeline {
                     },
                     DockerFlask: {
                         sh '''
+                        echo "Setting up Docker for Flask staging..."
                         cd Backend
                         docker build -t $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER .
                         docker push $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
@@ -239,6 +253,7 @@ pipeline {
 
                 sshagent(credentials: ['MACBOOK_SSH']) {
                     sh '''
+                    echo "Starting processes on staging server..."
                     ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
                     docker network create ecoroundstage-network || true &&
 
@@ -250,12 +265,13 @@ pipeline {
                     docker stop ecoroundflaskstage || true &&
                     docker rm -f ecoroundflaskstage || true &&
                     docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER &&
-                    docker run -d --name ecoroundflaskstage --network ecoroundstage-network -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=ecoroundotpstage:8080 -p 0.0.0.0:5001:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                    docker run -d --name ecoroundflaskstage --network ecoroundstage-network -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=ecoroundotpstage:8080 -p 0.0.0.0:$FLASK_PORT:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
                     '"
                     '''
                 }
 
                 sh '''
+                echo "Building APK for staging..."
                 export VITE_BACKEND_URL=http://$LOCAL_SERVER:5001/api
                 cd EcoRound
                 npx ionic build
@@ -282,6 +298,7 @@ pipeline {
                 parallel(
                     DockerOTP: {
                         sh '''
+                        echo "Setting up Docker for OpenTripPlanner production..." 
                         cd otp
                         docker build -t $DOCKER_USERNAME/ecoroundotp:latest .
                         docker push $DOCKER_USERNAME/ecoroundotp:latest
@@ -290,6 +307,7 @@ pipeline {
                     },
                     DockerFlask: {
                         sh '''
+                        echo "Setting up Docker for Flask production..."
                         cd Backend
                         docker build -t $DOCKER_USERNAME/ecoroundflask:latest .
                         docker push $DOCKER_USERNAME/ecoroundflask:latest
@@ -300,6 +318,7 @@ pipeline {
 
                 sshagent(credentials: ['MACBOOK_SSH']) {
                     sh '''
+                    echo "Setting up production server..."
                     ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc 'mkdir -p .jenkins/EcoRound'"
                     scp -o StrictHostKeyChecking=no docker-compose.yml ssh-user@$LOCAL_SERVER_SSH:.jenkins/EcoRound
                     ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
@@ -317,6 +336,7 @@ pipeline {
 
                 withCredentials([file(credentialsId: 'androidkey', variable: 'KEYSTORE_PATH')]) {
                     sh '''
+                    echo "Building APK for release in GitHub..."
                     export VITE_BACKEND_URL=https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api
                     cd EcoRound
                     npx ionic build --prod
@@ -337,7 +357,12 @@ pipeline {
     stage('Monitor') {
         steps {
             sh '''
+            echo "Checking if production server is online..."
             curl -s -o /dev/null https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify
+            '''
+
+            sh'''
+            echo "Checking if server monitor is online..."
             curl -s -o /dev/null http://10.141.39.58:19999/api/v1/info
             '''
         }
@@ -346,6 +371,7 @@ pipeline {
     post {
         always {
             sh '''
+            echo "Cleaning..."
             avdmanager delete avd -n $AVD_NAME
             adb kill-server
             '''
