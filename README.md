@@ -6,6 +6,13 @@ A mission to reduce CO<sub>2</sub> emissions by encouraging public transportatio
 
 Development currently based for Jakarta, Indonesia. Built for mobile (primarily Android) with Ionic Capacitor, and Docker-released backend server.
 
+### Contributors
+
+- Erza Fahrani Azzahra &ndash; *project manager, researcher*
+- Keo Ponleou Sok &ndash; *developer, designer*
+- Ashyk Newaz Ahmed &ndash; *pitcher*
+- Anil Kumar Mishra &ndash; *pitcher*
+
 ## Self build/deployment
 
 ### Backend method 1: Docker images
