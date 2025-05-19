@@ -358,7 +358,7 @@ pipeline {
         steps {
             sh '''
             echo "Checking if production server is online..."
-            curl https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify || echo "Request failed. Is the server on?"
+            curl -s -o https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify || echo "Request failed. Is the server on?"
             '''
 
             sh'''
