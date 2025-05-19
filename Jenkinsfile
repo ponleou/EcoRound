@@ -89,6 +89,7 @@ pipeline {
                             cd Testing
                             python -m venv .venv
                             .venv/bin/python -m pip install -r requirements.txt
+                            npm install
                             '''
                         }
                     )
