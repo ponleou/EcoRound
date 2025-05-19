@@ -125,7 +125,7 @@ pipeline {
 
                 sh '''
                 echo "Starting Appium for testing..."
-                cd EcoRound
+                cd Testing
                 npx appium &
                 '''
 
