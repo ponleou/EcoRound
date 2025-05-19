@@ -44,21 +44,15 @@ export default function Home() {
   const [carbonFootprint, setCarbonFootprint] = useState(0);
   const [rewardPoints, setRewardPoints] = useState(0);
 
-  useEffect(() => {
-    setCarbonFootprint(Math.round(Math.random() * 100));
-    setRewardPoints(Math.round(Math.random() * 100));
-
-    checkUrlVerification
-  }, []);
-
+  
   const [inputUrl, setInputUrl] = useState("");
   const [urlVerified, setUrlVerified] = useState(false);
-
+  
   const checkUrlVerification = async (url="") => {
     let response;
     if (url == "") response = await verifyUrl();
     else response = await verifyUrl(url)
-
+    
     if (response.verify) {
       setUrlVerified(true);
     } else {
@@ -66,6 +60,13 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    setCarbonFootprint(Math.round(Math.random() * 100));
+    setRewardPoints(Math.round(Math.random() * 100));
+
+    checkUrlVerification()
+  }, []);
+  
   return (
     // Header section
     <MainPage title="EcoRound">
