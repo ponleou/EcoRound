@@ -363,7 +363,7 @@ pipeline {
 
                 sh'''
                 echo "Checking if server monitor is online..."
-                curl -s -o /dev/null http://10.141.39.58:19999/api/v1/info || echo "Request failed. Is the server on?"
+                curl -s -o /dev/null http://$LOCAL_SERVER:19999/api/v1/info || echo "Request failed. Is the server on?"
                 '''
             }
         }
