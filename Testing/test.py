@@ -178,6 +178,19 @@ def main():
 
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.widget.Button\").instance(1)").get_function())
 
+    case_list.add_function(TouchChainsCase(driver, (550, 1450), (550, 500)).get_function())
+    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(19)").get_function())
+    case_list.add_function(TouchChainsCase(driver, (550, 1000), (550, 500)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (550, 1750), (550, 1000)).get_function())
+
+    case_list.add_function(back_button_function(driver))
+
+    case_list.add_function(TouchChainsCase(driver, (550, 1450), (550, 1000)).get_function())
+    case_list.add_function(TouchChainsCase(driver, (550, 1000), (550, 500)).get_function())
+
+    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(23)").get_function())
+
+    case_list.add_function(back_button_function(driver))
     case_list.add_function(back_button_function(driver))
 
     if case_list.run_cases(5, 1):
