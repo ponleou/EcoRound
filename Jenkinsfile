@@ -185,188 +185,188 @@ pipeline {
                 }
             }
         }
-    stage('Code Quality') {
-        steps {
-            sh '''
-            echo "Installing SonarQube CLI..."
-            wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -
-            chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/
-            '''
-
-            sh '''
-            echo "Running SonarQube Scanner..."
-            ./sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner -Dsonar.host.url="http://${LOCAL_SERVER}:9000"
-            '''
-        }
-    }
-    stage('Security Scan') {
-        steps {
-            script {
-                parallel(
-                    IonicReactApp: {
-                        sh '''
-                        echo "Dependency checking for Ionic React..."
-                        cd EcoRound
-                        npx snyk monitor
-                        npm audit || true
-                        '''
-                    },
-                    FlaskBackend: {
-                        sh '''
-                        echo "Dependency checking for Python Flask..."
-                        cd Backend
-                        . .venv/bin/activate
-                        npx snyk monitor --all-projects
-                        '''
-                    }
-                )
-            }
-        }
-    }
-    stage('Deploy') {
-        steps {
-            script {
-                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
-                }
-
-                parallel(
-                    DockerOTP: {
-                        sh '''
-                        echo "Setting up Docker for OpenTripPlanner staging..."
-                        cd otp
-                        docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
-                        docker push $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
-                        docker rmi -f $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
-                        '''
-                    },
-                    DockerFlask: {
-                        sh '''
-                        echo "Setting up Docker for Flask staging..."
-                        cd Backend
-                        docker build -t $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER .
-                        docker push $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
-                        docker rmi -f $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
-                        '''
-                    }
-                )
-
-                sshagent(credentials: ['MACBOOK_SSH']) {
-                    sh '''
-                    echo "Starting processes on staging server..."
-                    ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
-                    docker network create ecoroundstage-network || true &&
-
-                    docker stop ecoroundotpstage || true &&
-                    docker rm -f ecoroundotpstage || true &&
-                    docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
-                    docker run -d --name ecoroundotpstage --network ecoroundstage-network $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
-
-                    docker stop ecoroundflaskstage || true &&
-                    docker rm -f ecoroundflaskstage || true &&
-                    docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER &&
-                    docker run -d --name ecoroundflaskstage --network ecoroundstage-network -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=ecoroundotpstage:8080 -p 0.0.0.0:$FLASK_PORT:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
-                    '"
-                    '''
-                }
-
+        stage('Code Quality') {
+            steps {
                 sh '''
-                echo "Building APK for staging..."
-                export VITE_BACKEND_URL=http://$LOCAL_SERVER:5001/api
-                cd EcoRound
-                npx ionic build
-                npx ionic cap build android --no-open
-
-                cd android
-                ./gradlew clean assembleDebug
-
-                cd app/build/outputs/apk/debug/
-                mv app-debug.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
+                echo "Installing SonarQube CLI..."
+                wget -qO- "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.1.0.4889-linux-x64.zip" | bsdtar -xvf -
+                chmod -R 755 ./sonar-scanner-7.1.0.4889-linux-x64/
                 '''
 
-                archiveArtifacts artifacts: "EcoRound/android/app/build/outputs/apk/debug/EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk", fingerprint: true
+                sh '''
+                echo "Running SonarQube Scanner..."
+                ./sonar-scanner-7.1.0.4889-linux-x64/bin/sonar-scanner -Dsonar.host.url="http://${LOCAL_SERVER}:9000"
+                '''
             }
         }
-    }
-    stage('Release') {
-        steps {
-            script {
-                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+        stage('Security Scan') {
+            steps {
+                script {
+                    parallel(
+                        IonicReactApp: {
+                            sh '''
+                            echo "Dependency checking for Ionic React..."
+                            cd EcoRound
+                            npx snyk monitor
+                            npm audit || true
+                            '''
+                        },
+                        FlaskBackend: {
+                            sh '''
+                            echo "Dependency checking for Python Flask..."
+                            cd Backend
+                            . .venv/bin/activate
+                            npx snyk monitor --all-projects
+                            '''
+                        }
+                    )
                 }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+                    }
 
-                parallel(
-                    DockerOTP: {
+                    parallel(
+                        DockerOTP: {
+                            sh '''
+                            echo "Setting up Docker for OpenTripPlanner staging..."
+                            cd otp
+                            docker build -t $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER .
+                            docker push $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
+                            docker rmi -f $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER
+                            '''
+                        },
+                        DockerFlask: {
+                            sh '''
+                            echo "Setting up Docker for Flask staging..."
+                            cd Backend
+                            docker build -t $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER .
+                            docker push $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                            docker rmi -f $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                            '''
+                        }
+                    )
+
+                    sshagent(credentials: ['MACBOOK_SSH']) {
                         sh '''
-                        echo "Setting up Docker for OpenTripPlanner production..." 
-                        cd otp
-                        docker build -t $DOCKER_USERNAME/ecoroundotp:latest .
-                        docker push $DOCKER_USERNAME/ecoroundotp:latest
-                        docker rmi -f $DOCKER_USERNAME/ecoroundotp:latest
-                        '''
-                    },
-                    DockerFlask: {
-                        sh '''
-                        echo "Setting up Docker for Flask production..."
-                        cd Backend
-                        docker build -t $DOCKER_USERNAME/ecoroundflask:latest .
-                        docker push $DOCKER_USERNAME/ecoroundflask:latest
-                        docker rmi -f $DOCKER_USERNAME/ecoroundflask:latest
+                        echo "Starting processes on staging server..."
+                        ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
+                        docker network create ecoroundstage-network || true &&
+
+                        docker stop ecoroundotpstage || true &&
+                        docker rm -f ecoroundotpstage || true &&
+                        docker pull $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
+                        docker run -d --name ecoroundotpstage --network ecoroundstage-network $DOCKER_USERNAME/ecoroundotp:v$APP_VERSION.$BUILD_NUMBER &&
+
+                        docker stop ecoroundflaskstage || true &&
+                        docker rm -f ecoroundflaskstage || true &&
+                        docker pull $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER &&
+                        docker run -d --name ecoroundflaskstage --network ecoroundstage-network -e ORS_API_KEY=$ORS_API_KEY -e OTP_SERVER=ecoroundotpstage:8080 -p 0.0.0.0:$FLASK_PORT:5000 $DOCKER_USERNAME/ecoroundflask:v$APP_VERSION.$BUILD_NUMBER
+                        '"
                         '''
                     }
-                )
 
-                sshagent(credentials: ['MACBOOK_SSH']) {
                     sh '''
-                    echo "Setting up production server..."
-                    ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc 'mkdir -p .jenkins/EcoRound'"
-                    scp -o StrictHostKeyChecking=no docker-compose.yml ssh-user@$LOCAL_SERVER_SSH:.jenkins/EcoRound
-                    ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
-                    cd .jenkins/EcoRound
-                    export ORS_API_KEY=$ORS_API_KEY
-                    export PROD_SUBDOMAIN=$PROD_SUBDOMAIN
-                    mkdir -p logs
-                    chmod -R 777 logs
-                    docker-compose down
-                    docker-compose pull
-                    docker-compose up -d
-                    '"
-                    '''
-                }
-
-                withCredentials([file(credentialsId: 'androidkey', variable: 'KEYSTORE_PATH')]) {
-                    sh '''
-                    echo "Building APK for release in GitHub..."
-                    export VITE_BACKEND_URL=https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api
+                    echo "Building APK for staging..."
+                    export VITE_BACKEND_URL=http://$LOCAL_SERVER:5001/api
                     cd EcoRound
-                    npx ionic build --prod
-                    npx ionic cap build android --no-open --prod
+                    npx ionic build
+                    npx ionic cap build android --no-open
 
                     cd android
-                    ./gradlew clean assembleRelease -Pandroid.injected.signing.store.file=$KEYSTORE_PATH -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+                    ./gradlew clean assembleDebug
 
-                    cd app/build/outputs/apk/release/
-                    mv app-release.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
-
-                    gh release create "v${APP_VERSION}.${BUILD_NUMBER}" "EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk" --prerelease --title "v${APP_VERSION}.${BUILD_NUMBER}"
+                    cd app/build/outputs/apk/debug/
+                    mv app-debug.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
                     '''
+
+                    archiveArtifacts artifacts: "EcoRound/android/app/build/outputs/apk/debug/EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk", fingerprint: true
                 }
             }
         }
-    }
-    stage('Monitor') {
-        steps {
-            sh '''
-            echo "Checking if production server is online..."
-            curl -s -o /dev/null https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify || echo "Request failed. Is the server on?"
-            '''
+        stage('Release') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin'
+                    }
 
-            sh'''
-            echo "Checking if server monitor is online..."
-            curl -s -o /dev/null http://10.141.39.58:19999/api/v1/info || echo "Request failed. Is the server on?"
-            '''
+                    parallel(
+                        DockerOTP: {
+                            sh '''
+                            echo "Setting up Docker for OpenTripPlanner production..." 
+                            cd otp
+                            docker build -t $DOCKER_USERNAME/ecoroundotp:latest .
+                            docker push $DOCKER_USERNAME/ecoroundotp:latest
+                            docker rmi -f $DOCKER_USERNAME/ecoroundotp:latest
+                            '''
+                        },
+                        DockerFlask: {
+                            sh '''
+                            echo "Setting up Docker for Flask production..."
+                            cd Backend
+                            docker build -t $DOCKER_USERNAME/ecoroundflask:latest .
+                            docker push $DOCKER_USERNAME/ecoroundflask:latest
+                            docker rmi -f $DOCKER_USERNAME/ecoroundflask:latest
+                            '''
+                        }
+                    )
+
+                    sshagent(credentials: ['MACBOOK_SSH']) {
+                        sh '''
+                        echo "Setting up production server..."
+                        ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc 'mkdir -p .jenkins/EcoRound'"
+                        scp -o StrictHostKeyChecking=no docker-compose.yml ssh-user@$LOCAL_SERVER_SSH:.jenkins/EcoRound
+                        ssh -o StrictHostKeyChecking=no ssh-user@$LOCAL_SERVER_SSH "bash -lc '
+                        cd .jenkins/EcoRound
+                        export ORS_API_KEY=$ORS_API_KEY
+                        export PROD_SUBDOMAIN=$PROD_SUBDOMAIN
+                        mkdir -p logs
+                        chmod -R 777 logs
+                        docker-compose down
+                        docker-compose pull
+                        docker-compose up -d
+                        '"
+                        '''
+                    }
+
+                    withCredentials([file(credentialsId: 'androidkey', variable: 'KEYSTORE_PATH')]) {
+                        sh '''
+                        echo "Building APK for release in GitHub..."
+                        export VITE_BACKEND_URL=https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api
+                        cd EcoRound
+                        npx ionic build --prod
+                        npx ionic cap build android --no-open --prod
+
+                        cd android
+                        ./gradlew clean assembleRelease -Pandroid.injected.signing.store.file=$KEYSTORE_PATH -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+
+                        cd app/build/outputs/apk/release/
+                        mv app-release.apk EcoRound-v$APP_VERSION.$BUILD_NUMBER.apk
+
+                        gh release create "v${APP_VERSION}.${BUILD_NUMBER}" "EcoRound-v${APP_VERSION}.${BUILD_NUMBER}.apk" --prerelease --title "v${APP_VERSION}.${BUILD_NUMBER}"
+                        '''
+                    }
+                }
+            }
         }
-    }
+        stage('Monitor') {
+            steps {
+                sh '''
+                echo "Checking if production server is online..."
+                curl -s -o /dev/null https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify || echo "Request failed. Is the server on?"
+                '''
+
+                sh'''
+                echo "Checking if server monitor is online..."
+                curl -s -o /dev/null http://10.141.39.58:19999/api/v1/info || echo "Request failed. Is the server on?"
+                '''
+            }
+        }
     }
     post {
         always {
