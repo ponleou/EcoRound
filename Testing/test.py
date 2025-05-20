@@ -64,13 +64,13 @@ class TouchChainsCase():
     def get_function(self) -> Callable[[], None]:
         self.action.w3c_actions.pointer_action.move_to_location(self.start_x, self.start_y)
         self.action.w3c_actions.pointer_action.pointer_down()
-        self.action.w3c_actions.pointer_action.pause(0.5)
+        self.action.w3c_actions.pointer_action.pause(0.1)
 
         log_string = ""
 
         if self.end_x != -1 or self.end_y != -1:
             self.action.w3c_actions.pointer_action.move_to_location(self.end_x, self.end_y)
-            self.action.w3c_actions.pointer_action.pause(0.5)
+            self.action.w3c_actions.pointer_action.pause(0.1)
             log_string =f"drag ({self.start_x}, {self.start_y}) to ({self.end_x}, {self.end_y})"
 
         else:
@@ -169,26 +169,29 @@ def main():
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().text(\"SELECT LOCATION\")").get_function())
 
     # going to and navigating in transit section 
-    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(11)").get_function())
-    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(11)").get_function())
+    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(12)").get_function())
+    case_list.add_function(TouchChainsCase(driver, (550, 1450), (550, 500)).get_function())
+    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.widget.Image\").instance(6)").get_function())
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(12)").get_function())
     
     case_list.add_function(back_button_function(driver))
     case_list.add_function(back_button_function(driver))
 
+    # switch locations
     case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.widget.Button\").instance(1)").get_function())
 
+    # navigate to bike section
     case_list.add_function(TouchChainsCase(driver, (550, 1450), (550, 500)).get_function())
-    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(19)").get_function())
+    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(20)").get_function())
     case_list.add_function(TouchChainsCase(driver, (550, 1000), (550, 500)).get_function())
     case_list.add_function(TouchChainsCase(driver, (550, 1750), (550, 1000)).get_function())
 
     case_list.add_function(back_button_function(driver))
 
+    # navigate to car section
     case_list.add_function(TouchChainsCase(driver, (550, 1450), (550, 1000)).get_function())
     case_list.add_function(TouchChainsCase(driver, (550, 1000), (550, 500)).get_function())
-
-    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(23)").get_function())
+    case_list.add_function(WebElementCase(driver, AppiumBy.ANDROID_UIAUTOMATOR, "new UiSelector().className(\"android.view.View\").instance(24)").get_function())
 
     case_list.add_function(back_button_function(driver))
     case_list.add_function(back_button_function(driver))
