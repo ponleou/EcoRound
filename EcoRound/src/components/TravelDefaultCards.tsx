@@ -63,7 +63,7 @@ export default function TravelDefaultCards({
         return (
           <div key={name}>
             <hr />
-            <span onClick={() => route.loaded && handleRouteItem(route, walk)}>
+            <span onClick={() => route.loaded && handleRouteItem(route, icon)}>
               <RouteCardItem
                 iconText={name}
                 points={route.loaded ? route.points : ""}
