@@ -9,6 +9,13 @@ export default function IconText({
   iconColor = "",
   col = true,
 }) {
+
+  function getTextSizeClass(textSize) {
+    if (textSize == "base") return "text-base"
+    if (textSize === "large") return "text-lg"
+    return "text-xs"
+  }
+
   return (
     <div
       className={
@@ -21,11 +28,7 @@ export default function IconText({
         className={
           "text-center text-nowrap " +
           (col ? "w-full " : "") +
-          (textSize == "base"
-            ? "text-base"
-            : textSize == "large"
-            ? "text-lg"
-            : "text-xs") +
+          (getTextSizeClass(textSize)) +
           (textBold ? " font-bold" : "")
         }
       >

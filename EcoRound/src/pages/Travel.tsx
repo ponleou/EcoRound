@@ -418,7 +418,7 @@ export default function Travel({ match }) {
         }))
       );
     } catch (error) {
-      return [];
+      saveResult([])
     }
   };
 

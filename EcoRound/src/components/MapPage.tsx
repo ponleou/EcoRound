@@ -146,8 +146,8 @@ export default function MapPage({
               fillOpacity={1}
             ></CircleMarker>
           )}
-          {mapPaths.map((mapPath, index) => (
-            <span key={index}>
+          {mapPaths.map((mapPath) => (
+            <span key={mapPath.key}>
               <Polyline
                 positions={mapPath.path}
                 color={

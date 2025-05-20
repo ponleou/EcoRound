@@ -21,14 +21,14 @@ export default function ModalSelectedRouteCard({ route }) {
               route.route.distance,
               route.route.duration,
               route.route.emission,
-              <span className="font-bold">{route.route.points}</span>,
+              <span key={route.key} className="font-bold">{route.route.points}</span>,
             ]}
             iconSize="large"
             ripple={false}
           />
           <hr />
           <CardList>
-            {route.route.steps.map((step, index) => (
+            {route.route.steps.map((step) => (
               <TravelItem
                 key={step.id}
                 text={step.instruction}

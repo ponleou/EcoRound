@@ -18,7 +18,6 @@ export default function TravelSelectedTransitPath({
       onClick={() => {
         showMiddleStops.current[segmentIndex] =
           !showMiddleStops.current[segmentIndex];
-        console.log("clicked");
       }}
       className="grid grid-cols-[auto,1fr] gap-x-4 items-center px-2"
     >

@@ -181,6 +181,7 @@ function RouteProvider({ children }) {
         routes: [],
         loaded: false,
       }));
+      return error;
     }
   };
 

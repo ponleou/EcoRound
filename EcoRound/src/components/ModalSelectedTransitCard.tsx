@@ -3,6 +3,7 @@ import TravelCard from "./TravelCard";
 import TravelItem from "./TravelItem";
 import TravelSelectedNonTransitPath from "./TravelSelectedNonTransitPath";
 import TravelSelectedTransitPath from "./TravelSelectedTransitPath";
+import TransitRouteItem from './TransitRouteItem';
 
 export default function ModalSelectedTransitCard({ transitRoute, showMiddleStop }) {
   return (
@@ -17,7 +18,7 @@ export default function ModalSelectedTransitCard({ transitRoute, showMiddleStop 
               transitRoute.route.distance,
               transitRoute.route.duration,
               transitRoute.route.emission,
-              <span className="font-bold">{transitRoute.route.points}</span>,
+              <span key={transitRoute.key} className="font-bold">{transitRoute.route.points}</span>,
             ]}
             iconSize="large"
             ripple={false}

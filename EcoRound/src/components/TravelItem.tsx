@@ -31,7 +31,7 @@ export default function SearchItem({
         >
           {subTexts.map((subText, index) => (
             <span
-              key={index}
+              key={subText.key}
               className={subTexts.length - 1 <= index ? "truncate" : ""}
             >
               {subText}

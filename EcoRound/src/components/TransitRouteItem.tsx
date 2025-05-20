@@ -42,7 +42,7 @@ export default function TransitRouteItem({
         </p>
         <div className="flex gap-x-2 gap-y-0.5 items-center grow flex-wrap">
           {paths.map((path, index) => (
-            <span className="flex items-center gap-2" key={index}>
+            <span className="flex items-center gap-2" key={path.key}>
               {path.isTransit ? (
                 <div className="border-1 px-2 py-0.5 rounded-full border-2 border-primary">
                   <IconText
@@ -69,7 +69,7 @@ export default function TransitRouteItem({
         <div className="text-xs flex gap-2">
           {subTexts.map((subText, index) => (
             <IonText
-              key={index}
+              key={subText.key}
               color={"secondary"}
               className={
                 subTexts.length - 1 <= index ? "font-bold truncate" : ""

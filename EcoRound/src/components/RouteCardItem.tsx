@@ -33,7 +33,7 @@ export default function RouteCardItem({
             <p className="text-xs flex gap-2">
               {routeDescriptions.map((description, index) => (
                 <IonText
-                  key={index}
+                  key={description.key}
                   color={"secondary"}
                   className={
                     routeDescriptions.length - 1 <= index
