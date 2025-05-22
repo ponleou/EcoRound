@@ -182,6 +182,8 @@ pipeline {
                 sh '''
                 cd Testing
 
+                set +e
+
                 attempt=0
                 max_attempts=5
                 code=2
@@ -192,6 +194,8 @@ pipeline {
                     attempt=$((attempt + 1))
                     echo "Exit code $code"
                 done
+
+                set -e
 
                 exit $code
                 '''
