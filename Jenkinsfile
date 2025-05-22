@@ -329,7 +329,7 @@ pipeline {
 
                     sh '''
                     echo "Building APK for staging..."
-                    export VITE_BACKEND_URL=http://$LOCAL_SERVER:5001/api
+                    export VITE_BACKEND_URL=http://$LOCAL_SERVER:5000/api
                     cd EcoRound
                     npx ionic build
                     npx ionic cap build android --no-open
