@@ -369,15 +369,23 @@ pipeline {
         }
         stage('Monitor') {
             steps {
-                sh '''
-                echo "Checking if production server is online..."
-                curl -s -o /dev/null https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify || echo "Request failed. Is the server on?"
-                '''
+                retry(3) {
+                    timeout(time: 20, unit: 'SECONDS') {
+                        sh '''
+                        echo "Checking if production server is online..."
+                        curl -s -o /dev/null https://$PROD_SUBDOMAIN.$LOCALTUNNEL_DOMAIN/api/verify || echo "Request failed. Is the server on?"
+                        '''
+                    }
+                }
 
-                sh'''
-                echo "Checking if server monitor is online..."
-                curl -s -o /dev/null http://$LOCAL_SERVER:19999/api/v1/info || echo "Request failed. Is the server on?"
-                '''
+                retry(3) {
+                    timeout(time: 20, unit: 'SECONDS') {
+                        sh'''
+                        echo "Checking if server monitor is online..."
+                        curl -s -o /dev/null http://$LOCAL_SERVER:19999/api/v1/info || echo "Request failed. Is the server on?"
+                        '''
+                    }
+                }
             }
         }
     }
