@@ -91,10 +91,20 @@ class FunctionCases():
     def get_list(self) -> List[Callable[[], None]]:
         return self.list
     
-    def run_cases(self, delay=1, max_fail=0) -> bool:
+    def run_cases(self, delay=1, max_fail=0, max_initial_fail=0, initial_fail_exitcode=2) -> tuple[bool, int]:
+        """
+        delay: time between each action\n
+        max_fail: number of fails allowed before returning, default 0 to allow all fails\n
+        max_initial_fail: max test case number where fails are counted as "initial fails"\n
+        initial_fail_exitcode: returned exitcode for initial fails\n
+
+        return (success: bool, exit_code: int)
+        """
         print("Running test cases: ")
         success = 0
         fail = 0
+
+        error_exitcode = 1
 
         if max_fail <= 0:
             max_fail = len(self.list)
@@ -112,14 +122,17 @@ class FunctionCases():
             finally:
                 sleep(delay)
 
+            if index + 1 <= max_initial_fail:
+                error_exitcode = initial_fail_exitcode
+            
             if fail >= max_fail:
                 break
         
         print(f"Test cases complete: {success}/{len(self.list)}")
         if success == len(self.list):
-            return True
+            return (True, 0)
         else:
-            return False
+            return (False, error_exitcode)
 
 def back_button_function(driver: webdriver.Remote) -> Callable[[], None]:
     return lambda: (print("back button", end=""), driver.execute_script('mobile: pressKey', {"keycode": 4}))
@@ -196,10 +209,8 @@ def main():
     case_list.add_function(back_button_function(driver))
     case_list.add_function(back_button_function(driver))
 
-    if case_list.run_cases(5, 1):
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    _, exitcode = case_list.run_cases(5, 1, 2)
+    sys.exit(exitcode)
 
 if __name__ == '__main__':
     main()

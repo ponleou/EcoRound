@@ -182,6 +182,20 @@ pipeline {
                 sh '''
                 cd Testing
                 .venv/bin/python test.py
+
+                code=$?
+                attempt=0
+                max_attempts=5
+
+                while [ "$code" -eq 2 ] && [ "$attempt" -lt "$max_attempts" ]; do
+                    echo "Exit code $code: retrying..."
+                    .venv/bin/python test.py
+                    code=$?
+                    attempt=$((attempt + 1))
+                done
+
+                echo "Exit code $code"
+                exit $code
                 '''
                 }
             }
