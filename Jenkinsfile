@@ -131,34 +131,61 @@ pipeline {
                 '''
 
                 timeout(time: 120, unit: 'SECONDS') {
-                    sh '$adb wait-for-device'
+                    sh '''
+                    echo "Waiting for device..."
+                    $adb wait-for-device
+                    '''
                 }
 
-                retry(10) {
-                    try {
-                        sh '''
-                        echo "Attempting to connect to device..."
-                        $adb shell getprop sys.boot_completed
-                        $adb shell pm path android
-                        $adb shell pm list packages
-                        '''
-                    } catch (err) {
-                        sleep(time: 5, unit: 'SECONDS')
-                        throw err
-                    }
-                }
+                sh '''
+                echo "Attempting to connect to device..."
 
-                retry(5) {
-                    try {
-                        sh '''
-                        echo "Attempting to install APK..."
-                        $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
-                        '''
-                    } catch (err) {
-                        sleep(time: 5, unit: 'SECONDS')
-                        throw err
-                    }
-                }
+                set +e
+
+                attempt=0
+                max_attempts=10
+                code=0
+
+                while [ "$attempt" -lt "$max_attempts" ]; do
+                    $adb shell getprop sys.boot_completed
+                    code=$?
+
+                    if [[ "$code" -gt 0 ]]; then
+                        echo "Failed, retrying..."
+                        sleep 5s
+                    else
+                        break
+                    fi
+                done
+
+                set -e
+                exit $code
+                '''
+
+                sh '''
+                echo "Attempting to install APK..."
+
+                set +e
+
+                attempt=0
+                max_attempts=5
+                code=0
+
+                while [ "$attempt" -lt "$max_attempts" ]; do
+                    $adb install -r EcoRound/android/app/build/outputs/apk/debug/app-debug.apk
+                    code=$?
+
+                    if [[ "$code" -gt 0 ]]; then
+                        echo "Failed, retrying..."
+                        sleep 5s
+                    else
+                        break
+                    fi
+                done
+
+                set -e
+                exit $code
+                '''
 
                 sh '''
                 echo "Changing AVD settings for performance..."
@@ -167,17 +194,30 @@ pipeline {
                 $adb shell settings put global animator_duration_scale 0
                 '''
 
-                retry(5) {
-                    try {
-                        sh '''
-                        echo "Checking if Appium is online..."
-                        curl --silent http://127.0.0.1:4723/status | grep -q '"ready":true'
-                        '''
-                    } catch (err) {
-                        sleep(time: 5, unit: 'SECONDS')
-                        throw err
-                    }
-                }
+                sh '''
+                echo "Checking if Appium is online..."
+
+                set +e
+
+                attempt=0
+                max_attempts=5
+                code=0
+
+                while [ "$attempt" -lt "$max_attempts" ]; do
+                    curl --silent http://127.0.0.1:4723/status | grep -q '"ready":true'
+                    code=$?
+
+                    if [[ "$code" -gt 0 ]]; then
+                        echo "Failed, retrying..."
+                        sleep 5s
+                    else
+                        break
+                    fi
+                done
+
+                set -e
+                exit $code
+                '''
 
                 sh '''
                 cd Testing
