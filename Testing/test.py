@@ -209,7 +209,7 @@ def main():
     case_list.add_function(back_button_function(driver))
     case_list.add_function(back_button_function(driver))
 
-    _, exitcode = case_list.run_cases(5, 1, 2)
+    _, exitcode = case_list.run_cases(5, 1, 3)
     sys.exit(exitcode)
 
 if __name__ == '__main__':
