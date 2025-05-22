@@ -59,8 +59,6 @@ cd android
 
 ## Media
 
-<img src="img/Screenshot_20250520-110650.png" width=45% />
-<img src="img/Screenshot_20250520-110747.png" width=45% />
+<img src="img/Screenshot_20250520-110650.png" width=45% /> <img src="img/Screenshot_20250520-110747.png" width=45% />
 
-<img src="img/Screenshot_20250520-110928.png" width=45% />
-<img src="img/Screenshot_20250520-110855.png" width=45% />
+<img src="img/Screenshot_20250520-110928.png" width=45% /> <img src="img/Screenshot_20250520-110855.png" width=45% />
